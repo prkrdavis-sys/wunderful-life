@@ -1,0 +1,82 @@
+{
+  "fullName": "Emily Wunder",
+  "name": "Emily",
+  "brand": "Wunderful Life",
+  "tagline": "Creative, nature-loving UGC — airy visuals, real personality, content that feels like you already know me.",
+  "about": {
+    "headline": "About Me",
+    "paragraphs": [
+      "Hi, I'm Emily — a UGC creator who turns everyday moments into scroll-stopping content. I specialize in warm, relatable storytelling that helps brands connect with real people.",
+      "My work is organic, aesthetic, and a little whimsical: plants on the desk, golden-hour light, handwritten notes in frame. I want viewers to feel your brand and meet the human behind the camera — me.",
+      "Based in the Pacific Northwest, I love collaborating with wellness, lifestyle, and purpose-driven brands that care about authenticity as much as aesthetics."
+    ],
+    "photos": [
+      {
+        "id": "portrait-main",
+        "caption": "Emily — portrait placeholder",
+        "accent": "green",
+        "rotate": -3
+      },
+      {
+        "id": "creator-desk",
+        "caption": "Emily at her creative desk",
+        "accent": "pink",
+        "rotate": 4
+      },
+      {
+        "id": "outdoors",
+        "caption": "Emily on a nature walk — where ideas bloom",
+        "accent": "blue",
+        "rotate": -5
+      },
+      {
+        "id": "filming",
+        "caption": "Emily filming UGC — behind the scenes",
+        "accent": "yellow",
+        "rotate": 2
+      },
+      {
+        "id": "candid",
+        "caption": "Emily candid — personality over perfection",
+        "accent": "brown",
+        "rotate": -2
+      }
+    ]
+  },
+  "heroLinks": [
+    { "label": "About Me", "href": "/#about" },
+    { "label": "Services", "href": "/#services" },
+    { "label": "My Work", "href": "/#work" },
+    { "label": "Contact", "href": "/#contact" }
+  ],
+  "social": {
+    "instagram": "#",
+    "email": "mailto:hello@wunderfullife.com"
+  },
+  "services": [
+    {
+      "id": "tiktok-reels",
+      "title": "TikTok & Reels",
+      "description": "Short-form vertical video with strong hooks, trending audio, and that effortless Emily energy brands remember.",
+      "accent": "pink"
+    },
+    {
+      "id": "instagram",
+      "title": "Instagram Content",
+      "description": "Static posts, carousels, and Stories with an airy, nature-driven look that still converts.",
+      "accent": "green"
+    },
+    {
+      "id": "testimonial",
+      "title": "Testimonials",
+      "description": "Talking-head UGC that builds trust — warm, honest, and unmistakably me on camera.",
+      "accent": "blue"
+    },
+    {
+      "id": "unboxing",
+      "title": "Unboxing & Demos",
+      "description": "Product-first content with creative girl charm — polished enough for ads, real enough to relate.",
+      "accent": "yellow"
+    }
+  ]
+}

@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+:root {
+  --cream: #f7f3ec;
+  --paper: #fffdf9;
+  --white: #ffffff;
+  --green: #7cb87c;
+  --green-deep: #4a7c59;
+  --blue: #5b8def;
+  --blue-deep: #4a90a4;
+  --sky: #c8dff5;
+  --sky-deep: #8eb8e8;
+  --lavender: #d4c4e8;
+  --lavender-deep: #9a84c4;
+  --indigo: #4a4568;
+  --burgundy: #7a3b4a;
+  --brown: #6b5344;
+  --brown-light: #a08060;
+  --yellow: #f5e6a8;
+  --yellow-deep: #e8c547;
+  --pink: #e8a0bf;
+  --pink-deep: #d4789a;
+  --foreground: #2d2a26;
+  --muted: #5c564e;
+  --background: var(--cream);
+}
+
+@theme inline {
+  --color-cream: var(--cream);
+  --color-paper: var(--paper);
+  --color-white: var(--white);
+  --color-green: var(--green);
+  --color-green-deep: var(--green-deep);
+  --color-blue: var(--blue);
+  --color-blue-deep: var(--blue-deep);
+  --color-sky: var(--sky);
+  --color-sky-deep: var(--sky-deep);
+  --color-lavender: var(--lavender);
+  --color-lavender-deep: var(--lavender-deep);
+  --color-indigo: var(--indigo);
+  --color-burgundy: var(--burgundy);
+  --color-brown: var(--brown);
+  --color-brown-light: var(--brown-light);
+  --color-yellow: var(--yellow);
+  --color-yellow-deep: var(--yellow-deep);
+  --color-pink: var(--pink);
+  --color-pink-deep: var(--pink-deep);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-background: var(--background);
+  --font-display: var(--font-fraunces);
+  --font-body: var(--font-dm-sans);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  background: var(--cream);
+  color: var(--foreground);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+.grain-overlay {
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+.marquee-track {
+  animation: marquee 40s linear infinite;
+}
+
+.marquee-track.paused {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes blob-float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(12px, -18px) scale(1.04);
+  }
+  66% {
+    transform: translate(-10px, 10px) scale(0.96);
+  }
+}
+
+.blob-animate {
+  animation: blob-float 16s ease-in-out infinite;
+}
+
+.section-wash-green {
+  background:
+    linear-gradient(165deg, rgba(255, 253, 249, 0.94) 0%, rgba(200, 223, 245, 0.12) 35%, rgba(124, 184, 124, 0.05) 100%);
+}
+
+.section-wash-blue {
+  background:
+    linear-gradient(165deg, rgba(255, 253, 249, 0.95) 0%, rgba(212, 196, 232, 0.14) 40%, rgba(142, 184, 232, 0.08) 100%);
+}
+
+.section-wash-pink {
+  background:
+    linear-gradient(165deg, rgba(255, 253, 249, 0.92) 0%, rgba(232, 160, 191, 0.08) 38%, rgba(245, 230, 168, 0.1) 100%);
+}
+
+.section-wash-brown {
+  background:
+    linear-gradient(165deg, rgba(255, 253, 249, 0.94) 0%, rgba(122, 59, 74, 0.04) 35%, rgba(124, 184, 124, 0.05) 100%);
+}
+
+.accent-green { color: var(--green-deep); }
+.accent-blue { color: var(--blue-deep); }
+.accent-brown { color: var(--brown); }
+.accent-yellow { color: var(--brown); }
+.accent-pink { color: var(--pink-deep); }
+
+.bg-accent-green { background-color: var(--green); }
+.bg-accent-blue { background-color: var(--blue); }
+.bg-accent-brown { background-color: var(--brown-light); }
+.bg-accent-yellow { background-color: var(--yellow); }
+.bg-accent-pink { background-color: var(--pink); }
+
+.border-accent-green { border-color: var(--green); }
+.border-accent-blue { border-color: var(--blue); }
+.border-accent-brown { border-color: var(--brown-light); }
+.border-accent-yellow { border-color: var(--yellow-deep); }
+.border-accent-pink { border-color: var(--pink); }
