@@ -252,7 +252,7 @@ export function SiteEditorForm({ initial, onSaved }: SiteEditorFormProps) {
                   className="mt-1 block w-full text-xs text-muted"
                 />
                 {photo.imagePath && (
-                  <p className="mt-1 truncate text-xs text-green-deep">
+                  <p className="mt-1 truncate text-xs text-burgundy/80">
                     Current: {photo.imagePath}
                   </p>
                 )}
@@ -363,7 +363,7 @@ export function SiteEditorForm({ initial, onSaved }: SiteEditorFormProps) {
           </p>
         )}
         {message && (
-          <p className="mb-3 rounded-xl bg-green/15 px-4 py-2 text-sm text-green-deep">
+          <p className="mb-3 rounded-xl bg-lavender/25 px-4 py-2 text-sm text-indigo">
             {message}
           </p>
         )}
@@ -371,7 +371,7 @@ export function SiteEditorForm({ initial, onSaved }: SiteEditorFormProps) {
         <AnimatedButton
           onClick={() => void save()}
           disabled={loading}
-          className="w-full shadow-md shadow-green/10"
+          className="w-full shadow-md shadow-burgundy/15"
         >
           {loading ? "Saving…" : "Save site content"}
         </AnimatedButton>

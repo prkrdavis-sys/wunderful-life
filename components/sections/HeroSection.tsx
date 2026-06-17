@@ -1,11 +1,13 @@
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
 import { sectionWallpapers } from "@/lib/plants";
+import { sectionText } from "@/lib/sectionText";
 import { getSiteContent } from "@/lib/site";
 
 export async function HeroSection() {
   const site = await getSiteContent();
   const { wallpaper, overlay } = sectionWallpapers.hero;
+  const text = sectionText.hero;
 
   return (
     <section className="relative overflow-hidden px-4 py-24 sm:px-6 sm:py-32">
@@ -14,19 +16,18 @@ export async function HeroSection() {
         overlay={overlay}
         priority
       />
-      <div className="grain-overlay pointer-events-none absolute inset-0 opacity-30" aria-hidden />
 
       <div className="relative z-10 mx-auto max-w-4xl text-center">
-        <p className="mb-3 text-sm font-medium tracking-[0.28em] text-indigo/80 uppercase">
+        <p className={`mb-3 text-sm font-medium tracking-[0.28em] uppercase ${text.eyebrow}`}>
           {site.brand}
         </p>
-        <h1 className="font-display text-5xl leading-[1.05] text-brown sm:text-6xl md:text-7xl lg:text-8xl">
+        <h1 className={`font-display text-5xl leading-[1.05] sm:text-6xl md:text-7xl lg:text-8xl ${text.heading}`}>
           {site.fullName}
         </h1>
-        <p className="mt-4 font-display text-xl text-burgundy/90 sm:text-2xl">
+        <p className={`mt-4 font-display text-xl sm:text-2xl ${text.subheading}`}>
           UGC Creator · Creative · Nature-driven
         </p>
-        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted sm:text-xl">
+        <p className={`mx-auto mt-6 max-w-2xl text-lg leading-relaxed sm:text-xl ${text.body}`}>
           {site.tagline}
         </p>
 
@@ -35,14 +36,14 @@ export async function HeroSection() {
             <AnimatedButton
               key={link.href}
               href={link.href}
-              variant={link.href === "/#work" ? "primary" : "ghost"}
+              variant={link.emphasis === "primary" ? "burgundy" : "soft"}
             >
               {link.label}
             </AnimatedButton>
           ))}
         </div>
 
-        <p className="mx-auto mt-8 max-w-xl text-sm leading-relaxed text-muted/90">
+        <p className={`mx-auto mt-8 max-w-xl text-sm leading-relaxed ${text.caption}`}>
           I&apos;m {site.name} — the face behind the frame. Brands hire me for
           deliverables; they remember me for the personality.
         </p>

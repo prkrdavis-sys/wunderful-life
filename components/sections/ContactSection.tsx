@@ -5,10 +5,12 @@ import { SectionReveal } from "@/components/ui/motion";
 import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
 import { sectionWallpapers } from "@/lib/plants";
+import { sectionText } from "@/lib/sectionText";
 
 export function ContactSection() {
   const site = useSiteContent();
   const { wallpaper, overlay } = sectionWallpapers.contact;
+  const text = sectionText.contact;
 
   return (
     <section
@@ -18,10 +20,10 @@ export function ContactSection() {
       <PlantSectionBackground wallpaper={wallpaper} overlay={overlay} />
       <div className="relative z-10 mx-auto max-w-3xl text-center">
         <SectionReveal>
-          <h2 className="font-display text-3xl text-brown sm:text-4xl">
+          <h2 className={`font-display text-3xl sm:text-4xl ${text.heading}`}>
             Let&apos;s Create Together
           </h2>
-          <p className="mt-4 leading-relaxed text-muted">
+          <p className={`glass-panel mx-auto mt-6 max-w-2xl rounded-2xl border border-white/50 px-6 py-5 text-base leading-relaxed sm:px-8 sm:text-lg ${text.body}`}>
             Want content that converts and a creator brands actually want to
             work with again? Hi — I&apos;m {site.name}. Let&apos;s chat.
           </p>
@@ -32,7 +34,7 @@ export function ContactSection() {
             href={site.social.instagram}
             whileHover={{ scale: 1.04, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            className="inline-flex items-center gap-2 rounded-full border border-pink/40 bg-white/80 px-8 py-4 text-sm font-semibold text-brown shadow-sm transition hover:border-pink hover:bg-white"
+            className="inline-flex items-center gap-2 rounded-full border border-burgundy/45 bg-paper/92 px-8 py-4 text-sm font-semibold text-burgundy shadow-sm backdrop-blur-sm transition hover:border-burgundy hover:bg-paper"
           >
             Instagram
           </motion.a>
@@ -40,7 +42,7 @@ export function ContactSection() {
             href={site.social.email}
             whileHover={{ scale: 1.04, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            className="inline-flex items-center gap-2 rounded-full border border-green/40 bg-white/80 px-8 py-4 text-sm font-semibold text-brown shadow-sm transition hover:border-green hover:bg-white"
+            className="inline-flex items-center gap-2 rounded-full border border-indigo/35 bg-paper/92 px-8 py-4 text-sm font-semibold text-indigo shadow-sm backdrop-blur-sm transition hover:border-indigo/55 hover:bg-paper"
           >
             Email
           </motion.a>

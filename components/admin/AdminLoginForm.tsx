@@ -41,7 +41,7 @@ export function AdminLoginForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mx-auto mt-10 max-w-md rounded-3xl border-2 border-green/30 bg-white/80 p-6 backdrop-blur-sm"
+      className="mx-auto mt-10 max-w-md rounded-3xl border-2 border-lavender/35 bg-white/80 p-6 backdrop-blur-sm"
     >
       <label className="block text-sm">
         <span className="font-medium text-brown">Admin password</span>
@@ -49,7 +49,7 @@ export function AdminLoginForm() {
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          className="mt-1 w-full rounded-xl border border-brown/20 bg-cream px-3 py-2 text-brown outline-none focus:border-green"
+          className="mt-1 w-full rounded-xl border border-brown/20 bg-cream px-3 py-2 text-brown outline-none focus:border-burgundy/50"
           required
           autoComplete="current-password"
         />

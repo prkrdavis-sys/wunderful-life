@@ -5,4 +5,4 @@ export async function getSiteContent() {
   return readSiteContent();
 }
 
-export type { SiteContent, AboutPhoto } from "@/lib/site/types";
+export type { SiteContent, AboutPhoto, HeroLink } from "@/lib/site/types";

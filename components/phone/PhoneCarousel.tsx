@@ -54,7 +54,7 @@ export function PhoneCarousel({ videos, size = "lg" }: PhoneCarouselProps) {
           type="button"
           onClick={() => emblaApi?.scrollPrev()}
           disabled={!canScrollPrev}
-          className="rounded-full border-2 border-brown/20 bg-white px-4 py-2 text-sm font-medium text-brown disabled:opacity-30"
+          className="rounded-full border-2 border-white/50 bg-white/25 px-4 py-2 text-sm font-medium text-indigo backdrop-blur-sm disabled:opacity-30"
           aria-label="Previous videos"
         >
           ←
@@ -63,7 +63,7 @@ export function PhoneCarousel({ videos, size = "lg" }: PhoneCarouselProps) {
           type="button"
           onClick={() => emblaApi?.scrollNext()}
           disabled={!canScrollNext}
-          className="rounded-full border-2 border-brown/20 bg-white px-4 py-2 text-sm font-medium text-brown disabled:opacity-30"
+          className="rounded-full border-2 border-white/50 bg-white/25 px-4 py-2 text-sm font-medium text-indigo backdrop-blur-sm disabled:opacity-30"
           aria-label="Next videos"
         >
           →

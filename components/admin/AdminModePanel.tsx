@@ -18,7 +18,7 @@ export function AdminModeBanner() {
   const needsLogin = authRequired && !authenticated;
 
   return (
-    <div className="sticky top-[73px] z-40 border-b border-green/20 bg-green-deep/95 px-4 py-2 text-center text-sm text-white backdrop-blur-sm">
+    <div className="relative z-0 border-b border-lavender/35 bg-burgundy/92 px-4 py-2 text-center text-sm text-paper backdrop-blur-sm">
       {needsLogin ? (
         <span>Admin view — sign in from the Menu to make edits.</span>
       ) : (
@@ -147,8 +147,8 @@ export function AdminModePanel() {
                 onClick={() => setTab("content")}
                 className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                   tab === "content"
-                    ? "bg-green text-white"
-                    : "bg-cream text-brown hover:bg-green/10"
+                    ? "bg-burgundy text-paper"
+                    : "bg-cream text-indigo hover:bg-lavender/25"
                 }`}
               >
                 Site content
@@ -158,8 +158,8 @@ export function AdminModePanel() {
                 onClick={() => setTab("portfolio")}
                 className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                   tab === "portfolio"
-                    ? "bg-green text-white"
-                    : "bg-cream text-brown hover:bg-green/10"
+                    ? "bg-burgundy text-paper"
+                    : "bg-cream text-indigo hover:bg-lavender/25"
                 }`}
               >
                 Videos

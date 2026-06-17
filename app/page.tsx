@@ -15,9 +15,9 @@ export default async function HomePage() {
       <SectionSeparator />
       <AboutSection />
       <SectionSeparator />
-      <ServicesSection />
-      <SectionSeparator />
       <WorkPreviewSection videos={videos} />
+      <SectionSeparator />
+      <ServicesSection />
       <SectionSeparator />
       <ContactSection />
     </>

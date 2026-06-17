@@ -1,3 +1,10 @@
+export type HeroLink = {
+  label: string;
+  href: string;
+  emphasis?: "primary";
+  activePathPrefix?: string;
+};
+
 export type AboutPhoto = {
   id: string;
   caption: string;
@@ -16,7 +23,7 @@ export type SiteContent = {
     paragraphs: string[];
     photos: AboutPhoto[];
   };
-  heroLinks: { label: string; href: string }[];
+  heroLinks: HeroLink[];
   social: {
     instagram: string;
     email: string;

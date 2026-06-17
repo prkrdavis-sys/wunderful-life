@@ -5,6 +5,7 @@ import {
   Fraunces,
   Instrument_Sans,
 } from "next/font/google";
+import { AdminModeBanner } from "@/components/admin/AdminModePanel";
 import { SiteNav } from "@/components/layout/SiteNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { HashScrollHandler } from "@/components/layout/HashScrollHandler";
@@ -62,11 +63,14 @@ export default async function RootLayout({
       <body className="relative min-h-full flex flex-col bg-cream font-body antialiased">
         <AppProviders initialSite={site}>
           <HashScrollHandler />
-          <SiteNav
-            fullName={site.fullName}
-            brand={site.brand}
-            links={site.heroLinks}
-          />
+          <div className="sticky top-0 z-50">
+            <SiteNav
+              fullName={site.fullName}
+              brand={site.brand}
+              links={site.heroLinks}
+            />
+            <AdminModeBanner />
+          </div>
           <main className="relative z-10 flex-1">{children}</main>
           <SiteFooter />
         </AppProviders>

@@ -7,15 +7,16 @@ import { PhoneVideoPlayer } from "./PhoneVideoPlayer";
 
 type PhoneMarqueeProps = {
   videos: PortfolioVideo[];
+  emptyClassName?: string;
 };
 
-export function PhoneMarquee({ videos }: PhoneMarqueeProps) {
+export function PhoneMarquee({ videos, emptyClassName = "text-muted" }: PhoneMarqueeProps) {
   const [paused, setPaused] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
 
   if (videos.length === 0) {
     return (
-      <p className="text-center text-muted">
+      <p className={`text-center ${emptyClassName}`}>
         No featured work yet — add videos in Admin.
       </p>
     );

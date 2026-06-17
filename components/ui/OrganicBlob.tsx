@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 type AccentColor = "green" | "blue" | "brown" | "yellow" | "pink";
 
 const colors: Record<AccentColor, string> = {
-  green: "rgba(124, 184, 124, 0.35)",
+  green: "rgba(154, 132, 196, 0.35)",
   blue: "rgba(91, 141, 239, 0.3)",
   brown: "rgba(107, 83, 68, 0.25)",
   yellow: "rgba(245, 230, 168, 0.45)",
@@ -13,7 +13,7 @@ const colors: Record<AccentColor, string> = {
 };
 
 export function OrganicBlob({
-  color = "green",
+  color = "pink",
   className = "",
   size = 320,
 }: {
@@ -37,7 +37,7 @@ export function OrganicBlob({
 export function WaveDivider({ flip = false }: { flip?: boolean }) {
   return (
     <div
-      className={`relative h-16 w-full overflow-hidden text-green/20 ${flip ? "rotate-180" : ""}`}
+      className={`relative h-16 w-full overflow-hidden text-lavender/25 ${flip ? "rotate-180" : ""}`}
       aria-hidden
     >
       <svg

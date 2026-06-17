@@ -9,6 +9,10 @@ import type {
 } from "@/lib/videos/types";
 import { reorderVideos as applyOrder, sortVideos } from "@/lib/videos/sort";
 import { uniqueSlug } from "@/lib/videos/slugify";
+import {
+  isAcceptedVideoFile,
+  videoUploadErrorMessage,
+} from "@/lib/videos/upload";
 import { StorageError } from "./types";
 
 const DATA_PATH = path.join(process.cwd(), "data", "videos.json");
@@ -55,6 +59,9 @@ async function deleteFileIfLocal(filePath: string) {
 }
 
 function validateVideoFile(file: File) {
+  if (!isAcceptedVideoFile(file)) {
+    throw new StorageError(videoUploadErrorMessage(), 415);
+  }
   if (file.size > MAX_VIDEO_BYTES) {
     throw new StorageError("Video must be 100MB or smaller.", 413);
   }

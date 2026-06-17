@@ -2,20 +2,16 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SectionLink } from "@/components/ui/SectionLink";
 import { AdminLoginInline } from "@/components/admin/AdminLoginInline";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
-
-type NavLink = {
-  label: string;
-  href: string;
-};
+import type { HeroLink } from "@/lib/site/types";
 
 type SiteNavProps = {
   fullName: string;
   brand: string;
-  links: NavLink[];
+  links: HeroLink[];
 };
 
 export function SiteNav({ fullName, brand, links }: SiteNavProps) {
@@ -31,13 +27,45 @@ export function SiteNav({ fullName, brand, links }: SiteNavProps) {
   } = useAdminView();
   const [menuOpen, setMenuOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+  const adminMenuRef = useRef<HTMLDivElement>(null);
 
-  const isActive = (href: string) => {
-    if (href === "/#work") {
-      return pathname.startsWith("/work");
-    }
-    return false;
-  };
+  useEffect(() => {
+    if (!adminOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (
+        adminMenuRef.current &&
+        !adminMenuRef.current.contains(event.target as Node)
+      ) {
+        setAdminOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [adminOpen]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (
+        headerRef.current &&
+        !headerRef.current.contains(event.target as Node)
+      ) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [menuOpen]);
+
+  const isActive = (link: HeroLink) =>
+    link.activePathPrefix
+      ? pathname.startsWith(link.activePathPrefix)
+      : false;
 
   const handleRegularView = () => {
     setViewMode("regular");
@@ -68,8 +96,8 @@ export function SiteNav({ fullName, brand, links }: SiteNavProps) {
       <button
         type="button"
         onClick={handleRegularView}
-        className={`block w-full px-4 py-3 text-left text-sm font-medium transition hover:bg-green/10 ${
-          viewMode === "regular" ? "text-green-deep" : "text-brown"
+        className={`block w-full px-4 py-3 text-left text-sm font-medium transition hover:bg-white/25 ${
+          viewMode === "regular" ? "text-burgundy" : "text-indigo"
         }`}
       >
         Regular view {viewMode === "regular" ? "✓" : ""}
@@ -77,8 +105,8 @@ export function SiteNav({ fullName, brand, links }: SiteNavProps) {
       <button
         type="button"
         onClick={handleAdminView}
-        className={`block w-full px-4 py-3 text-left text-sm font-medium transition hover:bg-pink/10 ${
-          viewMode === "admin" ? "text-pink-deep" : "text-brown"
+        className={`block w-full px-4 py-3 text-left text-sm font-medium transition hover:bg-white/25 ${
+          viewMode === "admin" ? "text-burgundy" : "text-indigo"
         }`}
       >
         Admin view {viewMode === "admin" ? "✓" : ""}
@@ -91,13 +119,13 @@ export function SiteNav({ fullName, brand, links }: SiteNavProps) {
             setAdminOpen(false);
             setMenuOpen(false);
           }}
-          className="block w-full border-t border-brown/10 px-4 py-3 text-left text-sm font-medium text-brown transition hover:bg-cream"
+          className="block w-full border-t border-white/35 px-4 py-3 text-left text-sm font-medium text-indigo transition hover:bg-white/25"
         >
           Open editor
         </button>
       )}
       {authRequired && !authenticated && (
-        <div className="border-t border-brown/10">
+        <div className="border-t border-white/35">
           <AdminLoginInline />
         </div>
       )}
@@ -105,7 +133,7 @@ export function SiteNav({ fullName, brand, links }: SiteNavProps) {
         <button
           type="button"
           onClick={() => void handleSignOut()}
-          className="block w-full border-t border-brown/10 px-4 py-3 text-left text-sm font-medium text-muted transition hover:bg-cream"
+          className="block w-full border-t border-white/35 px-4 py-3 text-left text-sm font-medium text-indigo/70 transition hover:bg-white/25"
         >
           Sign out
         </button>
@@ -116,7 +144,7 @@ export function SiteNav({ fullName, brand, links }: SiteNavProps) {
           setAdminOpen(false);
           setMenuOpen(false);
         }}
-        className="block border-t border-brown/10 px-4 py-3 text-sm font-medium text-brown transition hover:bg-cream"
+        className="block border-t border-white/35 px-4 py-3 text-sm font-medium text-indigo/80 transition hover:bg-white/25"
       >
         Legacy admin page
       </SectionLink>
@@ -124,13 +152,16 @@ export function SiteNav({ fullName, brand, links }: SiteNavProps) {
   );
 
   return (
-    <header className="sticky top-0 z-50 border-b border-lavender/30 bg-paper/85 backdrop-blur-md">
+    <header
+      ref={headerRef}
+      className="glass-header relative z-10 border-b border-white/55"
+    >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
         <SectionLink href="/" className="group flex flex-col">
-          <span className="font-display text-lg font-semibold text-brown transition-colors group-hover:text-green-deep">
+          <span className="font-display text-lg font-semibold text-indigo transition-colors group-hover:text-burgundy">
             {fullName}
           </span>
-          <span className="text-xs tracking-widest text-muted uppercase">
+          <span className="text-xs tracking-widest text-indigo/60 uppercase">
             {brand}
           </span>
         </SectionLink>
@@ -140,22 +171,22 @@ export function SiteNav({ fullName, brand, links }: SiteNavProps) {
             <SectionLink
               key={link.href}
               href={link.href}
-              className={`text-sm font-medium transition-colors hover:text-pink-deep ${
-                isActive(link.href) ? "text-green-deep" : "text-brown"
+              className={`text-sm font-medium transition-colors hover:text-burgundy ${
+                isActive(link) ? "text-burgundy" : "text-indigo/85"
               }`}
             >
               {link.label}
             </SectionLink>
           ))}
 
-          <div className="relative">
+          <div ref={adminMenuRef} className="relative">
             <button
               type="button"
               onClick={() => setAdminOpen((open) => !open)}
               className={`flex items-center gap-1 rounded-full border-2 px-3 py-1.5 text-sm font-medium transition ${
                 viewMode === "admin"
-                  ? "border-green/40 bg-green/10 text-green-deep"
-                  : "border-brown/15 bg-white/70 text-brown hover:border-pink"
+                  ? "border-burgundy/40 bg-burgundy/10 text-burgundy"
+                  : "border-white/50 bg-white/20 text-indigo backdrop-blur-sm hover:border-burgundy/35 hover:bg-white/30"
               }`}
               aria-expanded={adminOpen}
               aria-haspopup="true"
@@ -171,7 +202,7 @@ export function SiteNav({ fullName, brand, links }: SiteNavProps) {
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  className="absolute right-0 mt-2 min-w-[220px] overflow-hidden rounded-2xl border border-brown/10 bg-white shadow-xl"
+                  className="glass-panel absolute right-0 z-20 mt-2 min-w-[220px] overflow-hidden rounded-2xl border border-white/50"
                 >
                   {viewMenuItems}
                 </motion.div>
@@ -182,7 +213,7 @@ export function SiteNav({ fullName, brand, links }: SiteNavProps) {
 
         <button
           type="button"
-          className="rounded-lg border border-brown/20 px-3 py-2 text-sm text-brown md:hidden"
+          className="rounded-lg border border-white/50 bg-white/20 px-3 py-2 text-sm text-indigo backdrop-blur-sm md:hidden"
           onClick={() => setMenuOpen((open) => !open)}
           aria-expanded={menuOpen}
         >
@@ -196,7 +227,7 @@ export function SiteNav({ fullName, brand, links }: SiteNavProps) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden border-t border-brown/10 md:hidden"
+            className="overflow-hidden border-t border-white/30 md:hidden"
           >
             <div className="flex flex-col gap-1 px-4 py-3">
               {links.map((link) => (
@@ -204,12 +235,12 @@ export function SiteNav({ fullName, brand, links }: SiteNavProps) {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-brown hover:bg-green/10"
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-indigo hover:bg-white/20 hover:text-burgundy"
                 >
                   {link.label}
                 </SectionLink>
               ))}
-              <div className="mt-2 rounded-xl border border-brown/10 bg-cream/40">
+              <div className="glass-panel mt-2 overflow-hidden rounded-xl border border-white/50">
                 {viewMenuItems}
               </div>
             </div>

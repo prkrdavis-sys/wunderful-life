@@ -69,7 +69,7 @@ export function PhoneVideoPlayer({
           type="button"
           onClick={handleClick}
           onKeyDown={handleKeyDown}
-          className="group relative h-full w-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-brown"
+          className="group relative h-full w-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-burgundy/50 focus-visible:ring-offset-2 focus-visible:ring-offset-indigo/20"
           aria-label={isPlaying ? `Pause ${video.title}` : `Play ${video.title}`}
           aria-pressed={isPlaying}
         >

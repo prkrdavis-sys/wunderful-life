@@ -7,7 +7,7 @@ import { SectionLink } from "@/components/ui/SectionLink";
 type AnimatedButtonProps = {
   children: ReactNode;
   href?: string;
-  variant?: "primary" | "secondary" | "ghost";
+  variant?: "primary" | "secondary" | "ghost" | "burgundy" | "soft";
   className?: string;
   onClick?: () => void;
   type?: "button" | "submit";
@@ -16,11 +16,15 @@ type AnimatedButtonProps = {
 
 const variants = {
   primary:
-    "bg-green/85 text-white shadow-md shadow-green/15 hover:bg-green-deep border border-green-deep/60",
+    "border border-burgundy/50 bg-burgundy/90 text-paper shadow-md shadow-burgundy/20 hover:bg-burgundy",
   secondary:
-    "bg-yellow/60 text-brown border border-yellow-deep/40 shadow-sm hover:bg-yellow/80",
+    "border border-lavender-deep/40 bg-lavender/25 text-indigo shadow-sm hover:border-burgundy/35 hover:bg-lavender/40 backdrop-blur-sm",
   ghost:
-    "bg-paper/90 text-brown border border-lavender/35 hover:border-sky-deep/50 hover:bg-white backdrop-blur-sm",
+    "border border-lavender/35 bg-paper/90 text-indigo backdrop-blur-sm hover:border-burgundy/40 hover:bg-white",
+  burgundy:
+    "border border-burgundy/50 bg-burgundy/90 text-paper shadow-md shadow-burgundy/20 hover:bg-burgundy",
+  soft:
+    "border border-lavender-deep/45 bg-paper/88 text-indigo backdrop-blur-sm hover:border-burgundy/40 hover:bg-paper",
 };
 
 export function AnimatedButton({

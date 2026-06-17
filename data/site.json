@@ -54,12 +54,14 @@
       "href": "/#about"
     },
     {
-      "label": "Services",
-      "href": "/#services"
+      "label": "My Work",
+      "href": "/#work",
+      "emphasis": "primary",
+      "activePathPrefix": "/work"
     },
     {
-      "label": "My Work",
-      "href": "/#work"
+      "label": "Services",
+      "href": "/#services"
     },
     {
       "label": "Contact",
@@ -67,7 +69,7 @@
     }
   ],
   "social": {
-    "instagram": "#",
+    "instagram": "#https://www.instagram.com/wunderfull.life777/",
     "email": "mailto:hello@wunderfullife.com"
   },
   "services": [

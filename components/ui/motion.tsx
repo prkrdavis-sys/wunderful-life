@@ -86,10 +86,10 @@ export function FilterChip({
       onClick={onClick}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      className={`font-label rounded-full border-2 px-4 py-1.5 text-sm font-medium tracking-wide transition-colors ${
+      className={`font-label rounded-full border-2 px-4 py-1.5 text-sm font-medium tracking-wide backdrop-blur-sm transition-colors ${
         active
-          ? "border-green bg-green text-white"
-          : "border-brown/20 bg-white/80 text-brown hover:border-pink"
+          ? "border-burgundy/50 bg-burgundy/90 text-paper shadow-sm shadow-burgundy/15"
+          : "border-white/50 bg-white/25 text-indigo hover:border-burgundy/35 hover:bg-white/35 hover:text-burgundy"
       }`}
     >
       {children}

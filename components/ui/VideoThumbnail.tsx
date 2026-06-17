@@ -16,7 +16,7 @@ export function VideoThumbnail({
   if (!src) {
     return (
       <div
-        className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br from-green/30 via-pink/20 to-yellow/30 ${className}`}
+        className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br from-lavender/35 via-pink/20 to-sky/25 ${className}`}
       >
         <span className="font-display text-2xl text-brown/30" aria-hidden>
           ▶

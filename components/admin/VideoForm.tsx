@@ -4,6 +4,12 @@ import { useCallback, useRef, useState } from "react";
 import type { Platform, PortfolioVideo } from "@/lib/videos/types";
 import { PLATFORMS } from "@/lib/videos/types";
 import { slugify } from "@/lib/videos/slugify";
+import {
+  isAcceptedVideoFile,
+  VIDEO_FILE_ACCEPT,
+  VIDEO_UPLOAD_HELP,
+  videoUploadErrorMessage,
+} from "@/lib/videos/upload";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 
 type VideoFormProps = {
@@ -105,7 +111,7 @@ export function VideoForm({ initial, onSuccess, onCancel }: VideoFormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-3xl border-2 border-green/30 bg-white/80 p-6 backdrop-blur-sm"
+      className="rounded-3xl border-2 border-lavender/35 bg-white/80 p-6 backdrop-blur-sm"
     >
       <h2 className="font-display text-xl text-brown">
         {initial ? "Edit Video" : "Add New Video"}
@@ -130,7 +136,7 @@ export function VideoForm({ initial, onSuccess, onCancel }: VideoFormProps) {
               onChange={(event) =>
                 setForm((current) => ({ ...current, [key]: event.target.value }))
               }
-              className="mt-1 w-full rounded-xl border border-brown/20 bg-cream px-3 py-2 text-brown outline-none focus:border-green"
+              className="mt-1 w-full rounded-xl border border-brown/20 bg-cream px-3 py-2 text-brown outline-none focus:border-burgundy/50"
               required={key === "title" || key === "brand"}
             />
           </label>
@@ -146,7 +152,7 @@ export function VideoForm({ initial, onSuccess, onCancel }: VideoFormProps) {
                 platform: event.target.value as Platform,
               }))
             }
-            className="mt-1 w-full rounded-xl border border-brown/20 bg-cream px-3 py-2 text-brown outline-none focus:border-green"
+            className="mt-1 w-full rounded-xl border border-brown/20 bg-cream px-3 py-2 text-brown outline-none focus:border-burgundy/50"
           >
             {PLATFORMS.map((platform) => (
               <option key={platform} value={platform}>
@@ -168,7 +174,7 @@ export function VideoForm({ initial, onSuccess, onCancel }: VideoFormProps) {
                 durationSec: Number(event.target.value),
               }))
             }
-            className="mt-1 w-full rounded-xl border border-brown/20 bg-cream px-3 py-2 text-brown outline-none focus:border-green"
+            className="mt-1 w-full rounded-xl border border-brown/20 bg-cream px-3 py-2 text-brown outline-none focus:border-burgundy/50"
           />
         </label>
 
@@ -179,15 +185,23 @@ export function VideoForm({ initial, onSuccess, onCancel }: VideoFormProps) {
           <input
             ref={videoInputRef}
             type="file"
-            accept="video/mp4,video/webm"
+            accept={VIDEO_FILE_ACCEPT}
             onChange={(event) => {
               const file = event.target.files?.[0] ?? null;
+              if (file && !isAcceptedVideoFile(file)) {
+                setVideoFile(null);
+                setError(videoUploadErrorMessage());
+                event.target.value = "";
+                return;
+              }
+              setError(null);
               setVideoFile(file);
               if (file) readVideoDuration(file);
             }}
             className="mt-1 block w-full text-sm text-muted"
             required={!initial}
           />
+          <span className="mt-1 block text-xs text-muted">{VIDEO_UPLOAD_HELP}</span>
         </label>
 
         <label className="block text-sm sm:col-span-2">

@@ -3,6 +3,7 @@ import { SectionReveal } from "@/components/ui/motion";
 import { PhoneMarquee } from "@/components/phone/PhoneMarquee";
 import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
 import { sectionWallpapers } from "@/lib/plants";
+import { sectionText } from "@/lib/sectionText";
 import { filterVideos } from "@/lib/videos/filter";
 import type { PortfolioVideo } from "@/lib/videos/types";
 import { getSiteContent } from "@/lib/site";
@@ -14,6 +15,7 @@ type WorkPreviewSectionProps = {
 export async function WorkPreviewSection({ videos }: WorkPreviewSectionProps) {
   const site = await getSiteContent();
   const { wallpaper, overlay } = sectionWallpapers.work;
+  const text = sectionText.work;
   const featured = filterVideos(videos, { featured: true });
   const marqueeVideos = featured.length > 0 ? featured : videos;
 
@@ -25,10 +27,10 @@ export async function WorkPreviewSection({ videos }: WorkPreviewSectionProps) {
       <PlantSectionBackground wallpaper={wallpaper} overlay={overlay} />
       <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
         <SectionReveal className="text-center">
-          <h2 className="font-display text-3xl text-brown sm:text-4xl">
+          <h2 className={`font-display text-3xl sm:text-4xl ${text.heading}`}>
             Selected Work
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-muted">
+          <p className={`mx-auto mt-4 max-w-2xl ${text.body}`}>
             Tap a phone to play — {site.name}&apos;s UGC, framed like scroll
             stopped mid-story.
           </p>
@@ -36,11 +38,11 @@ export async function WorkPreviewSection({ videos }: WorkPreviewSectionProps) {
       </div>
 
       <div className="relative z-10 mt-10">
-        <PhoneMarquee videos={marqueeVideos} />
+        <PhoneMarquee videos={marqueeVideos} emptyClassName={text.empty} />
       </div>
 
       <div className="relative z-10 mt-10 flex justify-center">
-        <AnimatedButton href="/work" variant="secondary">
+        <AnimatedButton href="/work" variant="soft">
           See All of {site.name}&apos;s Work
         </AnimatedButton>
       </div>
