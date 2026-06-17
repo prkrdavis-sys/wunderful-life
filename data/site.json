@@ -16,35 +16,35 @@
         "caption": "I love the outdoors",
         "accent": "green",
         "rotate": -3,
-        "imagePath": "/uploads/photos/portrait-main-3f704aaf-7b62-4d22-af40-32bf7c7d078c.png"
+        "imagePath": "/about-photos/portrait-main-3f704aaf-7b62-4d22-af40-32bf7c7d078c.png"
       },
       {
         "id": "creator-desk",
         "caption": "I'm also a fairy princess",
         "accent": "pink",
         "rotate": 4,
-        "imagePath": "/uploads/photos/creator-desk-02960e91-5572-45f9-85ad-870acd81e15d.png"
+        "imagePath": "/about-photos/creator-desk-02960e91-5572-45f9-85ad-870acd81e15d.png"
       },
       {
         "id": "outdoors",
         "caption": "Emily on a nature walk — where ideas bloom",
         "accent": "blue",
         "rotate": -5,
-        "imagePath": "/uploads/photos/outdoors-6f2b672b-7355-48bc-a798-a82e1b5984d6.png"
+        "imagePath": "/about-photos/outdoors-6f2b672b-7355-48bc-a798-a82e1b5984d6.png"
       },
       {
         "id": "filming",
         "caption": "Emily filming UGC — behind the scenes",
         "accent": "yellow",
         "rotate": 2,
-        "imagePath": "/uploads/photos/filming-c44dcede-eefc-4714-8107-fbeb2b7a7262.png"
+        "imagePath": "/about-photos/filming-c44dcede-eefc-4714-8107-fbeb2b7a7262.png"
       },
       {
         "id": "candid",
         "caption": "Emily candid — personality over perfection",
         "accent": "brown",
         "rotate": -2,
-        "imagePath": "/uploads/photos/candid-104bf6ba-b0ce-473a-ad48-343518136b3b.png"
+        "imagePath": "/about-photos/candid-104bf6ba-b0ce-473a-ad48-343518136b3b.png"
       }
     ]
   },

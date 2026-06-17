@@ -43,7 +43,17 @@ Without `ADMIN_PASSWORD`, admin routes are open for local development.
 
 ## Deploying with uploads
 
-Local disk uploads do not persist on serverless hosts (e.g. Vercel). Before deploying with upload support, move video storage to a remote bucket and replace `lib/storage/local.ts` with a remote-backed implementation.
+About photos uploaded locally are saved to `public/about-photos/` (committed to git) or **Vercel Blob** when `BLOB_READ_WRITE_TOKEN` is set on your Vercel project.
+
+Video uploads still use local disk (`public/uploads/`), which does **not** persist on serverless hosts. For production video uploads, move storage to Vercel Blob or another remote bucket.
+
+### Fix broken photos on Vercel
+
+If photos work locally but show broken icons on Vercel, the image files were likely saved under `public/uploads/` (gitignored) and never deployed. Commit photos under `public/about-photos/` or enable Vercel Blob:
+
+1. In the Vercel dashboard → Storage → Create Blob store
+2. Link it to the project (sets `BLOB_READ_WRITE_TOKEN` automatically)
+3. Redeploy
 
 ## Scripts
 
