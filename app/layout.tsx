@@ -5,6 +5,7 @@ import {
   Fraunces,
   Instrument_Sans,
 } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { SiteNav } from "@/components/layout/SiteNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { HashScrollHandler } from "@/components/layout/HashScrollHandler";
@@ -70,6 +71,7 @@ export default async function RootLayout({
           <main className="relative z-10 flex-1">{children}</main>
           <SiteFooter />
         </AppProviders>
+        <Analytics />
       </body>
     </html>
   );
