@@ -90,7 +90,7 @@ export function VideoList({ videos, onEdit, onChange }: VideoListProps) {
       if (!response.ok) throw new Error(updated.error ?? "Update failed.");
       onChange(
         videos.map((item) =>
-          item.id === video.id ? (updated as PortfolioVideo) : item,
+          item.id === video.id ? { ...item, ...(updated as PortfolioVideo) } : item,
         ),
       );
     } catch (err) {
@@ -133,7 +133,9 @@ export function VideoList({ videos, onEdit, onChange }: VideoListProps) {
           </div>
 
             <div className="min-w-0 flex-1">
-              <p className="truncate font-semibold text-brown">{video.title}</p>
+              <p className="truncate font-semibold text-brown">
+                {video.title || "Untitled video"}
+              </p>
               <p className="text-sm text-muted">
                 {video.brand} · {platformLabel(video.platform)} ·{" "}
                 {formatDuration(video.durationSec)}
@@ -143,7 +145,10 @@ export function VideoList({ videos, onEdit, onChange }: VideoListProps) {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div
+              className="flex flex-wrap gap-2"
+              onMouseDown={(event) => event.stopPropagation()}
+            >
               <AnimatedButton
                 type="button"
                 variant="ghost"

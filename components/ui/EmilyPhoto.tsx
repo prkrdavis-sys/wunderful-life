@@ -1,4 +1,5 @@
-import type { SiteContent } from "@/lib/site";
+import Image from "next/image";
+import type { AboutPhoto } from "@/lib/site/types";
 
 const accentGradients: Record<string, string> = {
   green: "from-green/50 via-green/20 to-cream",
@@ -9,14 +10,15 @@ const accentGradients: Record<string, string> = {
 };
 
 type EmilyPhotoProps = {
-  photo: SiteContent["about"]["photos"][number];
-  size?: "sm" | "md" | "lg";
+  photo: AboutPhoto;
+  size?: "sm" | "md" | "lg" | "xl";
 };
 
 const sizeClasses = {
-  sm: "max-w-[140px]",
-  md: "max-w-[200px]",
-  lg: "max-w-[280px]",
+  sm: "w-[160px]",
+  md: "w-[220px] sm:w-[250px]",
+  lg: "w-[260px] sm:w-[300px] lg:w-[340px]",
+  xl: "w-[280px] sm:w-[340px] lg:w-[400px]",
 };
 
 export function EmilyPhoto({ photo, size = "md" }: EmilyPhotoProps) {
@@ -29,18 +31,28 @@ export function EmilyPhoto({ photo, size = "md" }: EmilyPhotoProps) {
       style={{ ["--photo-rotate" as string]: `${photo.rotate}deg` }}
     >
       <div
-        className={`aspect-[4/5] overflow-hidden rounded-sm bg-gradient-to-br ${gradient}`}
+        className={`relative aspect-[4/5] overflow-hidden rounded-sm bg-gradient-to-br ${gradient}`}
       >
-        <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center">
-          <span className="font-display text-4xl text-brown/25 sm:text-5xl">
-            E
-          </span>
-          <p className="text-[10px] leading-snug text-brown/50 sm:text-xs">
-            Photo placeholder
-          </p>
-        </div>
+        {photo.imagePath ? (
+          <Image
+            src={photo.imagePath}
+            alt={photo.caption}
+            fill
+            sizes="(max-width: 640px) 280px, (max-width: 1024px) 340px, 400px"
+            className="object-cover"
+          />
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center">
+            <span className="font-display text-4xl text-brown/25 sm:text-5xl">
+              E
+            </span>
+            <p className="text-[10px] leading-snug text-brown/50 sm:text-xs">
+              Photo placeholder
+            </p>
+          </div>
+        )}
       </div>
-      <figcaption className="mt-2 text-center font-display text-xs text-brown sm:text-sm">
+      <figcaption className="font-label mt-2 text-center text-xs tracking-wide text-brown sm:text-sm">
         {photo.caption}
       </figcaption>
     </figure>

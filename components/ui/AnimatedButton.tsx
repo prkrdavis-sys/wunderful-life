@@ -32,12 +32,12 @@ export function AnimatedButton({
   type = "button",
   disabled,
 }: AnimatedButtonProps) {
-  const classes = `relative z-10 inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold tracking-wide transition-colors ${variants[variant]} ${className}`;
+  const classes = `font-display inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold tracking-wide transition-colors ${variants[variant]} ${className}`;
 
   if (href) {
     return (
       <motion.div
-        className="relative z-10 inline-block"
+        className="inline-block"
         whileHover={{ scale: 1.04 }}
         whileTap={{ scale: 0.97 }}
       >

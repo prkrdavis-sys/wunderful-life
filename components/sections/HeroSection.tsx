@@ -1,11 +1,19 @@
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
+import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
+import { sectionWallpapers } from "@/lib/plants";
 import { getSiteContent } from "@/lib/site";
 
-export function HeroSection() {
-  const site = getSiteContent();
+export async function HeroSection() {
+  const site = await getSiteContent();
+  const { wallpaper, overlay } = sectionWallpapers.hero;
 
   return (
     <section className="relative overflow-hidden px-4 py-24 sm:px-6 sm:py-32">
+      <PlantSectionBackground
+        wallpaper={wallpaper}
+        overlay={overlay}
+        priority
+      />
       <div className="grain-overlay pointer-events-none absolute inset-0 opacity-30" aria-hidden />
 
       <div className="relative z-10 mx-auto max-w-4xl text-center">

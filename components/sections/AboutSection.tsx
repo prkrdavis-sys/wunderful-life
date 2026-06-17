@@ -4,11 +4,13 @@ import {
   StaggerItem,
 } from "@/components/ui/motion";
 import { EmilyPhoto } from "@/components/ui/EmilyPhoto";
-import { WaveDivider } from "@/components/ui/OrganicBlob";
+import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
+import { sectionWallpapers } from "@/lib/plants";
 import { getSiteContent } from "@/lib/site";
 
-export function AboutSection() {
-  const site = getSiteContent();
+export async function AboutSection() {
+  const site = await getSiteContent();
+  const { wallpaper, overlay } = sectionWallpapers.about;
   const photos = site.about.photos;
   const mainPhoto = photos[0];
   const accentPhoto = photos[1];
@@ -17,9 +19,9 @@ export function AboutSection() {
   return (
     <section
       id="about"
-      className="section-wash-green relative scroll-mt-24 px-4 py-20 sm:px-6 sm:py-24"
+      className="relative scroll-mt-24 overflow-hidden px-4 py-20 sm:px-6 sm:py-24"
     >
-      <WaveDivider />
+      <PlantSectionBackground wallpaper={wallpaper} overlay={overlay} />
       <div className="relative z-10 mx-auto max-w-6xl">
         <SectionReveal className="mb-10 text-center md:text-left">
           <h2 className="font-display text-3xl text-brown sm:text-4xl">
@@ -30,14 +32,12 @@ export function AboutSection() {
           </p>
         </SectionReveal>
 
-        <div className="grid gap-12 lg:grid-cols-[1fr_1.2fr] lg:items-start">
+        <div className="grid gap-12 lg:grid-cols-[auto_1fr] lg:items-start">
           <SectionReveal className="flex justify-center lg:justify-start">
-            {mainPhoto && (
-              <div className="relative">
-                <EmilyPhoto photo={mainPhoto} size="lg" />
-                <div className="absolute -right-4 -bottom-6 hidden sm:block">
-                  {accentPhoto && <EmilyPhoto photo={accentPhoto} size="sm" />}
-                </div>
+            {(mainPhoto || accentPhoto) && (
+              <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-end sm:gap-10">
+                {mainPhoto && <EmilyPhoto photo={mainPhoto} size="xl" />}
+                {accentPhoto && <EmilyPhoto photo={accentPhoto} size="md" />}
               </div>
             )}
           </SectionReveal>
@@ -63,9 +63,9 @@ export function AboutSection() {
               ready so brands can feel your vibe before the first call.
             </p>
           </div>
-          <div className="mt-8 flex flex-wrap items-end justify-center gap-6 sm:gap-8">
+          <div className="mt-8 flex flex-wrap items-end justify-center gap-8 sm:gap-10">
             {galleryPhotos.map((photo) => (
-              <EmilyPhoto key={photo.id} photo={photo} size="md" />
+              <EmilyPhoto key={photo.id} photo={photo} size="lg" />
             ))}
           </div>
         </SectionReveal>

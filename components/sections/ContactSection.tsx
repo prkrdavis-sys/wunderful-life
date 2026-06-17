@@ -2,16 +2,20 @@
 
 import { motion } from "framer-motion";
 import { SectionReveal } from "@/components/ui/motion";
-import { getSiteContent } from "@/lib/site";
+import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
+import { useSiteContent } from "@/components/admin/AdminViewProvider";
+import { sectionWallpapers } from "@/lib/plants";
 
 export function ContactSection() {
-  const site = getSiteContent();
+  const site = useSiteContent();
+  const { wallpaper, overlay } = sectionWallpapers.contact;
 
   return (
     <section
       id="contact"
-      className="section-wash-brown relative scroll-mt-24 px-4 py-20 sm:px-6 sm:py-24"
+      className="relative scroll-mt-24 overflow-hidden px-4 py-20 sm:px-6 sm:py-24"
     >
+      <PlantSectionBackground wallpaper={wallpaper} overlay={overlay} />
       <div className="relative z-10 mx-auto max-w-3xl text-center">
         <SectionReveal>
           <h2 className="font-display text-3xl text-brown sm:text-4xl">

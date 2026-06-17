@@ -1,5 +1,25 @@
 [
   {
+    "id": "demo-2",
+    "slug": "tea-time-testimonial",
+    "title": "Tea Time Testimonial",
+    "brand": "Steep & Still",
+    "platform": "instagram",
+    "hook": "The cozy tea ritual I actually swear by 🍵",
+    "cta": "Shop the blend — link in bio",
+    "durationSec": 32,
+    "tags": [
+      "testimonial",
+      "lifestyle",
+      "food-and-drink"
+    ],
+    "thumbnailPath": "",
+    "videoPath": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+    "featured": true,
+    "sortOrder": 0,
+    "createdAt": "2025-02-02T14:30:00.000Z"
+  },
+  {
     "id": "demo-1",
     "slug": "morning-ritual-serum",
     "title": "Morning Ritual Serum",
@@ -8,28 +28,16 @@
     "hook": "POV: your skin finally drinks its coffee ☀️",
     "cta": "Link in bio — 20% off with EMILY20",
     "durationSec": 28,
-    "tags": ["skincare", "wellness", "morning-routine"],
+    "tags": [
+      "skincare",
+      "wellness",
+      "morning-routine"
+    ],
     "thumbnailPath": "",
     "videoPath": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
     "featured": true,
-    "sortOrder": 0,
-    "createdAt": "2025-01-15T10:00:00.000Z"
-  },
-  {
-    "id": "demo-2",
-    "slug": "tea-time-testimonial",
-    "title": "Tea Time Testimonial",
-    "brand": "Wild Meadow Tea",
-    "platform": "instagram",
-    "hook": "I've replaced my afternoon coffee with this — and I'm not going back.",
-    "cta": "Shop the sampler at wildmeadowtea.com",
-    "durationSec": 42,
-    "tags": ["testimonial", "lifestyle", "food-and-drink"],
-    "thumbnailPath": "",
-    "videoPath": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-    "featured": true,
     "sortOrder": 1,
-    "createdAt": "2025-02-02T14:30:00.000Z"
+    "createdAt": "2025-01-15T10:00:00.000Z"
   },
   {
     "id": "demo-3",
@@ -40,7 +48,11 @@
     "hook": "Everything I pack for a day hike — in under 60 seconds.",
     "cta": "Use code WUNDERFUL for free shipping",
     "durationSec": 55,
-    "tags": ["unboxing", "outdoors", "gear"],
+    "tags": [
+      "unboxing",
+      "outdoors",
+      "gear"
+    ],
     "thumbnailPath": "",
     "videoPath": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
     "featured": true,
@@ -50,16 +62,20 @@
   {
     "id": "demo-4",
     "slug": "candle-evening-vibe",
-    "title": "Evening Candle Vibe",
+    "title": "Candle Evening Vibe",
     "brand": "Hearth & Haze",
-    "platform": "instagram",
-    "hook": "The coziest 15 seconds of your feed today 🕯️",
-    "cta": "Tap to shop the fall collection",
-    "durationSec": 15,
-    "tags": ["home", "aesthetic", "lifestyle"],
+    "platform": "tiktok",
+    "hook": "POV: golden hour, one candle, zero stress 🕯️",
+    "cta": "Find your scent at hearthandhaze.com",
+    "durationSec": 24,
+    "tags": [
+      "home",
+      "aesthetic",
+      "lifestyle"
+    ],
     "thumbnailPath": "",
     "videoPath": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
-    "featured": false,
+    "featured": true,
     "sortOrder": 3,
     "createdAt": "2025-04-01T18:45:00.000Z"
   }

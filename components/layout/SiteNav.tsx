@@ -1,9 +1,11 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { SectionLink } from "@/components/ui/SectionLink";
+import { AdminLoginInline } from "@/components/admin/AdminLoginInline";
+import { useAdminView } from "@/components/admin/AdminViewProvider";
 
 type NavLink = {
   label: string;
@@ -18,6 +20,15 @@ type SiteNavProps = {
 
 export function SiteNav({ fullName, brand, links }: SiteNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const {
+    viewMode,
+    setViewMode,
+    authenticated,
+    authRequired,
+    setPanelOpen,
+    refreshSession,
+  } = useAdminView();
   const [menuOpen, setMenuOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
 
@@ -27,6 +38,90 @@ export function SiteNav({ fullName, brand, links }: SiteNavProps) {
     }
     return false;
   };
+
+  const handleRegularView = () => {
+    setViewMode("regular");
+    setPanelOpen(false);
+    setAdminOpen(false);
+    setMenuOpen(false);
+  };
+
+  const handleAdminView = () => {
+    setViewMode("admin");
+    setPanelOpen(true);
+    setAdminOpen(false);
+    setMenuOpen(false);
+  };
+
+  const handleSignOut = async () => {
+    await fetch("/api/admin/logout", { method: "POST" });
+    await refreshSession();
+    setViewMode("regular");
+    setPanelOpen(false);
+    setAdminOpen(false);
+    setMenuOpen(false);
+    router.refresh();
+  };
+
+  const viewMenuItems = (
+    <>
+      <button
+        type="button"
+        onClick={handleRegularView}
+        className={`block w-full px-4 py-3 text-left text-sm font-medium transition hover:bg-green/10 ${
+          viewMode === "regular" ? "text-green-deep" : "text-brown"
+        }`}
+      >
+        Regular view {viewMode === "regular" ? "✓" : ""}
+      </button>
+      <button
+        type="button"
+        onClick={handleAdminView}
+        className={`block w-full px-4 py-3 text-left text-sm font-medium transition hover:bg-pink/10 ${
+          viewMode === "admin" ? "text-pink-deep" : "text-brown"
+        }`}
+      >
+        Admin view {viewMode === "admin" ? "✓" : ""}
+      </button>
+      {viewMode === "admin" && authenticated && (
+        <button
+          type="button"
+          onClick={() => {
+            setPanelOpen(true);
+            setAdminOpen(false);
+            setMenuOpen(false);
+          }}
+          className="block w-full border-t border-brown/10 px-4 py-3 text-left text-sm font-medium text-brown transition hover:bg-cream"
+        >
+          Open editor
+        </button>
+      )}
+      {authRequired && !authenticated && (
+        <div className="border-t border-brown/10">
+          <AdminLoginInline />
+        </div>
+      )}
+      {authenticated && (
+        <button
+          type="button"
+          onClick={() => void handleSignOut()}
+          className="block w-full border-t border-brown/10 px-4 py-3 text-left text-sm font-medium text-muted transition hover:bg-cream"
+        >
+          Sign out
+        </button>
+      )}
+      <SectionLink
+        href="/admin"
+        onClick={() => {
+          setAdminOpen(false);
+          setMenuOpen(false);
+        }}
+        className="block border-t border-brown/10 px-4 py-3 text-sm font-medium text-brown transition hover:bg-cream"
+      >
+        Legacy admin page
+      </SectionLink>
+    </>
+  );
 
   return (
     <header className="sticky top-0 z-50 border-b border-lavender/30 bg-paper/85 backdrop-blur-md">
@@ -57,7 +152,11 @@ export function SiteNav({ fullName, brand, links }: SiteNavProps) {
             <button
               type="button"
               onClick={() => setAdminOpen((open) => !open)}
-              className="flex items-center gap-1 rounded-full border-2 border-brown/15 bg-white/70 px-3 py-1.5 text-sm font-medium text-brown transition hover:border-pink"
+              className={`flex items-center gap-1 rounded-full border-2 px-3 py-1.5 text-sm font-medium transition ${
+                viewMode === "admin"
+                  ? "border-green/40 bg-green/10 text-green-deep"
+                  : "border-brown/15 bg-white/70 text-brown hover:border-pink"
+              }`}
               aria-expanded={adminOpen}
               aria-haspopup="true"
             >
@@ -72,15 +171,9 @@ export function SiteNav({ fullName, brand, links }: SiteNavProps) {
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  className="absolute right-0 mt-2 min-w-[140px] overflow-hidden rounded-2xl border border-brown/10 bg-white shadow-xl"
+                  className="absolute right-0 mt-2 min-w-[220px] overflow-hidden rounded-2xl border border-brown/10 bg-white shadow-xl"
                 >
-                  <SectionLink
-                    href="/admin"
-                    onClick={() => setAdminOpen(false)}
-                    className="block px-4 py-3 text-sm font-medium text-brown transition hover:bg-pink/10 hover:text-pink-deep"
-                  >
-                    Admin
-                  </SectionLink>
+                  {viewMenuItems}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -116,13 +209,9 @@ export function SiteNav({ fullName, brand, links }: SiteNavProps) {
                   {link.label}
                 </SectionLink>
               ))}
-              <SectionLink
-                href="/admin"
-                onClick={() => setMenuOpen(false)}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-pink-deep hover:bg-pink/10"
-              >
-                Admin
-              </SectionLink>
+              <div className="mt-2 rounded-xl border border-brown/10 bg-cream/40">
+                {viewMenuItems}
+              </div>
             </div>
           </motion.nav>
         )}

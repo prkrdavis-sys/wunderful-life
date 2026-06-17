@@ -16,7 +16,7 @@ export default async function AdminPage() {
       <div className="mx-auto max-w-4xl">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold tracking-[0.2em] text-pink-deep uppercase">
+            <p className="font-label text-sm font-semibold tracking-[0.2em] text-pink-deep uppercase">
               Creator Tools
             </p>
             <h1 className="mt-2 font-display text-4xl text-brown">Admin</h1>

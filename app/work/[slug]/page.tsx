@@ -68,7 +68,7 @@ export default async function WorkDetailPage({ params }: WorkDetailPageProps) {
                   key={item.label}
                   className="rounded-2xl border-2 border-brown/10 bg-white/70 p-4 backdrop-blur-sm"
                 >
-                  <h2 className="text-xs font-semibold tracking-widest text-pink-deep uppercase">
+                  <h2 className="font-label text-xs font-semibold tracking-[0.18em] text-pink-deep uppercase">
                     {item.label}
                   </h2>
                   <p className="mt-2 text-brown">{item.value}</p>
@@ -78,7 +78,7 @@ export default async function WorkDetailPage({ params }: WorkDetailPageProps) {
 
             {video.tags.length > 0 && (
               <SectionReveal delay={0.2} className="mt-6">
-                <h2 className="text-xs font-semibold tracking-widest text-green-deep uppercase">
+                <h2 className="font-label text-xs font-semibold tracking-[0.18em] text-green-deep uppercase">
                   Tags
                 </h2>
                 <div className="mt-3 flex flex-wrap gap-2">

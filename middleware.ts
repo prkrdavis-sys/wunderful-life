@@ -3,6 +3,9 @@ import type { NextRequest } from "next/server";
 import { ADMIN_COOKIE, canAccessAdmin, isAdminAuthRequired } from "@/lib/auth";
 
 function isProtectedApiRoute(pathname: string, method: string): boolean {
+  if (pathname.startsWith("/api/site")) {
+    return method !== "GET";
+  }
   if (!pathname.startsWith("/api/videos")) return false;
   if (method === "GET") return false;
   return true;
@@ -43,5 +46,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/videos/:path*", "/api/videos"],
+  matcher: ["/admin/:path*", "/api/videos/:path*", "/api/videos", "/api/site/:path*"],
 };

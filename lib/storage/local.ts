@@ -154,13 +154,17 @@ export async function updateVideo(
       ? uniqueSlug(input.title, existingSlugs)
       : current.slug;
 
+  const patch = Object.fromEntries(
+    Object.entries(input).filter(([, value]) => value !== undefined),
+  ) as VideoUpdateInput;
+
   const updated: PortfolioVideo = {
     ...current,
-    ...input,
+    ...patch,
     slug,
     thumbnailPath,
     videoPath,
-    tags: input.tags ?? current.tags,
+    tags: patch.tags ?? current.tags,
   };
 
   videos[index] = updated;

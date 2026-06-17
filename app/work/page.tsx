@@ -11,7 +11,7 @@ type WorkPageProps = {
 };
 
 export default async function WorkPage({ searchParams }: WorkPageProps) {
-  const site = getSiteContent();
+  const site = await getSiteContent();
   const { tag } = await searchParams;
   const videos = await listVideos();
 

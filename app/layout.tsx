@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
-import { Fraunces, DM_Sans } from "next/font/google";
+import {
+  Bricolage_Grotesque,
+  DM_Sans,
+  Fraunces,
+  Instrument_Sans,
+} from "next/font/google";
 import { SiteNav } from "@/components/layout/SiteNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { HashScrollHandler } from "@/components/layout/HashScrollHandler";
+import { AppProviders } from "@/components/layout/AppProviders";
 import { getSiteContent } from "@/lib/site";
 import "./globals.css";
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-bricolage",
   subsets: ["latin"],
   display: "swap",
 });
@@ -18,32 +24,52 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
-const site = getSiteContent();
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  display: "swap",
+});
 
-export const metadata: Metadata = {
-  title: {
-    default: `${site.fullName} · ${site.brand}`,
-    template: `%s · ${site.brand}`,
-  },
-  description: site.tagline,
-};
+const instrumentSans = Instrument_Sans({
+  variable: "--font-instrument",
+  subsets: ["latin"],
+  display: "swap",
+});
 
-export default function RootLayout({
+export async function generateMetadata(): Promise<Metadata> {
+  const site = await getSiteContent();
+  return {
+    title: {
+      default: `${site.fullName} · ${site.brand}`,
+      template: `%s · ${site.brand}`,
+    },
+    description: site.tagline,
+  };
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const site = await getSiteContent();
+
   return (
-    <html lang="en" className={`${fraunces.variable} ${dmSans.variable} h-full scroll-smooth`}>
+    <html
+      lang="en"
+      className={`${bricolage.variable} ${dmSans.variable} ${fraunces.variable} ${instrumentSans.variable} h-full scroll-smooth`}
+    >
       <body className="relative min-h-full flex flex-col bg-cream font-body antialiased">
-        <HashScrollHandler />
-        <SiteNav
-          fullName={site.fullName}
-          brand={site.brand}
-          links={site.heroLinks}
-        />
-        <main className="relative z-10 flex-1">{children}</main>
-        <SiteFooter />
+        <AppProviders initialSite={site}>
+          <HashScrollHandler />
+          <SiteNav
+            fullName={site.fullName}
+            brand={site.brand}
+            links={site.heroLinks}
+          />
+          <main className="relative z-10 flex-1">{children}</main>
+          <SiteFooter />
+        </AppProviders>
       </body>
     </html>
   );

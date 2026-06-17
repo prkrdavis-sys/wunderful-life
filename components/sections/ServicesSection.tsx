@@ -3,24 +3,28 @@ import {
   StaggerChildren,
   StaggerItem,
 } from "@/components/ui/motion";
+import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
+import { sectionWallpapers } from "@/lib/plants";
 import { getSiteContent } from "@/lib/site";
 
 const accentMap = {
-  green: "border-green/25 bg-white/75",
-  blue: "border-blue/20 bg-white/75",
-  yellow: "border-yellow-deep/25 bg-white/75",
-  pink: "border-pink/25 bg-white/75",
-  brown: "border-brown-light/25 bg-white/75",
+  green: "border-green/25 bg-white/85",
+  blue: "border-blue/20 bg-white/85",
+  yellow: "border-yellow-deep/25 bg-white/85",
+  pink: "border-pink/25 bg-white/85",
+  brown: "border-brown-light/25 bg-white/85",
 } as const;
 
-export function ServicesSection() {
-  const site = getSiteContent();
+export async function ServicesSection() {
+  const site = await getSiteContent();
+  const { wallpaper, overlay } = sectionWallpapers.services;
 
   return (
     <section
       id="services"
-      className="section-wash-blue relative scroll-mt-24 px-4 py-20 sm:px-6 sm:py-24"
+      className="relative scroll-mt-24 overflow-hidden px-4 py-20 sm:px-6 sm:py-24"
     >
+      <PlantSectionBackground wallpaper={wallpaper} overlay={overlay} />
       <div className="relative z-10 mx-auto max-w-6xl">
         <SectionReveal className="text-center">
           <h2 className="font-display text-3xl text-brown sm:text-4xl">
@@ -40,7 +44,7 @@ export function ServicesSection() {
             return (
               <StaggerItem key={service.id}>
                 <article
-                  className={`rounded-3xl border ${accent} p-6 shadow-sm backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-md`}
+                  className={`rounded-3xl border ${accent} p-6 shadow-sm backdrop-blur-md transition hover:-translate-y-0.5 hover:shadow-md`}
                 >
                   <h3 className="font-display text-xl text-brown">
                     {service.title}

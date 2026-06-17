@@ -1,7 +1,8 @@
-import siteData from "@/data/site.json";
+import { readSiteContent, updateSiteContent } from "@/lib/storage/site";
+import { StorageError } from "@/lib/storage";
 
-export type SiteContent = typeof siteData;
-
-export function getSiteContent(): SiteContent {
-  return siteData;
+export async function getSiteContent() {
+  return readSiteContent();
 }
+
+export type { SiteContent, AboutPhoto } from "@/lib/site/types";

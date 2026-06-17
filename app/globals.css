@@ -48,8 +48,10 @@
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-background: var(--background);
-  --font-display: var(--font-fraunces);
+  --font-display: var(--font-bricolage);
   --font-body: var(--font-dm-sans);
+  --font-serif: var(--font-fraunces);
+  --font-label: var(--font-instrument);
 }
 
 html {
@@ -133,6 +135,33 @@ body {
 .section-wash-brown {
   background:
     linear-gradient(165deg, rgba(255, 253, 249, 0.94) 0%, rgba(122, 59, 74, 0.04) 35%, rgba(124, 184, 124, 0.05) 100%);
+}
+
+.plant-wallpaper-overlay-light {
+  background: linear-gradient(
+    180deg,
+    rgba(247, 243, 236, 0.52) 0%,
+    rgba(255, 253, 249, 0.58) 45%,
+    rgba(247, 243, 236, 0.54) 100%
+  );
+}
+
+.plant-wallpaper-overlay-medium {
+  background: linear-gradient(
+    180deg,
+    rgba(247, 243, 236, 0.62) 0%,
+    rgba(255, 253, 249, 0.7) 50%,
+    rgba(247, 243, 236, 0.65) 100%
+  );
+}
+
+.plant-wallpaper-overlay-heavy {
+  background: linear-gradient(
+    180deg,
+    rgba(247, 243, 236, 0.78) 0%,
+    rgba(255, 253, 249, 0.84) 50%,
+    rgba(247, 243, 236, 0.8) 100%
+  );
 }
 
 .accent-green { color: var(--green-deep); }

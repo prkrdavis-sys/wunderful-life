@@ -1,8 +1,10 @@
+"use client";
+
 import { SectionLink } from "@/components/ui/SectionLink";
-import { getSiteContent } from "@/lib/site";
+import { useSiteContent } from "@/components/admin/AdminViewProvider";
 
 export function SiteFooter() {
-  const site = getSiteContent();
+  const site = useSiteContent();
 
   return (
     <footer className="relative border-t border-lavender/25 bg-paper/70 py-12 backdrop-blur-sm">
