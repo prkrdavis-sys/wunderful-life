@@ -1,13 +1,16 @@
 "use client";
 
+import { upload } from "@vercel/blob/client";
 import { useCallback, useRef, useState } from "react";
 import type { Platform, PortfolioVideo } from "@/lib/videos/types";
 import { PLATFORMS } from "@/lib/videos/types";
 import { slugify } from "@/lib/videos/slugify";
 import {
   isAcceptedVideoFile,
+  uploadFilename,
   VIDEO_FILE_ACCEPT,
   VIDEO_UPLOAD_HELP,
+  videoContentTypeFromFilename,
   videoUploadErrorMessage,
 } from "@/lib/videos/upload";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
@@ -17,6 +20,29 @@ type VideoFormProps = {
   onSuccess: (video: PortfolioVideo) => void;
   onCancel?: () => void;
 };
+
+type UploadConfig = {
+  clientUpload: boolean;
+  handleUploadUrl: string;
+};
+
+async function uploadAsset(
+  file: File,
+  dir: "videos" | "thumbnails",
+  handleUploadUrl: string,
+): Promise<string> {
+  const pathname = uploadFilename(dir, file.name, crypto.randomUUID());
+  const result = await upload(pathname, file, {
+    access: "public",
+    handleUploadUrl,
+    multipart: dir === "videos",
+    contentType:
+      dir === "videos"
+        ? file.type || videoContentTypeFromFilename(file.name)
+        : file.type || undefined,
+  });
+  return result.url;
+}
 
 const emptyForm = {
   title: "",
@@ -49,6 +75,7 @@ export function VideoForm({ initial, onSuccess, onCancel }: VideoFormProps) {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("Saving…");
   const [error, setError] = useState<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
@@ -70,6 +97,7 @@ export function VideoForm({ initial, onSuccess, onCancel }: VideoFormProps) {
     event.preventDefault();
     setLoading(true);
     setError(null);
+    setLoadingMessage("Saving…");
 
     const payload = new FormData();
     payload.set("title", form.title);
@@ -81,10 +109,32 @@ export function VideoForm({ initial, onSuccess, onCancel }: VideoFormProps) {
     payload.set("tags", form.tags);
     payload.set("slug", form.slug || slugify(form.title));
     payload.set("featured", String(form.featured));
-    if (videoFile) payload.set("video", videoFile);
-    if (thumbnailFile) payload.set("thumbnail", thumbnailFile);
 
     try {
+      const configResponse = await fetch("/api/videos/config");
+      const config = (await configResponse.json()) as UploadConfig;
+
+      if (config.clientUpload) {
+        if (videoFile) {
+          setLoadingMessage("Uploading video…");
+          payload.set(
+            "videoUrl",
+            await uploadAsset(videoFile, "videos", config.handleUploadUrl),
+          );
+        }
+        if (thumbnailFile) {
+          setLoadingMessage("Uploading thumbnail…");
+          payload.set(
+            "thumbnailUrl",
+            await uploadAsset(thumbnailFile, "thumbnails", config.handleUploadUrl),
+          );
+        }
+      } else {
+        if (videoFile) payload.set("video", videoFile);
+        if (thumbnailFile) payload.set("thumbnail", thumbnailFile);
+      }
+
+      setLoadingMessage("Saving…");
       const url = initial ? `/api/videos/${initial.id}` : "/api/videos";
       const method = initial ? "PATCH" : "POST";
       const response = await fetch(url, { method, body: payload });
@@ -240,7 +290,7 @@ export function VideoForm({ initial, onSuccess, onCancel }: VideoFormProps) {
 
       <div className="mt-6 flex flex-wrap gap-3">
         <AnimatedButton type="submit" disabled={loading}>
-          {loading ? "Saving…" : initial ? "Update Video" : "Add Video"}
+          {loading ? loadingMessage : initial ? "Update Video" : "Add Video"}
         </AnimatedButton>
         {onCancel && (
           <AnimatedButton type="button" variant="ghost" onClick={onCancel}>

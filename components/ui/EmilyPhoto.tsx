@@ -16,12 +16,12 @@ type EmilyPhotoProps = {
 };
 
 const sizeClasses = {
-  sm: "w-[160px]",
-  md: "w-[220px] sm:w-[250px]",
-  lg: "w-[280px] sm:w-[340px] lg:w-[400px]",
-  xl: "w-[320px] sm:w-[420px] lg:w-[480px]",
-  hero: "w-full max-w-[360px] sm:max-w-[480px] lg:max-w-[560px] xl:max-w-[640px]",
-  gallery: "w-full",
+  sm: "w-full max-w-[160px]",
+  md: "w-full max-w-[220px] sm:max-w-[250px]",
+  lg: "w-full max-w-[280px] sm:max-w-[340px] xl:max-w-[400px]",
+  xl: "w-full max-w-[320px] sm:max-w-[420px] xl:max-w-[480px]",
+  hero: "w-full max-w-full sm:max-w-[min(100%,480px)] xl:max-w-[min(100%,560px)]",
+  gallery: "w-full max-w-md mx-auto sm:max-w-none",
 };
 
 const frameClasses = {
@@ -52,7 +52,7 @@ export function EmilyPhoto({
 
   return (
     <figure
-      className={`${sizeClasses[size]} ${frameClasses[size]} rotate-[var(--photo-rotate)] rounded-sm border border-white/90 bg-paper shadow-lg shadow-indigo/10 ring-1 ring-lavender/20 ${className}`}
+      className={`max-w-full ${sizeClasses[size]} ${frameClasses[size]} rotate-[var(--photo-rotate)] rounded-sm border border-white/90 bg-paper shadow-lg shadow-indigo/10 ring-1 ring-lavender/20 ${className}`}
       style={{ ["--photo-rotate" as string]: `${photo.rotate}deg` }}
     >
       <div

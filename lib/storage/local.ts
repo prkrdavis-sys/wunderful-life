@@ -1,3 +1,4 @@
+import { del, get, put } from "@vercel/blob";
 import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
@@ -11,8 +12,10 @@ import { reorderVideos as applyOrder, sortVideos } from "@/lib/videos/sort";
 import { uniqueSlug } from "@/lib/videos/slugify";
 import {
   isAcceptedVideoFile,
+  videoContentTypeFromFilename,
   videoUploadErrorMessage,
 } from "@/lib/videos/upload";
+import { useBlobStorage, VIDEOS_METADATA_BLOB_PATH } from "./blob";
 import { StorageError } from "./types";
 
 const DATA_PATH = path.join(process.cwd(), "data", "videos.json");
@@ -23,17 +26,56 @@ const THUMB_DIR = path.join(UPLOADS_ROOT, "thumbnails");
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 
 async function ensureUploadDirs() {
+  if (useBlobStorage) return;
   await fs.mkdir(VIDEO_DIR, { recursive: true });
   await fs.mkdir(THUMB_DIR, { recursive: true });
 }
 
+async function readVideosFromBlob(): Promise<PortfolioVideo[] | null> {
+  if (!useBlobStorage) return null;
+
+  try {
+    const result = await get(VIDEOS_METADATA_BLOB_PATH, { access: "public" });
+    if (!result || result.statusCode !== 200 || !result.stream) {
+      return null;
+    }
+
+    const text = await new Response(result.stream).text();
+    return JSON.parse(text) as PortfolioVideo[];
+  } catch {
+    return null;
+  }
+}
+
 async function readVideosFile(): Promise<PortfolioVideo[]> {
+  const blobVideos = await readVideosFromBlob();
+  if (blobVideos) return blobVideos;
+
   const raw = await fs.readFile(DATA_PATH, "utf8");
   return JSON.parse(raw) as PortfolioVideo[];
 }
 
 async function writeVideosFile(videos: PortfolioVideo[]) {
-  await fs.writeFile(DATA_PATH, `${JSON.stringify(sortVideos(videos), null, 2)}\n`);
+  if (process.env.VERCEL && !useBlobStorage) {
+    throw new StorageError(
+      "Video uploads require Vercel Blob storage. Create a Blob store in your Vercel project and redeploy.",
+      503,
+    );
+  }
+
+  const content = `${JSON.stringify(sortVideos(videos), null, 2)}\n`;
+
+  if (useBlobStorage) {
+    await put(VIDEOS_METADATA_BLOB_PATH, content, {
+      access: "public",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType: "application/json",
+    });
+    return;
+  }
+
+  await fs.writeFile(DATA_PATH, content);
 }
 
 async function saveUploadFile(
@@ -42,19 +84,53 @@ async function saveUploadFile(
 ): Promise<string> {
   const ext = path.extname(file.name) || (dir === "videos" ? ".mp4" : ".jpg");
   const filename = `${randomUUID()}${ext}`;
+
+  if (useBlobStorage) {
+    const blob = await put(`${dir}/${filename}`, file, {
+      access: "public",
+      addRandomSuffix: false,
+      multipart: dir === "videos",
+      contentType:
+        dir === "videos"
+          ? videoContentTypeFromFilename(file.name)
+          : undefined,
+    });
+    return blob.url;
+  }
+
   const targetDir = dir === "videos" ? VIDEO_DIR : THUMB_DIR;
   const buffer = Buffer.from(await file.arrayBuffer());
   await fs.writeFile(path.join(targetDir, filename), buffer);
   return `/uploads/${dir}/${filename}`;
 }
 
-async function deleteFileIfLocal(filePath: string) {
+async function deleteStoredFile(filePath: string) {
+  if (filePath.startsWith("https://")) {
+    if (useBlobStorage) {
+      try {
+        await del(filePath);
+      } catch {
+        // ignore missing blobs
+      }
+    }
+    return;
+  }
+
   if (!filePath.startsWith("/uploads/")) return;
   const absolute = path.join(process.cwd(), "public", filePath);
   try {
     await fs.unlink(absolute);
   } catch {
     // ignore missing files
+  }
+}
+
+function assertCanPersistUploads() {
+  if (process.env.VERCEL && !useBlobStorage) {
+    throw new StorageError(
+      "Video uploads require Vercel Blob storage. Create a Blob store in your Vercel project and redeploy.",
+      503,
+    );
   }
 }
 
@@ -65,6 +141,10 @@ function validateVideoFile(file: File) {
   if (file.size > MAX_VIDEO_BYTES) {
     throw new StorageError("Video must be 100MB or smaller.", 413);
   }
+}
+
+function isRemoteAssetUrl(value: string | null | undefined): value is string {
+  return Boolean(value?.startsWith("https://"));
 }
 
 export async function listVideos() {
@@ -82,19 +162,23 @@ export async function getVideoById(id: string) {
 }
 
 export async function createVideo(input: VideoCreateInput, files?: UploadFiles) {
+  assertCanPersistUploads();
   await ensureUploadDirs();
   const videos = await readVideosFile();
   const existingSlugs = videos.map((video) => video.slug);
 
-  const thumbnailPath = files?.thumbnail
-    ? await saveUploadFile(files.thumbnail, "thumbnails")
+  let thumbnailPath = isRemoteAssetUrl(files?.thumbnailUrl)
+    ? files.thumbnailUrl
     : null;
-  const videoPath = files?.video
-    ? await saveUploadFile(files.video, "videos")
-    : null;
+  let videoPath = isRemoteAssetUrl(files?.videoUrl) ? files.videoUrl : null;
 
   if (files?.video) {
     validateVideoFile(files.video);
+    videoPath = await saveUploadFile(files.video, "videos");
+  }
+
+  if (files?.thumbnail) {
+    thumbnailPath = await saveUploadFile(files.thumbnail, "thumbnails");
   }
 
   if (!thumbnailPath || !videoPath) {
@@ -132,6 +216,7 @@ export async function updateVideo(
   input: VideoUpdateInput,
   files?: UploadFiles,
 ) {
+  assertCanPersistUploads();
   await ensureUploadDirs();
   const videos = await readVideosFile();
   const index = videos.findIndex((video) => video.id === id);
@@ -141,13 +226,20 @@ export async function updateVideo(
   let thumbnailPath = current.thumbnailPath;
   let videoPath = current.videoPath;
 
-  if (files?.thumbnail) {
-    await deleteFileIfLocal(current.thumbnailPath);
+  if (isRemoteAssetUrl(files?.thumbnailUrl)) {
+    await deleteStoredFile(current.thumbnailPath);
+    thumbnailPath = files.thumbnailUrl;
+  } else if (files?.thumbnail) {
+    await deleteStoredFile(current.thumbnailPath);
     thumbnailPath = await saveUploadFile(files.thumbnail, "thumbnails");
   }
-  if (files?.video) {
+
+  if (isRemoteAssetUrl(files?.videoUrl)) {
+    await deleteStoredFile(current.videoPath);
+    videoPath = files.videoUrl;
+  } else if (files?.video) {
     validateVideoFile(files.video);
-    await deleteFileIfLocal(current.videoPath);
+    await deleteStoredFile(current.videoPath);
     videoPath = await saveUploadFile(files.video, "videos");
   }
 
@@ -185,8 +277,8 @@ export async function deleteVideo(id: string) {
   if (index === -1) return false;
 
   const [removed] = videos.splice(index, 1);
-  await deleteFileIfLocal(removed.thumbnailPath);
-  await deleteFileIfLocal(removed.videoPath);
+  await deleteStoredFile(removed.thumbnailPath);
+  await deleteStoredFile(removed.videoPath);
   await writeVideosFile(
     videos.map((video, idx) => ({ ...video, sortOrder: idx })),
   );

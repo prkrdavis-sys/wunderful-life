@@ -50,3 +50,37 @@ export function isAcceptedVideoFile(file: Pick<File, "name" | "type">): boolean 
 
   return isAcceptedMimeType(mime);
 }
+
+export const BLOB_VIDEO_CONTENT_TYPES = [...ACCEPTED_VIDEO_MIME_TYPES];
+
+export const BLOB_THUMBNAIL_CONTENT_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/svg+xml",
+] as const;
+
+export function videoContentTypeFromFilename(filename: string): string | undefined {
+  switch (extensionFromFilename(filename)) {
+    case ".mov":
+      return "video/quicktime";
+    case ".mp4":
+      return "video/mp4";
+    case ".m4v":
+      return "video/x-m4v";
+    case ".webm":
+      return "video/webm";
+    default:
+      return undefined;
+  }
+}
+
+export function uploadFilename(
+  dir: "videos" | "thumbnails",
+  originalName: string,
+  id: string,
+): string {
+  const ext =
+    extensionFromFilename(originalName) || (dir === "videos" ? ".mp4" : ".jpg");
+  return `${dir}/${id}${ext}`;
+}

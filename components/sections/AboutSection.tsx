@@ -17,85 +17,50 @@ export async function AboutSection() {
   const mainPhoto = photos[0];
   const accentPhoto = photos[1];
   const galleryPhotos = photos.slice(2);
-  const [leadParagraph, ...restParagraphs] = site.about.paragraphs;
 
   return (
     <section
       id="about"
-      className="relative scroll-mt-24 overflow-hidden px-4 py-24 sm:px-6 sm:py-32"
+      className="relative scroll-mt-24 overflow-hidden px-4 py-16 sm:px-6 sm:py-24"
     >
       <PlantSectionBackground wallpaper={wallpaper} overlay={overlay} />
-      <div className="relative z-10 mx-auto max-w-7xl">
-        <SectionReveal className="mb-14 text-center lg:mb-20">
-          <h2 className={`font-display text-4xl sm:text-5xl ${text.heading}`}>
+      <div className="relative z-10 mx-auto max-w-5xl">
+        <SectionReveal className="mb-10 text-center md:mb-12 md:text-left">
+          <h2 className={`font-display text-3xl sm:text-4xl ${text.heading}`}>
             {site.about.headline}
           </h2>
-          <p className={`mx-auto mt-4 max-w-2xl text-lg sm:text-xl ${text.subheading}`}>
+          <p className={`mt-3 max-w-xl text-base sm:text-lg ${text.subheading}`}>
             Meet {site.name} — creative, aesthetic, and unapologetically myself.
           </p>
         </SectionReveal>
 
-        <div className="grid items-start gap-12 lg:grid-cols-12 lg:gap-x-14 lg:gap-y-10 xl:gap-x-20">
-          {mainPhoto && (
-            <SectionReveal className="lg:col-span-6 xl:col-span-5">
-              <EmilyPhoto
-                photo={mainPhoto}
-                size="hero"
-                className="mx-auto lg:mx-0"
-              />
+        <div className="grid gap-10 md:grid-cols-[minmax(0,280px)_minmax(0,1fr)] md:items-start md:gap-12 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] lg:gap-14">
+          {(mainPhoto || accentPhoto) && (
+            <SectionReveal className="mx-auto flex w-full max-w-xs flex-col items-center gap-6 md:mx-0 md:max-w-none md:items-start">
+              {mainPhoto && <EmilyPhoto photo={mainPhoto} size="lg" />}
+              {accentPhoto && <EmilyPhoto photo={accentPhoto} size="md" />}
             </SectionReveal>
           )}
 
-          <div className="flex flex-col justify-center gap-6 lg:col-span-6 lg:py-6 xl:col-span-7">
-            {leadParagraph && (
-              <SectionReveal>
-                <p
-                  className={`font-serif text-xl leading-relaxed sm:text-2xl sm:leading-relaxed ${text.body}`}
-                >
-                  {leadParagraph}
-                </p>
-              </SectionReveal>
-            )}
-            {restParagraphs[0] && (
-              <StaggerChildren>
-                <StaggerItem>
-                  <p className={`text-base leading-relaxed sm:text-lg ${text.body}`}>
-                    {restParagraphs[0]}
-                  </p>
-                </StaggerItem>
-              </StaggerChildren>
-            )}
-          </div>
-
-          {restParagraphs[1] && (
-            <StaggerChildren className="order-last flex flex-col justify-center lg:order-none lg:col-span-5 lg:col-start-1 lg:row-start-2">
-              <StaggerItem>
+          <StaggerChildren className="min-w-0 space-y-4">
+            {site.about.paragraphs.map((paragraph) => (
+              <StaggerItem key={paragraph.slice(0, 24)}>
                 <p className={`text-base leading-relaxed sm:text-lg ${text.body}`}>
-                  {restParagraphs[1]}
+                  {paragraph}
                 </p>
               </StaggerItem>
-            </StaggerChildren>
-          )}
-
-          {accentPhoto && (
-            <SectionReveal className="order-last lg:order-none lg:col-span-6 lg:col-start-7 lg:row-start-2 xl:col-span-5 xl:col-start-8">
-              <EmilyPhoto
-                photo={accentPhoto}
-                size="xl"
-                className="mx-auto lg:ml-auto lg:mr-0"
-              />
-            </SectionReveal>
-          )}
+            ))}
+          </StaggerChildren>
         </div>
 
         {galleryPhotos.length > 0 && (
-          <SectionReveal className="mt-20 lg:mt-28">
-            <h3 className={`text-center font-display text-2xl sm:text-3xl ${text.heading}`}>
+          <SectionReveal className="mt-14 md:mt-16">
+            <h3 className={`font-display text-xl sm:text-2xl ${text.heading}`}>
               A little more {site.name}
             </h3>
-            <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-10">
+            <div className="mt-6 flex flex-wrap gap-6 sm:gap-8">
               {galleryPhotos.map((photo) => (
-                <EmilyPhoto key={photo.id} photo={photo} size="gallery" />
+                <EmilyPhoto key={photo.id} photo={photo} size="md" />
               ))}
             </div>
           </SectionReveal>

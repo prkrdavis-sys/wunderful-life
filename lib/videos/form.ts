@@ -4,7 +4,20 @@ import { parsePlatform, PLATFORMS } from "./types";
 export type UploadFiles = {
   video?: File | null;
   thumbnail?: File | null;
+  videoUrl?: string | null;
+  thumbnailUrl?: string | null;
 };
+
+function getFileEntry(form: FormData, key: string): File | null {
+  const value = form.get(key);
+  if (!(value instanceof File) || value.size === 0) return null;
+  return value;
+}
+
+function getUrlEntry(form: FormData, key: string): string | null {
+  const value = form.get(key);
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
 
 function parseTags(
   value: FormDataEntryValue | null,
@@ -34,11 +47,10 @@ function parseBoolean(value: FormDataEntryValue | null): boolean {
 
 export function parseUploadFiles(form: FormData): UploadFiles {
   return {
-    video: form.get("video") instanceof File ? (form.get("video") as File) : null,
-    thumbnail:
-      form.get("thumbnail") instanceof File
-        ? (form.get("thumbnail") as File)
-        : null,
+    video: getFileEntry(form, "video"),
+    thumbnail: getFileEntry(form, "thumbnail"),
+    videoUrl: getUrlEntry(form, "videoUrl"),
+    thumbnailUrl: getUrlEntry(form, "thumbnailUrl"),
   };
 }
 
