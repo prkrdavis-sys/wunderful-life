@@ -15,6 +15,7 @@ import {
 } from "@/lib/videos/upload";
 import { prepareVideoForWebUpload } from "@/lib/videos/transcode";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
+import { FileUploadButton } from "@/components/ui/FileUploadButton";
 
 type VideoFormProps = {
   initial?: PortfolioVideo | null;
@@ -335,46 +336,46 @@ export function VideoForm({
         />
       </label>
 
-      <label className="block text-sm sm:col-span-2">
+      <div className="block text-sm sm:col-span-2">
         <span className="text-muted">
           Video file {initial ? "(leave empty to keep current)" : ""}
         </span>
-        <input
-          ref={videoInputRef}
-          type="file"
+        <FileUploadButton
+          className="mt-1"
+          inputRef={videoInputRef}
           accept={VIDEO_FILE_ACCEPT}
-          onChange={(event) => {
-            const file = event.target.files?.[0] ?? null;
+          buttonLabel="Choose video"
+          hint={VIDEO_UPLOAD_HELP}
+          selectedName={videoFile?.name}
+          required={!initial}
+          onChange={(file) => {
             if (file && !isAcceptedVideoFile(file)) {
               setVideoFile(null);
               setError(videoUploadErrorMessage());
-              event.target.value = "";
+              if (videoInputRef.current) videoInputRef.current.value = "";
               return;
             }
             setError(null);
             setVideoFile(file);
             if (file) readVideoDuration(file);
           }}
-          className="mt-1 block w-full text-sm text-muted"
-          required={!initial}
         />
-        <span className="mt-1 block text-xs text-muted">{VIDEO_UPLOAD_HELP}</span>
-      </label>
+      </div>
 
-      <label className="block text-sm sm:col-span-2">
+      <div className="block text-sm sm:col-span-2">
         <span className="text-muted">
           Thumbnail {initial ? "(leave empty to keep current)" : ""}
         </span>
-        <input
-          type="file"
+        <FileUploadButton
+          className="mt-1"
           accept="image/png,image/jpeg,image/webp,image/svg+xml"
-          onChange={(event) =>
-            setThumbnailFile(event.target.files?.[0] ?? null)
-          }
-          className="mt-1 block w-full text-sm text-muted"
+          buttonLabel="Choose thumbnail"
+          hint="PNG, JPEG, WebP, or SVG"
+          selectedName={thumbnailFile?.name}
           required={!initial}
+          onChange={(file) => setThumbnailFile(file)}
         />
-      </label>
+      </div>
 
       <label className="flex items-center gap-2 text-sm sm:col-span-2">
         <input

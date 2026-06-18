@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { SiteContent } from "@/lib/site/types";
 import { PHOTO_ACCENTS } from "@/lib/site/accents";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
+import { FileUploadButton } from "@/components/ui/FileUploadButton";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
 
 type SiteEditorFormProps = {
@@ -318,23 +319,23 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
                         />
                       </label>
                     </div>
-                    <label className="block text-sm">
+                    <div className="block text-sm">
                       <span className="text-muted">Upload image</span>
-                      <input
-                        type="file"
+                      <FileUploadButton
+                        className="mt-1"
                         accept="image/*"
-                        onChange={(event) => {
-                          const file = event.target.files?.[0];
+                        buttonLabel="Choose photo"
+                        hint="JPG, PNG, or WebP"
+                        onChange={(file) => {
                           if (file) void uploadPhoto(photo.id, file);
                         }}
-                        className="mt-1 block w-full text-xs text-muted"
                       />
                       {photo.imagePath && (
                         <p className="mt-1 truncate text-xs text-burgundy/80">
                           Current: {photo.imagePath}
                         </p>
                       )}
-                    </label>
+                    </div>
                   </div>
                 ))}
               </div>
