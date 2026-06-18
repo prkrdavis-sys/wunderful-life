@@ -64,11 +64,7 @@ export default async function RootLayout({
         <AppProviders initialSite={site}>
           <HashScrollHandler />
           <div className="sticky top-0 z-50">
-            <SiteNav
-              fullName={site.fullName}
-              brand={site.brand}
-              links={site.heroLinks}
-            />
+            <SiteNav />
             <AdminModeBanner />
           </div>
           <main className="relative z-10 flex-1">{children}</main>

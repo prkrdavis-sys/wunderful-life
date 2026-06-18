@@ -56,10 +56,6 @@ export function AdminViewProvider({
   }, []);
 
   useEffect(() => {
-    setSite(initialSite);
-  }, [initialSite]);
-
-  useEffect(() => {
     const stored = localStorage.getItem(VIEW_MODE_KEY);
     if (stored === "admin" || stored === "regular") {
       setViewModeState(stored);

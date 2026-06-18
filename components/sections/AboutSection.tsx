@@ -1,3 +1,5 @@
+"use client";
+
 import {
   SectionReveal,
   StaggerChildren,
@@ -5,12 +7,12 @@ import {
 } from "@/components/ui/motion";
 import { EmilyPhoto } from "@/components/ui/EmilyPhoto";
 import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
+import { useSiteContent } from "@/components/admin/AdminViewProvider";
 import { sectionWallpapers } from "@/lib/plants";
 import { sectionText } from "@/lib/sectionText";
-import { getSiteContent } from "@/lib/site";
 
-export async function AboutSection() {
-  const site = await getSiteContent();
+export function AboutSection() {
+  const site = useSiteContent();
   const { wallpaper, overlay } = sectionWallpapers.about;
   const text = sectionText.about;
   const photos = site.about.photos;

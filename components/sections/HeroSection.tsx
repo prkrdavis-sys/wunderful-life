@@ -1,11 +1,13 @@
+"use client";
+
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
+import { useSiteContent } from "@/components/admin/AdminViewProvider";
 import { sectionWallpapers } from "@/lib/plants";
 import { sectionText } from "@/lib/sectionText";
-import { getSiteContent } from "@/lib/site";
 
-export async function HeroSection() {
-  const site = await getSiteContent();
+export function HeroSection() {
+  const site = useSiteContent();
   const { wallpaper, overlay } = sectionWallpapers.hero;
   const text = sectionText.hero;
 

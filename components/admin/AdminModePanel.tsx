@@ -169,7 +169,7 @@ export function AdminModePanel() {
             <div className="min-h-0 flex-1 overflow-hidden">
               {tab === "content" ? (
                 <div className="flex h-full min-h-0 flex-col px-5">
-                  <SiteEditorForm initial={site} />
+                  <SiteEditorForm />
                 </div>
               ) : (
                 <div className="flex h-full min-h-0 flex-col px-5">

@@ -5,16 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { SectionLink } from "@/components/ui/SectionLink";
 import { AdminLoginInline } from "@/components/admin/AdminLoginInline";
-import { useAdminView } from "@/components/admin/AdminViewProvider";
+import { useAdminView, useSiteContent } from "@/components/admin/AdminViewProvider";
 import type { HeroLink } from "@/lib/site/types";
 
-type SiteNavProps = {
-  fullName: string;
-  brand: string;
-  links: HeroLink[];
-};
-
-export function SiteNav({ fullName, brand, links }: SiteNavProps) {
+export function SiteNav() {
+  const site = useSiteContent();
   const pathname = usePathname();
   const router = useRouter();
   const {
@@ -159,15 +154,15 @@ export function SiteNav({ fullName, brand, links }: SiteNavProps) {
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
         <SectionLink href="/" className="group flex flex-col">
           <span className="font-display text-lg font-semibold text-indigo transition-colors group-hover:text-burgundy">
-            {fullName}
+            {site.fullName}
           </span>
           <span className="text-xs tracking-widest text-indigo/60 uppercase">
-            {brand}
+            {site.brand}
           </span>
         </SectionLink>
 
         <nav className="hidden items-center gap-5 md:flex">
-          {links.map((link) => (
+          {site.heroLinks.map((link) => (
             <SectionLink
               key={link.href}
               href={link.href}
@@ -230,7 +225,7 @@ export function SiteNav({ fullName, brand, links }: SiteNavProps) {
             className="overflow-hidden border-t border-white/30 md:hidden"
           >
             <div className="flex flex-col gap-1 px-4 py-3">
-              {links.map((link) => (
+              {site.heroLinks.map((link) => (
                 <SectionLink
                   key={link.href}
                   href={link.href}

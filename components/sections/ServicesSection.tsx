@@ -1,15 +1,17 @@
+"use client";
+
 import {
   SectionReveal,
   StaggerChildren,
   StaggerItem,
 } from "@/components/ui/motion";
 import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
+import { useSiteContent } from "@/components/admin/AdminViewProvider";
 import { sectionWallpapers } from "@/lib/plants";
 import { sectionText } from "@/lib/sectionText";
-import { getSiteContent } from "@/lib/site";
 
-export async function ServicesSection() {
-  const site = await getSiteContent();
+export function ServicesSection() {
+  const site = useSiteContent();
   const { wallpaper, overlay } = sectionWallpapers.services;
   const text = sectionText.services;
 

@@ -1,30 +1,21 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { SiteContent } from "@/lib/site/types";
 import { PHOTO_ACCENTS } from "@/lib/site/accents";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
 
 type SiteEditorFormProps = {
-  initial: SiteContent;
   onSaved?: (site: SiteContent) => void;
 };
 
-export function SiteEditorForm({ initial, onSaved }: SiteEditorFormProps) {
-  const router = useRouter();
-  const { setSite } = useAdminView();
-  const [form, setForm] = useState(initial);
+export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
+  const { site, setSite } = useAdminView();
+  const [form, setForm] = useState(site);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    setForm((current) =>
-      JSON.stringify(current) === JSON.stringify(initial) ? current : initial,
-    );
-  }, [initial]);
 
   const save = async () => {
     setLoading(true);
@@ -47,7 +38,6 @@ export function SiteEditorForm({ initial, onSaved }: SiteEditorFormProps) {
       setForm(data);
       onSaved?.(data);
       setMessage("Saved.");
-      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save.");
     } finally {
@@ -76,7 +66,6 @@ export function SiteEditorForm({ initial, onSaved }: SiteEditorFormProps) {
       setForm(data);
       setSite(data);
       setMessage("Photo uploaded.");
-      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload photo.");
     } finally {
