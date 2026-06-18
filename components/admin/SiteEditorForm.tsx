@@ -44,6 +44,7 @@ export function SiteEditorForm({ initial, onSaved }: SiteEditorFormProps) {
       }
 
       setSite(data);
+      setForm(data);
       onSaved?.(data);
       setMessage("Saved.");
       router.refresh();

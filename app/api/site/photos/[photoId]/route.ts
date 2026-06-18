@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { uploadAboutPhoto } from "@/lib/storage/site";
 import { StorageError } from "@/lib/storage";
 
@@ -17,6 +18,7 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const site = await uploadAboutPhoto(photoId, file);
+    revalidatePath("/", "layout");
     return NextResponse.json(site);
   } catch (error) {
     if (error instanceof StorageError) {

@@ -1,7 +1,8 @@
-import { readSiteContent, updateSiteContent } from "@/lib/storage/site";
-import { StorageError } from "@/lib/storage";
+import { unstable_noStore as noStore } from "next/cache";
+import { readSiteContent } from "@/lib/storage/site";
 
 export async function getSiteContent() {
+  noStore();
   return readSiteContent();
 }
 

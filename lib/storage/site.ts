@@ -77,6 +77,7 @@ export async function writeSiteContent(content: SiteContent) {
         addRandomSuffix: false,
         allowOverwrite: true,
         contentType: "application/json",
+        cacheControlMaxAge: 60,
       });
       return;
     } catch (error) {

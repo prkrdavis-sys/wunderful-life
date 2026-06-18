@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { readSiteContent, updateSiteContent } from "@/lib/storage/site";
 import type { SiteContent } from "@/lib/site/types";
 import { StorageError } from "@/lib/storage";
@@ -12,6 +13,7 @@ export async function PATCH(request: Request) {
   try {
     const body = (await request.json()) as SiteContent;
     const site = await updateSiteContent(body);
+    revalidatePath("/", "layout");
     return NextResponse.json(site);
   } catch (error) {
     if (error instanceof StorageError) {
