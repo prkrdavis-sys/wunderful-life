@@ -3,6 +3,7 @@ export function getUseBlobStorage(): boolean {
 }
 
 export const VIDEOS_METADATA_BLOB_PATH = "metadata/videos.json";
+export const SITE_METADATA_BLOB_PATH = "metadata/site.json";
 
 /** Vercel serverless functions reject request bodies larger than ~4.5MB. */
 export const VERCEL_DIRECT_UPLOAD_LIMIT_BYTES = 4 * 1024 * 1024;

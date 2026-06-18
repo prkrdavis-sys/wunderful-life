@@ -18,6 +18,8 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     console.error(error);
-    return NextResponse.json({ error: "Failed to update site content." }, { status: 500 });
+    const message =
+      error instanceof Error ? error.message : "Failed to update site content.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -21,7 +21,9 @@ export function SiteEditorForm({ initial, onSaved }: SiteEditorFormProps) {
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    setForm(initial);
+    setForm((current) =>
+      JSON.stringify(current) === JSON.stringify(initial) ? current : initial,
+    );
   }, [initial]);
 
   const save = async () => {

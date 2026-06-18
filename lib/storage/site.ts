@@ -1,25 +1,66 @@
-import { del, put } from "@vercel/blob";
+import { del, get, put } from "@vercel/blob";
 import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
 import type { SiteContent } from "@/lib/site/types";
+import {
+  getUseBlobStorage,
+  SITE_METADATA_BLOB_PATH,
+} from "./blob";
 import { StorageError } from "./types";
 
 const SITE_PATH = path.join(process.cwd(), "data", "site.json");
 const PHOTO_DIR = path.join(process.cwd(), "public", "about-photos");
-const useBlobStorage = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 
 async function ensurePhotoDir() {
   await fs.mkdir(PHOTO_DIR, { recursive: true });
 }
 
+async function readSiteFromBlob(): Promise<SiteContent | null> {
+  if (!getUseBlobStorage()) return null;
+
+  try {
+    const result = await get(SITE_METADATA_BLOB_PATH, { access: "public" });
+    if (!result || result.statusCode !== 200 || !result.stream) {
+      return null;
+    }
+
+    const text = await new Response(result.stream).text();
+    return JSON.parse(text) as SiteContent;
+  } catch {
+    return null;
+  }
+}
+
 export async function readSiteContent(): Promise<SiteContent> {
+  const blobSite = await readSiteFromBlob();
+  if (blobSite !== null) return blobSite;
+
   const raw = await fs.readFile(SITE_PATH, "utf8");
   return JSON.parse(raw) as SiteContent;
 }
 
 export async function writeSiteContent(content: SiteContent) {
-  await fs.writeFile(SITE_PATH, `${JSON.stringify(content, null, 2)}\n`);
+  if (process.env.VERCEL && !getUseBlobStorage()) {
+    throw new StorageError(
+      "Site edits require Vercel Blob storage. Create a Blob store in your Vercel project and redeploy.",
+      503,
+    );
+  }
+
+  const json = `${JSON.stringify(content, null, 2)}\n`;
+
+  if (getUseBlobStorage()) {
+    await put(SITE_METADATA_BLOB_PATH, json, {
+      access: "public",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType: "application/json",
+    });
+    return;
+  }
+
+  await fs.writeFile(SITE_PATH, json);
 }
 
 export async function updateSiteContent(content: SiteContent) {
@@ -29,7 +70,7 @@ export async function updateSiteContent(content: SiteContent) {
 
 async function deleteStoredPhoto(imagePath: string) {
   if (imagePath.startsWith("https://")) {
-    if (useBlobStorage) {
+    if (getUseBlobStorage()) {
       try {
         await del(imagePath);
       } catch {
@@ -56,7 +97,7 @@ async function savePhotoFile(photoId: string, file: File): Promise<string> {
   const ext = path.extname(file.name) || ".jpg";
   const filename = `${photoId}-${randomUUID()}${ext}`;
 
-  if (useBlobStorage) {
+  if (getUseBlobStorage()) {
     const blob = await put(`about-photos/${filename}`, file, {
       access: "public",
       addRandomSuffix: false,
