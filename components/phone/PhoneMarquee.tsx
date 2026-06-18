@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { PortfolioVideo } from "@/lib/videos/types";
+import { uniqueVideosById } from "@/lib/videos/sort";
 import { phoneTilt } from "./constants";
 import { PhoneVideoPlayer } from "./PhoneVideoPlayer";
 
@@ -13,8 +14,9 @@ type PhoneMarqueeProps = {
 export function PhoneMarquee({ videos, emptyClassName = "text-muted" }: PhoneMarqueeProps) {
   const [paused, setPaused] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const uniqueVideos = uniqueVideosById(videos);
 
-  if (videos.length === 0) {
+  if (uniqueVideos.length === 0) {
     return (
       <p className={`text-center ${emptyClassName}`}>
         No featured work yet — add videos in Admin.
@@ -22,12 +24,12 @@ export function PhoneMarquee({ videos, emptyClassName = "text-muted" }: PhoneMar
     );
   }
 
-  const duplicated = [...videos, ...videos];
-
   const handleActivate = (id: string | null) => {
     setActiveId(id);
     setPaused(id !== null);
   };
+
+  const shouldAnimate = uniqueVideos.length > 1;
 
   return (
     <div
@@ -38,11 +40,13 @@ export function PhoneMarquee({ videos, emptyClassName = "text-muted" }: PhoneMar
       }}
     >
       <div
-        className={`marquee-track flex w-max gap-8 px-4 ${paused ? "paused" : ""}`}
+        className={`flex w-max gap-8 px-4 ${
+          shouldAnimate ? `marquee-track-single ${paused ? "paused" : ""}` : "mx-auto"
+        }`}
       >
-        {duplicated.map((video, index) => (
+        {uniqueVideos.map((video, index) => (
           <PhoneVideoPlayer
-            key={`${video.id}-${index}`}
+            key={video.id}
             video={video}
             accentIndex={index % 5}
             tilt={phoneTilt(index)}

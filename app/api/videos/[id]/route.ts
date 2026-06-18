@@ -30,7 +30,9 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     console.error(error);
-    return NextResponse.json({ error: "Failed to update video." }, { status: 500 });
+    const message =
+      error instanceof Error ? error.message : "Failed to update video.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

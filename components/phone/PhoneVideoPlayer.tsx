@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { PortfolioVideo } from "@/lib/videos/types";
 import { VideoThumbnail } from "@/components/ui/VideoThumbnail";
 import { PhoneFrame } from "./PhoneFrame";
@@ -29,31 +29,48 @@ export function PhoneVideoPlayer({
   linkToDetail = true,
 }: PhoneVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [playbackError, setPlaybackError] = useState(false);
   const isPlaying = activeId === video.id;
 
-  const handleClick = useCallback(() => {
-    if (isPlaying) {
-      videoRef.current?.pause();
-      onActivate(null);
-      return;
-    }
+  const handleActivate = useCallback(() => {
+    setPlaybackError(false);
     onActivate(video.id);
-  }, [isPlaying, onActivate, video.id]);
+  }, [onActivate, video.id]);
+
+  const handleDeactivate = useCallback(() => {
+    onActivate(null);
+  }, [onActivate]);
 
   useEffect(() => {
-    if (isPlaying && videoRef.current) {
-      void videoRef.current.play();
+    const element = videoRef.current;
+    if (!isPlaying || !element) return;
+
+    const playPromise = element.play();
+    if (playPromise) {
+      void playPromise.catch(() => {
+        setPlaybackError(true);
+      });
     }
-    if (!isPlaying && videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
+  }, [isPlaying, video.videoPath]);
+
+  useEffect(() => {
+    if (!isPlaying) {
+      setPlaybackError(false);
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.currentTime = 0;
+      }
     }
   }, [isPlaying]);
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      handleClick();
+      if (isPlaying) {
+        handleDeactivate();
+      } else {
+        handleActivate();
+      }
     }
   };
 
@@ -65,22 +82,19 @@ export function PhoneVideoPlayer({
         size={size}
         isActive={isPlaying}
       >
-        <button
-          type="button"
-          onClick={handleClick}
-          onKeyDown={handleKeyDown}
-          className="group relative h-full w-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-burgundy/50 focus-visible:ring-offset-2 focus-visible:ring-offset-indigo/20"
-          aria-label={isPlaying ? `Pause ${video.title}` : `Play ${video.title}`}
-          aria-pressed={isPlaying}
-        >
+        <div className="relative h-full w-full">
           <AnimatePresence mode="wait">
             {!isPlaying ? (
-              <motion.div
+              <motion.button
                 key="thumb"
+                type="button"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0"
+                onClick={handleActivate}
+                onKeyDown={handleKeyDown}
+                className="group relative h-full w-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-burgundy/50 focus-visible:ring-offset-2 focus-visible:ring-offset-indigo/20"
+                aria-label={`Play ${video.title}`}
               >
                 <VideoThumbnail
                   src={video.thumbnailPath}
@@ -97,7 +111,7 @@ export function PhoneVideoPlayer({
                     ▶
                   </span>
                 </motion.div>
-              </motion.div>
+              </motion.button>
             ) : (
               <motion.div
                 key="video"
@@ -105,18 +119,39 @@ export function PhoneVideoPlayer({
                 animate={{ opacity: 1 }}
                 className="absolute inset-0 bg-black"
               >
-                <video
-                  ref={videoRef}
-                  src={video.videoPath}
-                  controls
-                  playsInline
-                  className="h-full w-full object-cover"
-                  onEnded={() => onActivate(null)}
-                />
+                {playbackError ? (
+                  <div className="flex h-full flex-col items-center justify-center gap-3 px-4 text-center">
+                    <p className="text-sm font-medium text-white">
+                      This video format is not supported in your browser.
+                    </p>
+                    <p className="text-xs text-white/70">
+                      Re-upload the video from Admin to auto-convert it, or export
+                      as MP4 from Photos.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleDeactivate}
+                      className="rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-brown"
+                    >
+                      Back
+                    </button>
+                  </div>
+                ) : (
+                  <video
+                    ref={videoRef}
+                    src={video.videoPath}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="h-full w-full object-cover"
+                    onEnded={handleDeactivate}
+                    onError={() => setPlaybackError(true)}
+                  />
+                )}
               </motion.div>
             )}
           </AnimatePresence>
-        </button>
+        </div>
       </PhoneFrame>
 
       {showTitle && (

@@ -5,6 +5,7 @@ import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
 import { sectionWallpapers } from "@/lib/plants";
 import { sectionText } from "@/lib/sectionText";
 import { filterVideos } from "@/lib/videos/filter";
+import { uniqueVideosById } from "@/lib/videos/sort";
 import type { PortfolioVideo } from "@/lib/videos/types";
 import { getSiteContent } from "@/lib/site";
 
@@ -17,7 +18,9 @@ export async function WorkPreviewSection({ videos }: WorkPreviewSectionProps) {
   const { wallpaper, overlay } = sectionWallpapers.work;
   const text = sectionText.work;
   const featured = filterVideos(videos, { featured: true });
-  const marqueeVideos = featured.length > 0 ? featured : videos;
+  const marqueeVideos = uniqueVideosById(
+    featured.length > 0 ? featured : videos,
+  );
 
   return (
     <section

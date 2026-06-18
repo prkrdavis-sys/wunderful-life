@@ -1,13 +1,6 @@
 import Image from "next/image";
 import type { AboutPhoto } from "@/lib/site/types";
-
-const accentGradients: Record<string, string> = {
-  green: "from-lavender/45 via-lavender/18 to-cream",
-  pink: "from-pink/50 via-pink/20 to-cream",
-  blue: "from-blue/40 via-blue/15 to-cream",
-  yellow: "from-yellow/60 via-yellow/25 to-cream",
-  brown: "from-brown-light/40 via-brown/10 to-cream",
-};
+import { photoAccentGradient } from "@/lib/site/accents";
 
 type EmilyPhotoProps = {
   photo: AboutPhoto;
@@ -47,8 +40,7 @@ export function EmilyPhoto({
   size = "md",
   className = "",
 }: EmilyPhotoProps) {
-  const gradient =
-    accentGradients[photo.accent] ?? accentGradients.green;
+  const gradient = photoAccentGradient(photo.accent);
 
   return (
     <figure

@@ -15,7 +15,7 @@ import {
   videoContentTypeFromFilename,
   videoUploadErrorMessage,
 } from "@/lib/videos/upload";
-import { useBlobStorage, VIDEOS_METADATA_BLOB_PATH } from "./blob";
+import { getUseBlobStorage, VIDEOS_METADATA_BLOB_PATH } from "./blob";
 import { StorageError } from "./types";
 
 const DATA_PATH = path.join(process.cwd(), "data", "videos.json");
@@ -26,13 +26,13 @@ const THUMB_DIR = path.join(UPLOADS_ROOT, "thumbnails");
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 
 async function ensureUploadDirs() {
-  if (useBlobStorage) return;
+  if (getUseBlobStorage()) return;
   await fs.mkdir(VIDEO_DIR, { recursive: true });
   await fs.mkdir(THUMB_DIR, { recursive: true });
 }
 
 async function readVideosFromBlob(): Promise<PortfolioVideo[] | null> {
-  if (!useBlobStorage) return null;
+  if (!getUseBlobStorage()) return null;
 
   try {
     const result = await get(VIDEOS_METADATA_BLOB_PATH, { access: "public" });
@@ -49,14 +49,14 @@ async function readVideosFromBlob(): Promise<PortfolioVideo[] | null> {
 
 async function readVideosFile(): Promise<PortfolioVideo[]> {
   const blobVideos = await readVideosFromBlob();
-  if (blobVideos) return blobVideos;
+  if (blobVideos !== null) return blobVideos;
 
   const raw = await fs.readFile(DATA_PATH, "utf8");
   return JSON.parse(raw) as PortfolioVideo[];
 }
 
 async function writeVideosFile(videos: PortfolioVideo[]) {
-  if (process.env.VERCEL && !useBlobStorage) {
+  if (process.env.VERCEL && !getUseBlobStorage()) {
     throw new StorageError(
       "Video uploads require Vercel Blob storage. Create a Blob store in your Vercel project and redeploy.",
       503,
@@ -65,7 +65,7 @@ async function writeVideosFile(videos: PortfolioVideo[]) {
 
   const content = `${JSON.stringify(sortVideos(videos), null, 2)}\n`;
 
-  if (useBlobStorage) {
+  if (getUseBlobStorage()) {
     await put(VIDEOS_METADATA_BLOB_PATH, content, {
       access: "public",
       addRandomSuffix: false,
@@ -82,10 +82,11 @@ async function saveUploadFile(
   file: File,
   dir: "videos" | "thumbnails",
 ): Promise<string> {
-  const ext = path.extname(file.name) || (dir === "videos" ? ".mp4" : ".jpg");
+  const ext =
+    path.extname(file.name).toLowerCase() || (dir === "videos" ? ".mp4" : ".jpg");
   const filename = `${randomUUID()}${ext}`;
 
-  if (useBlobStorage) {
+  if (getUseBlobStorage()) {
     const blob = await put(`${dir}/${filename}`, file, {
       access: "public",
       addRandomSuffix: false,
@@ -106,7 +107,7 @@ async function saveUploadFile(
 
 async function deleteStoredFile(filePath: string) {
   if (filePath.startsWith("https://")) {
-    if (useBlobStorage) {
+    if (getUseBlobStorage()) {
       try {
         await del(filePath);
       } catch {
@@ -126,7 +127,7 @@ async function deleteStoredFile(filePath: string) {
 }
 
 function assertCanPersistUploads() {
-  if (process.env.VERCEL && !useBlobStorage) {
+  if (process.env.VERCEL && !getUseBlobStorage()) {
     throw new StorageError(
       "Video uploads require Vercel Blob storage. Create a Blob store in your Vercel project and redeploy.",
       503,
@@ -247,11 +248,12 @@ export async function updateVideo(
     .filter((video) => video.id !== id)
     .map((video) => video.slug);
 
-  const slug = input.slug
-    ? uniqueSlug(input.slug, existingSlugs)
-    : input.title
-      ? uniqueSlug(input.title, existingSlugs)
-      : current.slug;
+  const slug =
+    input.slug !== undefined
+      ? uniqueSlug(input.slug, existingSlugs)
+      : input.title !== undefined
+        ? uniqueSlug(input.title, existingSlugs)
+        : current.slug;
 
   const patch = Object.fromEntries(
     Object.entries(input).filter(([, value]) => value !== undefined),

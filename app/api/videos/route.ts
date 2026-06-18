@@ -24,7 +24,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     console.error(error);
-    return NextResponse.json({ error: "Failed to create video." }, { status: 500 });
+    const message =
+      error instanceof Error ? error.message : "Failed to create video.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

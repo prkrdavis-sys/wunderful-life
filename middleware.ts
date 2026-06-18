@@ -3,6 +3,9 @@ import type { NextRequest } from "next/server";
 import { ADMIN_COOKIE, canAccessAdmin, isAdminAuthRequired } from "@/lib/auth";
 
 function isProtectedApiRoute(pathname: string, method: string): boolean {
+  if (pathname === "/api/videos/upload") {
+    return false;
+  }
   if (pathname.startsWith("/api/site")) {
     return method !== "GET";
   }

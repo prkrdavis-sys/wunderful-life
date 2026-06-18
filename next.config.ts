@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
+import path from "node:path";
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: path.join(process.cwd()),
+  },
   images: {
     remotePatterns: [
       {
@@ -11,6 +15,7 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
+    proxyClientMaxBodySize: "100mb",
     serverActions: {
       bodySizeLimit: "100mb",
     },

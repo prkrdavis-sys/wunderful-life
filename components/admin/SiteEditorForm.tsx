@@ -3,10 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { SiteContent } from "@/lib/site/types";
+import { PHOTO_ACCENTS } from "@/lib/site/accents";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
-
-const ACCENTS = ["green", "blue", "pink", "yellow", "brown"] as const;
 
 type SiteEditorFormProps = {
   initial: SiteContent;
@@ -211,9 +210,9 @@ export function SiteEditorForm({ initial, onSaved }: SiteEditorFormProps) {
                     }
                     className="mt-1 w-full rounded-xl border border-brown/20 bg-white px-3 py-2 text-brown"
                   >
-                    {ACCENTS.map((accent) => (
-                      <option key={accent} value={accent}>
-                        {accent}
+                    {PHOTO_ACCENTS.map((accent) => (
+                      <option key={accent.value} value={accent.value}>
+                        {accent.label}
                       </option>
                     ))}
                   </select>
@@ -314,9 +313,9 @@ export function SiteEditorForm({ initial, onSaved }: SiteEditorFormProps) {
                 }
                 className="mt-1 w-full rounded-xl border border-brown/20 bg-white px-3 py-2 text-brown"
               >
-                {ACCENTS.map((accent) => (
-                  <option key={accent} value={accent}>
-                    {accent}
+                {PHOTO_ACCENTS.map((accent) => (
+                  <option key={accent.value} value={accent.value}>
+                    {accent.label}
                   </option>
                 ))}
               </select>

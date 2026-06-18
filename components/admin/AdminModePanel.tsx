@@ -172,11 +172,14 @@ export function AdminModePanel() {
                   <SiteEditorForm key={site.fullName + site.tagline} initial={site} />
                 </div>
               ) : (
-                <div className="h-full overflow-y-auto overscroll-contain px-5 py-6">
+                <div className="flex h-full min-h-0 flex-col px-5">
                   {videosLoaded ? (
-                    <AdminDashboard initialVideos={videos} />
+                    <AdminDashboard
+                      initialVideos={videos}
+                      onVideosChange={setVideos}
+                    />
                   ) : (
-                    <p className="text-sm text-muted">Loading videos…</p>
+                    <p className="py-6 text-sm text-muted">Loading videos…</p>
                   )}
                 </div>
               )}

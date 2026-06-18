@@ -4,6 +4,15 @@ export function sortVideos(videos: PortfolioVideo[]): PortfolioVideo[] {
   return [...videos].sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
+export function uniqueVideosById(videos: PortfolioVideo[]): PortfolioVideo[] {
+  const seen = new Set<string>();
+  return videos.filter((video) => {
+    if (seen.has(video.id)) return false;
+    seen.add(video.id);
+    return true;
+  });
+}
+
 export function reorderVideos(
   videos: PortfolioVideo[],
   orderedIds: string[],

@@ -3,6 +3,7 @@
 import useEmblaCarousel from "embla-carousel-react";
 import { useEffect, useState } from "react";
 import type { PortfolioVideo } from "@/lib/videos/types";
+import { uniqueVideosById } from "@/lib/videos/sort";
 import { phoneTilt } from "./constants";
 import { PhoneVideoPlayer } from "./PhoneVideoPlayer";
 
@@ -12,6 +13,7 @@ type PhoneCarouselProps = {
 };
 
 export function PhoneCarousel({ videos, size = "lg" }: PhoneCarouselProps) {
+  const uniqueVideos = uniqueVideosById(videos);
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "center",
     containScroll: "trimSnaps",
@@ -39,7 +41,7 @@ export function PhoneCarousel({ videos, size = "lg" }: PhoneCarouselProps) {
     };
   }, [emblaApi]);
 
-  if (videos.length === 0) {
+  if (uniqueVideos.length === 0) {
     return (
       <p className="py-16 text-center text-muted">
         No videos match your filters.
@@ -72,7 +74,7 @@ export function PhoneCarousel({ videos, size = "lg" }: PhoneCarouselProps) {
 
       <div ref={emblaRef} className="overflow-hidden px-4">
         <div className="flex gap-6 py-6">
-          {videos.map((video, index) => (
+          {uniqueVideos.map((video, index) => (
             <div key={video.id} className="min-w-0 shrink-0 grow-0 basis-auto">
               <PhoneVideoPlayer
                 video={video}
