@@ -34,6 +34,11 @@ async function readJsonResponse<T>(response: Response): Promise<T> {
   try {
     return JSON.parse(raw) as T;
   } catch {
+    if (response.status === 413) {
+      throw new Error(
+        "That file is too large for a direct upload. Try again — large videos upload through Blob storage automatically.",
+      );
+    }
     throw new Error(
       response.ok
         ? "The server returned an unexpected response."
@@ -49,10 +54,9 @@ function shouldUseClientUpload(
 ): boolean {
   if (!config.clientUpload) return false;
 
-  const limit = config.directUploadLimitBytes;
-  return (
-    (videoFile?.size ?? 0) > limit || (thumbnailFile?.size ?? 0) > limit
-  );
+  // On Vercel, never attach files to the API route — even one ~4MB video plus
+  // a thumbnail can exceed the serverless 4.5MB body limit (413).
+  return Boolean(videoFile || thumbnailFile);
 }
 
 function uploadContentType(file: File, dir: "videos" | "thumbnails"): string | undefined {
