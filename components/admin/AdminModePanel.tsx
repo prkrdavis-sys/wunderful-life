@@ -7,6 +7,7 @@ import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { AdminLoginInline } from "@/components/admin/AdminLoginInline";
 import { SiteEditorForm } from "@/components/admin/SiteEditorForm";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
+import { EditorPanelIcon } from "@/components/ui/EditorPanelIcon";
 
 type AdminTab = "content" | "portfolio";
 
@@ -27,9 +28,9 @@ export function AdminModeBanner() {
           <button
             type="button"
             onClick={() => setPanelOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-paper/35 bg-paper/15 px-3 py-1 text-sm font-semibold text-paper transition hover:bg-paper/25"
+            className="inline-flex items-center gap-2 rounded-full border border-paper/35 bg-paper/15 px-3 py-1.5 text-sm font-semibold text-paper transition hover:bg-paper/25"
           >
-            <span aria-hidden className="text-xs">▢</span>
+            <EditorPanelIcon className="h-3.5 w-3.5 shrink-0 opacity-95" />
             Open editing panel
           </button>
         </span>

@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { SectionLink } from "@/components/ui/SectionLink";
+import { EditorPanelIcon } from "@/components/ui/EditorPanelIcon";
 import { AdminLoginInline } from "@/components/admin/AdminLoginInline";
 import { useAdminView, useSiteContent } from "@/components/admin/AdminViewProvider";
 import type { HeroLink } from "@/lib/site/types";
@@ -138,16 +139,7 @@ export function SiteNav() {
                   aria-hidden
                   className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-burgundy/20 bg-paper/90 text-burgundy shadow-sm"
                 >
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.75}
-                  >
-                    <rect x="5" y="7" width="14" height="12" rx="2" />
-                    <path strokeLinecap="round" d="M9 7V5.5A1.5 1.5 0 0110.5 4h3A1.5 1.5 0 0115 5.5V7" />
-                  </svg>
+                  <EditorPanelIcon />
                 </span>
                 <span className="min-w-0">
                   <span className="block text-sm font-semibold text-burgundy">
