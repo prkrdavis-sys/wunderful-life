@@ -19,9 +19,13 @@ import { AnimatedButton } from "@/components/ui/AnimatedButton";
 type VideoFormProps = {
   initial?: PortfolioVideo | null;
   layout?: "default" | "panel";
+  embedded?: boolean;
   onSuccess: (video: PortfolioVideo) => void;
   onCancel?: () => void;
 };
+
+const inputClass =
+  "mt-1 w-full rounded-xl border border-brown/20 bg-white px-3 py-2 text-brown outline-none focus:border-burgundy/50";
 
 type UploadConfig = {
   clientUpload: boolean;
@@ -105,6 +109,7 @@ const emptyForm = {
 export function VideoForm({
   initial,
   layout = "default",
+  embedded = false,
   onSuccess,
   onCancel,
 }: VideoFormProps) {
@@ -281,21 +286,21 @@ export function VideoForm({
         ] as const
       ).map(([key, label, type]) => (
         <label key={key} className="block text-sm">
-          <span className="font-medium text-brown">{label}</span>
+          <span className="text-muted">{label}</span>
           <input
             type={type}
             value={form[key]}
             onChange={(event) =>
               setForm((current) => ({ ...current, [key]: event.target.value }))
             }
-            className="mt-1 w-full rounded-xl border border-brown/20 bg-cream px-3 py-2 text-brown outline-none focus:border-burgundy/50"
+            className={inputClass}
             required={key === "title" || key === "brand"}
           />
         </label>
       ))}
 
       <label className="block text-sm">
-        <span className="font-medium text-brown">Platform</span>
+        <span className="text-muted">Platform</span>
         <select
           value={form.platform}
           onChange={(event) =>
@@ -304,7 +309,7 @@ export function VideoForm({
               platform: event.target.value as Platform,
             }))
           }
-          className="mt-1 w-full rounded-xl border border-brown/20 bg-cream px-3 py-2 text-brown outline-none focus:border-burgundy/50"
+          className={inputClass}
         >
           {PLATFORMS.map((platform) => (
             <option key={platform} value={platform}>
@@ -315,7 +320,7 @@ export function VideoForm({
       </label>
 
       <label className="block text-sm">
-        <span className="font-medium text-brown">Duration (seconds)</span>
+        <span className="text-muted">Duration (seconds)</span>
         <input
           type="number"
           min={0}
@@ -326,12 +331,12 @@ export function VideoForm({
               durationSec: Number(event.target.value),
             }))
           }
-          className="mt-1 w-full rounded-xl border border-brown/20 bg-cream px-3 py-2 text-brown outline-none focus:border-burgundy/50"
+          className={inputClass}
         />
       </label>
 
       <label className="block text-sm sm:col-span-2">
-        <span className="font-medium text-brown">
+        <span className="text-muted">
           Video file {initial ? "(leave empty to keep current)" : ""}
         </span>
         <input
@@ -357,7 +362,7 @@ export function VideoForm({
       </label>
 
       <label className="block text-sm sm:col-span-2">
-        <span className="font-medium text-brown">
+        <span className="text-muted">
           Thumbnail {initial ? "(leave empty to keep current)" : ""}
         </span>
         <input
@@ -380,20 +385,54 @@ export function VideoForm({
           }
           className="h-4 w-4 rounded border-brown/30"
         />
-        <span className="font-medium text-brown">Featured on landing marquee</span>
+        <span className="text-muted">Featured on landing marquee</span>
       </label>
     </div>
   );
 
+  const saveFooter = (
+    <>
+      {error && (
+        <p className="mb-2 rounded-xl bg-pink/15 px-4 py-2 text-sm text-brown">
+          {error}
+        </p>
+      )}
+      {message && (
+        <p className="mb-2 rounded-xl bg-lavender/25 px-4 py-2 text-sm text-indigo">
+          {message}
+        </p>
+      )}
+
+      <AnimatedButton
+        onClick={() => void save()}
+        disabled={loading}
+        className="w-full shadow-md shadow-burgundy/15 sm:max-w-xs"
+      >
+        {loading ? loadingMessage : initial ? "Save video" : "Add video"}
+      </AnimatedButton>
+    </>
+  );
+
+  if (layout === "panel" && embedded) {
+    return (
+      <div className="space-y-4">
+        {fields}
+        <div className="border-t border-brown/10 pt-4">{saveFooter}</div>
+      </div>
+    );
+  }
+
   if (layout === "panel") {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="shrink-0 border-b border-brown/10 pb-4">
+        <div className="shrink-0 border-b border-brown/10 px-4 pb-4 sm:px-6">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="font-display text-xl text-brown">Edit Video</h2>
+              <h3 className="font-display text-lg text-brown">
+                {initial ? "Edit video" : "Add video"}
+              </h3>
               <p className="mt-1 text-sm text-muted">
-                {initial?.title || "Update details, media, and featured status."}
+                {initial?.title ?? "Update details, media, and featured status."}
               </p>
             </div>
             {onCancel && (
@@ -408,29 +447,12 @@ export function VideoForm({
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-6">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-5">
           {fields}
         </div>
 
-        <div className="shrink-0 border-t border-brown/10 bg-paper py-4">
-          {error && (
-            <p className="mb-3 rounded-xl bg-pink/20 px-4 py-2 text-sm text-brown">
-              {error}
-            </p>
-          )}
-          {message && (
-            <p className="mb-3 rounded-xl bg-lavender/25 px-4 py-2 text-sm text-indigo">
-              {message}
-            </p>
-          )}
-
-          <AnimatedButton
-            onClick={() => void save()}
-            disabled={loading}
-            className="w-full shadow-md shadow-burgundy/15"
-          >
-            {loading ? loadingMessage : "Save video"}
-          </AnimatedButton>
+        <div className="shrink-0 border-t border-brown/10 bg-paper px-4 py-3 sm:px-6">
+          {saveFooter}
         </div>
       </div>
     );

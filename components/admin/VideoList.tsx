@@ -3,7 +3,6 @@
 import { useState } from "react";
 import type { PortfolioVideo } from "@/lib/videos/types";
 import { formatDuration, platformLabel } from "@/lib/videos/types";
-import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { VideoThumbnail } from "@/components/ui/VideoThumbnail";
 
 type VideoListProps = {
@@ -12,10 +11,20 @@ type VideoListProps = {
   onChange: (videos: PortfolioVideo[]) => void;
 };
 
+function PlatformChip({ platform }: { platform: PortfolioVideo["platform"] }) {
+  return (
+    <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-indigo uppercase backdrop-blur-sm">
+      {platformLabel(platform)}
+    </span>
+  );
+}
+
 export function VideoList({ videos, onEdit, onChange }: VideoListProps) {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const featuredCount = videos.filter((video) => video.featured).length;
 
   const reorder = async (previous: PortfolioVideo[], ordered: PortfolioVideo[]) => {
     onChange(ordered);
@@ -103,82 +112,115 @@ export function VideoList({ videos, onEdit, onChange }: VideoListProps) {
 
   if (videos.length === 0) {
     return (
-      <p className="rounded-2xl border border-dashed border-brown/20 p-8 text-center text-muted">
-        No videos yet. Add your first upload above.
+      <p className="rounded-2xl border border-dashed border-brown/20 p-10 text-center text-sm text-muted">
+        No videos yet. Use <span className="font-medium text-brown">Add video</span>{" "}
+        to upload your first one.
       </p>
     );
   }
 
   return (
-    <>
+    <div className="space-y-4">
       {error && (
-        <p className="mb-4 rounded-xl bg-pink/20 px-4 py-2 text-sm text-brown">
-          {error}
-        </p>
+        <p className="rounded-xl bg-pink/15 px-4 py-2 text-sm text-brown">{error}</p>
       )}
-      <ul className="space-y-4">
-        {videos.map((video) => (
+
+      <p className="text-sm text-muted">
+        {videos.length} video{videos.length === 1 ? "" : "s"}
+        {featuredCount > 0 && (
+          <>
+            {" "}
+            · {featuredCount} featured on marquee
+          </>
+        )}
+        <span className="hidden sm:inline"> · drag cards to reorder</span>
+      </p>
+
+      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {videos.map((video, index) => (
           <li
             key={video.id}
             draggable
             onDragStart={() => setDraggingId(video.id)}
             onDragOver={(event) => event.preventDefault()}
             onDrop={() => void handleDrop(video.id)}
-            className={`flex flex-col gap-4 rounded-2xl border-2 border-brown/10 bg-white/80 p-4 sm:flex-row sm:items-center ${
-              draggingId === video.id ? "opacity-50" : ""
+            className={`group flex flex-col overflow-hidden rounded-2xl border border-brown/15 bg-cream/50 transition ${
+              draggingId === video.id
+                ? "scale-[0.98] opacity-50"
+                : "hover:border-brown/25 hover:shadow-sm"
             }`}
           >
-          <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded-xl bg-brown/10">
-            <VideoThumbnail src={video.thumbnailPath} alt={video.title} />
-          </div>
-
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-semibold text-brown">
-                {video.title || "Untitled video"}
-              </p>
-              <p className="text-sm text-muted">
-                {video.brand} · {platformLabel(video.platform)} ·{" "}
-                {formatDuration(video.durationSec)}
-              </p>
-              <p className="mt-1 text-xs text-muted">
-                Drag to reorder · {video.featured ? "Featured" : "Not featured"}
-              </p>
-            </div>
-
-            <div
-              className="flex flex-wrap gap-2"
-              onMouseDown={(event) => event.stopPropagation()}
+            <button
+              type="button"
+              onClick={() => onEdit(video)}
+              className="relative aspect-[9/16] w-full overflow-hidden bg-brown/10 text-left"
             >
-              <AnimatedButton
+              <VideoThumbnail src={video.thumbnailPath} alt={video.title} />
+              <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-1 p-2">
+                <span className="rounded-md bg-brown/55 px-1.5 py-0.5 font-label text-[10px] font-semibold tracking-wider text-paper uppercase backdrop-blur-sm">
+                  #{index + 1}
+                </span>
+                <PlatformChip platform={video.platform} />
+              </div>
+              {video.featured && (
+                <span className="absolute bottom-2 left-2 rounded-full bg-burgundy px-2 py-0.5 text-[10px] font-semibold text-paper">
+                  Featured
+                </span>
+              )}
+              <span className="absolute right-2 bottom-2 rounded-md bg-brown/55 px-1.5 py-0.5 text-[10px] font-medium text-paper backdrop-blur-sm">
+                {formatDuration(video.durationSec)}
+              </span>
+            </button>
+
+            <div className="flex min-h-0 flex-1 flex-col gap-2 p-3">
+              <button
                 type="button"
-                variant="ghost"
-                className="px-4 py-2 text-xs"
                 onClick={() => onEdit(video)}
+                className="text-left"
               >
-                Edit
-              </AnimatedButton>
-              <AnimatedButton
-                type="button"
-                variant="secondary"
-                className="px-4 py-2 text-xs"
-                disabled={busyId === video.id}
-                onClick={() => void toggleFeatured(video)}
+                <p className="line-clamp-2 font-medium leading-snug text-brown">
+                  {video.title || "Untitled video"}
+                </p>
+                <p className="mt-0.5 truncate text-xs text-muted">{video.brand}</p>
+                {video.hook && (
+                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-indigo/80">
+                    {video.hook}
+                  </p>
+                )}
+              </button>
+
+              <div
+                className="mt-auto flex flex-wrap gap-1 border-t border-brown/10 pt-2"
+                onMouseDown={(event) => event.stopPropagation()}
               >
-                {video.featured ? "Unfeature" : "Feature"}
-              </AnimatedButton>
-              <AnimatedButton
-                type="button"
-                variant="ghost"
-                className="px-4 py-2 text-xs text-pink-deep"
-                disabled={busyId === video.id}
-                onClick={() => void handleDelete(video.id)}
-              >
-                Delete
-              </AnimatedButton>
+                <button
+                  type="button"
+                  onClick={() => onEdit(video)}
+                  className="rounded-lg px-2 py-1 text-xs font-medium text-burgundy transition hover:bg-white/80"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  disabled={busyId === video.id}
+                  onClick={() => void toggleFeatured(video)}
+                  className="rounded-lg px-2 py-1 text-xs font-medium text-indigo transition hover:bg-white/80 disabled:opacity-50"
+                >
+                  {video.featured ? "Unfeature" : "Feature"}
+                </button>
+                <button
+                  type="button"
+                  disabled={busyId === video.id}
+                  onClick={() => void handleDelete(video.id)}
+                  className="rounded-lg px-2 py-1 text-xs font-medium text-pink-deep transition hover:bg-white/80 disabled:opacity-50"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </li>
         ))}
       </ul>
-    </>
+    </div>
   );
 }

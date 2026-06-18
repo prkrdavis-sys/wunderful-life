@@ -114,65 +114,64 @@ export function AdminModePanel() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="admin-editor-title"
-            initial={{ opacity: 0, scale: 0.96, y: 16 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 16 }}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
-            className="fixed top-1/2 left-1/2 z-[70] flex h-[min(88vh,52rem)] w-[min(92vw,42rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-3xl border border-brown/15 bg-paper shadow-2xl"
+            className="fixed inset-3 z-[70] flex flex-col overflow-hidden rounded-2xl border border-brown/15 bg-paper shadow-2xl sm:inset-4 md:inset-6 lg:inset-8"
           >
-            <div className="flex items-center justify-between border-b border-brown/10 px-5 py-4">
-              <div>
-                <p className="font-label text-xs font-semibold tracking-[0.2em] text-pink-deep uppercase">
-                  Admin mode
-                </p>
+            <div className="flex shrink-0 items-center justify-between gap-4 border-b border-brown/10 px-4 py-3 sm:px-6">
+              <div className="min-w-0">
                 <h2
                   id="admin-editor-title"
-                  className="font-display text-2xl text-brown"
+                  className="font-display text-xl text-brown sm:text-2xl"
                 >
                   Edit portfolio
                 </h2>
               </div>
-              <button
-                type="button"
-                onClick={() => setPanelOpen(false)}
-                className="rounded-full border border-brown/20 px-3 py-1.5 text-sm text-brown hover:bg-cream"
-              >
-                Close
-              </button>
-            </div>
 
-            <div className="flex gap-2 border-b border-brown/10 px-5 py-3">
-              <button
-                type="button"
-                onClick={() => setTab("content")}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                  tab === "content"
-                    ? "bg-burgundy text-paper"
-                    : "bg-cream text-indigo hover:bg-lavender/25"
-                }`}
-              >
-                Site content
-              </button>
-              <button
-                type="button"
-                onClick={() => setTab("portfolio")}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                  tab === "portfolio"
-                    ? "bg-burgundy text-paper"
-                    : "bg-cream text-indigo hover:bg-lavender/25"
-                }`}
-              >
-                Videos
-              </button>
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1 rounded-full bg-cream p-1">
+                  <button
+                    type="button"
+                    onClick={() => setTab("content")}
+                    className={`rounded-full px-3 py-1.5 text-sm font-medium transition sm:px-4 sm:py-2 ${
+                      tab === "content"
+                        ? "bg-burgundy text-paper"
+                        : "text-indigo hover:bg-lavender/25"
+                    }`}
+                  >
+                    Site
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTab("portfolio")}
+                    className={`rounded-full px-3 py-1.5 text-sm font-medium transition sm:px-4 sm:py-2 ${
+                      tab === "portfolio"
+                        ? "bg-burgundy text-paper"
+                        : "text-indigo hover:bg-lavender/25"
+                    }`}
+                  >
+                    Videos
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPanelOpen(false)}
+                  className="rounded-full border border-brown/20 px-3 py-1.5 text-sm text-brown hover:bg-cream"
+                >
+                  Close
+                </button>
+              </div>
             </div>
 
             <div className="min-h-0 flex-1 overflow-hidden">
               {tab === "content" ? (
-                <div className="flex h-full min-h-0 flex-col px-5">
+                <div className="flex h-full min-h-0 flex-col">
                   <SiteEditorForm />
                 </div>
               ) : (
-                <div className="flex h-full min-h-0 flex-col px-5">
+                <div className="flex h-full min-h-0 flex-col">
                   {videosLoaded ? (
                     <AdminDashboard
                       initialVideos={videos}
