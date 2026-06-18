@@ -56,13 +56,6 @@ async function readVideosFile(): Promise<PortfolioVideo[]> {
 }
 
 async function writeVideosFile(videos: PortfolioVideo[]) {
-  if (process.env.VERCEL && !getUseBlobStorage()) {
-    throw new StorageError(
-      "Video uploads require Vercel Blob storage. Create a Blob store in your Vercel project and redeploy.",
-      503,
-    );
-  }
-
   const content = `${JSON.stringify(sortVideos(videos), null, 2)}\n`;
 
   if (getUseBlobStorage()) {

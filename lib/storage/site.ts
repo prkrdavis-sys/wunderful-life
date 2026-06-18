@@ -12,6 +12,29 @@ import { StorageError } from "./types";
 const SITE_PATH = path.join(process.cwd(), "data", "site.json");
 const PHOTO_DIR = path.join(process.cwd(), "public", "about-photos");
 
+function isCompleteSiteContent(value: unknown): value is SiteContent {
+  if (!value || typeof value !== "object") return false;
+  const site = value as SiteContent;
+  return (
+    typeof site.fullName === "string" &&
+    typeof site.name === "string" &&
+    typeof site.brand === "string" &&
+    typeof site.tagline === "string" &&
+    Boolean(site.about?.headline) &&
+    Array.isArray(site.about?.paragraphs) &&
+    Array.isArray(site.about?.photos) &&
+    Array.isArray(site.heroLinks) &&
+    Boolean(site.social?.instagram) &&
+    Boolean(site.social?.email) &&
+    Array.isArray(site.services)
+  );
+}
+
+async function readSiteFromFile(): Promise<SiteContent> {
+  const raw = await fs.readFile(SITE_PATH, "utf8");
+  return JSON.parse(raw) as SiteContent;
+}
+
 async function ensurePhotoDir() {
   await fs.mkdir(PHOTO_DIR, { recursive: true });
 }
@@ -26,7 +49,8 @@ async function readSiteFromBlob(): Promise<SiteContent | null> {
     }
 
     const text = await new Response(result.stream).text();
-    return JSON.parse(text) as SiteContent;
+    const parsed = JSON.parse(text) as SiteContent;
+    return isCompleteSiteContent(parsed) ? parsed : null;
   } catch {
     return null;
   }
@@ -36,31 +60,50 @@ export async function readSiteContent(): Promise<SiteContent> {
   const blobSite = await readSiteFromBlob();
   if (blobSite !== null) return blobSite;
 
-  const raw = await fs.readFile(SITE_PATH, "utf8");
-  return JSON.parse(raw) as SiteContent;
+  return readSiteFromFile();
 }
 
 export async function writeSiteContent(content: SiteContent) {
-  if (process.env.VERCEL && !getUseBlobStorage()) {
-    throw new StorageError(
-      "Site edits require Vercel Blob storage. Create a Blob store in your Vercel project and redeploy.",
-      503,
-    );
+  if (!isCompleteSiteContent(content)) {
+    throw new StorageError("Invalid site content.", 400);
   }
 
   const json = `${JSON.stringify(content, null, 2)}\n`;
 
   if (getUseBlobStorage()) {
-    await put(SITE_METADATA_BLOB_PATH, json, {
-      access: "public",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-    });
-    return;
+    try {
+      await put(SITE_METADATA_BLOB_PATH, json, {
+        access: "public",
+        addRandomSuffix: false,
+        allowOverwrite: true,
+        contentType: "application/json",
+      });
+      return;
+    } catch (error) {
+      if (readEnv("VERCEL") === "1") {
+        throw new StorageError(
+          toErrorMessage(
+            error,
+            "Could not save site content to Vercel Blob. Check that a Blob store is linked to this project.",
+          ),
+          503,
+        );
+      }
+      throw error;
+    }
   }
 
   await fs.writeFile(SITE_PATH, json);
+}
+
+function readEnv(name: string): string | undefined {
+  return process.env[name];
+}
+
+function toErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === "string" && error.trim()) return error;
+  return fallback;
 }
 
 export async function updateSiteContent(content: SiteContent) {
