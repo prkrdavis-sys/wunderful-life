@@ -342,9 +342,9 @@ export function VideoForm({
         </span>
         <FileUploadButton
           className="mt-1"
+          kind="video"
           inputRef={videoInputRef}
           accept={VIDEO_FILE_ACCEPT}
-          buttonLabel="Choose video"
           hint={VIDEO_UPLOAD_HELP}
           selectedName={videoFile?.name}
           required={!initial}
@@ -368,9 +368,8 @@ export function VideoForm({
         </span>
         <FileUploadButton
           className="mt-1"
+          kind="thumbnail"
           accept="image/png,image/jpeg,image/webp,image/svg+xml"
-          buttonLabel="Choose thumbnail"
-          hint="PNG, JPEG, WebP, or SVG"
           selectedName={thumbnailFile?.name}
           required={!initial}
           onChange={(file) => setThumbnailFile(file)}

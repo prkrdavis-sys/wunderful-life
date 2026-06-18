@@ -320,19 +320,19 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
                       </label>
                     </div>
                     <div className="block text-sm">
-                      <span className="text-muted">Upload image</span>
+                      <span className="text-muted">Photo</span>
                       <FileUploadButton
                         className="mt-1"
+                        kind="photo"
                         accept="image/*"
-                        buttonLabel="Choose photo"
-                        hint="JPG, PNG, or WebP"
                         onChange={(file) => {
                           if (file) void uploadPhoto(photo.id, file);
                         }}
                       />
                       {photo.imagePath && (
-                        <p className="mt-1 truncate text-xs text-burgundy/80">
-                          Current: {photo.imagePath}
+                        <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-indigo">
+                          <span aria-hidden>🌸</span>
+                          Live on your site
                         </p>
                       )}
                     </div>
