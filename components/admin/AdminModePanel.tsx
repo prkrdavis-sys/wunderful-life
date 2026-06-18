@@ -22,14 +22,15 @@ export function AdminModeBanner() {
       {needsLogin ? (
         <span>Admin view — sign in from the Menu to make edits.</span>
       ) : (
-        <span>
-          Admin mode active.{" "}
+        <span className="inline-flex flex-wrap items-center justify-center gap-2">
+          <span>Admin view is on.</span>
           <button
             type="button"
             onClick={() => setPanelOpen(true)}
-            className="font-semibold underline underline-offset-2"
+            className="inline-flex items-center gap-1.5 rounded-full border border-paper/35 bg-paper/15 px-3 py-1 text-sm font-semibold text-paper transition hover:bg-paper/25"
           >
-            Open editor
+            <span aria-hidden className="text-xs">▢</span>
+            Open editing panel
           </button>
         </span>
       )}

@@ -17,6 +17,7 @@ export function SiteNav() {
     setViewMode,
     authenticated,
     authRequired,
+    panelOpen,
     setPanelOpen,
     refreshSession,
   } = useAdminView();
@@ -71,6 +72,11 @@ export function SiteNav() {
 
   const handleAdminView = () => {
     setViewMode("admin");
+    setAdminOpen(false);
+    setMenuOpen(false);
+  };
+
+  const openEditorPanel = () => {
     setPanelOpen(true);
     setAdminOpen(false);
     setMenuOpen(false);
@@ -97,33 +103,66 @@ export function SiteNav() {
       >
         Regular view {viewMode === "regular" ? "✓" : ""}
       </button>
-      <button
-        type="button"
-        onClick={handleAdminView}
-        className={`block w-full px-4 py-3 text-left text-sm font-medium transition hover:bg-white/25 ${
-          viewMode === "admin" ? "text-burgundy" : "text-indigo"
-        }`}
-      >
-        Admin view {viewMode === "admin" ? "✓" : ""}
-      </button>
-      {viewMode === "admin" && authenticated && (
+
+      <div className="border-t border-white/35">
         <button
           type="button"
-          onClick={() => {
-            setPanelOpen(true);
-            setAdminOpen(false);
-            setMenuOpen(false);
-          }}
-          className="block w-full border-t border-white/35 px-4 py-3 text-left text-sm font-medium text-indigo transition hover:bg-white/25"
+          onClick={handleAdminView}
+          className={`block w-full px-4 py-3 text-left text-sm font-medium transition hover:bg-white/25 ${
+            viewMode === "admin" ? "text-burgundy" : "text-indigo"
+          }`}
         >
-          Open editor
+          Admin view {viewMode === "admin" ? "✓" : ""}
         </button>
-      )}
-      {authRequired && !authenticated && (
-        <div className="border-t border-white/35">
-          <AdminLoginInline />
-        </div>
-      )}
+
+        {viewMode === "admin" && (
+          <div className="mx-3 mb-3 space-y-2">
+            {authRequired && !authenticated ? (
+              <div className="overflow-hidden rounded-xl border border-burgundy/20 bg-burgundy/8 p-3">
+                <p className="mb-2 text-xs font-medium text-indigo/85">
+                  Sign in to open the editing panel
+                </p>
+                <AdminLoginInline />
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={openEditorPanel}
+                className={`flex w-full items-start gap-3 rounded-xl border px-3 py-3 text-left transition ${
+                  panelOpen
+                    ? "border-burgundy/35 bg-burgundy/12 shadow-inner"
+                    : "border-burgundy/20 bg-white/40 hover:border-burgundy/35 hover:bg-white/55"
+                }`}
+              >
+                <span
+                  aria-hidden
+                  className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-burgundy/20 bg-paper/90 text-burgundy shadow-sm"
+                >
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.75}
+                  >
+                    <rect x="5" y="7" width="14" height="12" rx="2" />
+                    <path strokeLinecap="round" d="M9 7V5.5A1.5 1.5 0 0110.5 4h3A1.5 1.5 0 0115 5.5V7" />
+                  </svg>
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-burgundy">
+                    {panelOpen ? "Editing panel open" : "Open editing panel"}
+                  </span>
+                  <span className="mt-0.5 block text-xs leading-snug text-indigo/75">
+                    Floats over the site — stays on this page
+                  </span>
+                </span>
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
       {authenticated && (
         <button
           type="button"
@@ -133,16 +172,6 @@ export function SiteNav() {
           Sign out
         </button>
       )}
-      <SectionLink
-        href="/admin"
-        onClick={() => {
-          setAdminOpen(false);
-          setMenuOpen(false);
-        }}
-        className="block border-t border-white/35 px-4 py-3 text-sm font-medium text-indigo/80 transition hover:bg-white/25"
-      >
-        Legacy admin page
-      </SectionLink>
     </>
   );
 
@@ -197,7 +226,7 @@ export function SiteNav() {
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  className="glass-panel absolute right-0 z-20 mt-2 min-w-[220px] overflow-hidden rounded-2xl border border-white/50"
+                  className="glass-panel absolute right-0 z-20 mt-2 min-w-[260px] overflow-hidden rounded-2xl border border-white/50"
                 >
                   {viewMenuItems}
                 </motion.div>

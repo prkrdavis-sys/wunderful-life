@@ -67,8 +67,8 @@ export function AdminViewProvider({
     (mode: ViewMode) => {
       setViewModeState(mode);
       localStorage.setItem(VIEW_MODE_KEY, mode);
-      if (mode === "admin") {
-        setPanelOpen(true);
+      if (mode === "regular") {
+        setPanelOpen(false);
       }
     },
     [],

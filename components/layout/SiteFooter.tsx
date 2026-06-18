@@ -22,9 +22,6 @@ export function SiteFooter() {
           <SectionLink href="/#contact" className="hover:text-burgundy">
             Contact
           </SectionLink>
-          <SectionLink href="/admin" className="hover:text-burgundy/80">
-            Admin
-          </SectionLink>
         </div>
         <p className="text-xs text-indigo/60">
           © {new Date().getFullYear()} {site.brand}
