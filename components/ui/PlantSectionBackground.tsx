@@ -7,6 +7,7 @@ import {
 } from "@/lib/plants";
 
 const overlayClasses: Record<WallpaperOverlay, string> = {
+  none: "plant-wallpaper-overlay-none",
   minimal: "plant-wallpaper-overlay-minimal",
   light: "plant-wallpaper-overlay-light",
   medium: "plant-wallpaper-overlay-medium",

@@ -74,10 +74,9 @@ export const plantWallpapers = {
   },
   "services-pexels": {
     src: "/plants/wallpaper-services-pexels.jpg",
-    alt: "Botanical plant leaves",
+    alt: "Pastel sunset sky with crescent moon",
     credit: "Pexels",
     position: "center center",
-    ...BOTANICAL_PEXELS_TUNE,
   },
   "fern-wall": {
     src: "/plants/wallpaper-fern-wall.jpg",
@@ -95,7 +94,7 @@ export const plantWallpapers = {
 
 export type PlantWallpaperId = keyof typeof plantWallpapers;
 
-export type WallpaperOverlay = "minimal" | "light" | "medium" | "heavy";
+export type WallpaperOverlay = "none" | "minimal" | "light" | "medium" | "heavy";
 
 export type SectionWallpaperConfig = {
   wallpaper: PlantWallpaperId;
@@ -105,7 +104,7 @@ export type SectionWallpaperConfig = {
 export const sectionWallpapers: Record<string, SectionWallpaperConfig> = {
   hero: { wallpaper: "hero-sky", overlay: "minimal" },
   about: { wallpaper: "about-sky", overlay: "minimal" },
-  services: { wallpaper: "services-pexels", overlay: "minimal" },
+  services: { wallpaper: "services-pexels", overlay: "none" },
   work: { wallpaper: "work-pexels", overlay: "minimal" },
   contact: { wallpaper: "contact-pexels", overlay: "minimal" },
   workPage: { wallpaper: "services-pexels", overlay: "minimal" },

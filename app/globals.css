@@ -103,14 +103,15 @@ body {
     inset 0 -1px 0 rgb(212 196 232 / 0.2);
 }
 
-.glass-panel-frosted {
-  background: rgb(255 253 249 / 0.06);
-  backdrop-filter: blur(32px) saturate(140%);
-  -webkit-backdrop-filter: blur(32px) saturate(140%);
-  box-shadow:
-    0 8px 32px rgb(74 69 104 / 0.05),
-    inset 0 1px 0 rgb(255 255 255 / 0.18),
-    inset 0 -1px 0 rgb(212 196 232 / 0.05);
+.service-glass-layer {
+  background: rgb(255 255 255 / 0.03);
+  backdrop-filter: blur(40px) saturate(125%);
+  -webkit-backdrop-filter: blur(40px) saturate(125%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22);
+}
+
+.service-glass-card {
+  box-shadow: 0 8px 32px rgb(74 69 104 / 0.05);
 }
 
 .grain-overlay {
@@ -184,6 +185,10 @@ body {
 .section-wash-brown {
   background:
     linear-gradient(165deg, rgba(255, 253, 249, 0.94) 0%, rgba(122, 59, 74, 0.06) 35%, rgba(212, 196, 232, 0.08) 100%);
+}
+
+.plant-wallpaper-overlay-none {
+  background: transparent;
 }
 
 .plant-wallpaper-overlay-minimal {
