@@ -64,6 +64,7 @@ export function PhoneMarquee({
   captionClasses,
 }: PhoneMarqueeProps) {
   const [activeSlideKey, setActiveSlideKey] = useState<string | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
   const uniqueVideos = useMemo(() => uniqueVideosById(videos), [videos]);
   const marqueeSlides = useMemo(() => buildMarqueeSlides(uniqueVideos), [uniqueVideos]);
 
@@ -80,8 +81,8 @@ export function PhoneMarquee({
         direction: "forward",
         playOnInit: true,
         startDelay: 0,
-        stopOnInteraction: true,
-        stopOnMouseEnter: true,
+        stopOnInteraction: false,
+        stopOnMouseEnter: false,
         stopOnFocusIn: false,
       }),
     ],
@@ -98,10 +99,36 @@ export function PhoneMarquee({
     plugins,
   );
 
+  const syncAutoScroll = useCallback(() => {
+    const autoScroll = emblaApi?.plugins()?.autoScroll;
+    if (!autoScroll) return;
+
+    const shouldPause = Boolean(activeSlideKey) || isHovered;
+    if (shouldPause) {
+      autoScroll.stop();
+    } else {
+      autoScroll.play();
+    }
+  }, [emblaApi, activeSlideKey, isHovered]);
+
   useEffect(() => {
-    if (!emblaApi || !activeSlideKey) return;
-    emblaApi.plugins()?.autoScroll?.stop();
-  }, [activeSlideKey, emblaApi]);
+    syncAutoScroll();
+  }, [syncAutoScroll]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+
+    const onPointerDown = () => emblaApi.plugins()?.autoScroll?.stop();
+    const onSettle = () => syncAutoScroll();
+
+    emblaApi.on("pointerDown", onPointerDown);
+    emblaApi.on("settle", onSettle);
+
+    return () => {
+      emblaApi.off("pointerDown", onPointerDown);
+      emblaApi.off("settle", onSettle);
+    };
+  }, [emblaApi, syncAutoScroll]);
 
   if (uniqueVideos.length === 0) {
     return (
@@ -116,6 +143,8 @@ export function PhoneMarquee({
       <div
         ref={emblaRef}
         className="cursor-grab select-none overflow-hidden px-4 active:cursor-grabbing"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
         <div className="flex gap-8 py-2">
           {marqueeSlides.map((video, index) => {
