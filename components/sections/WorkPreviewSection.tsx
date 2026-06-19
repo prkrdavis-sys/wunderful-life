@@ -25,7 +25,7 @@ export async function WorkPreviewSection({ videos }: WorkPreviewSectionProps) {
   return (
     <section
       id="work"
-      className="relative scroll-mt-24 overflow-hidden py-20"
+      className="scroll-section-anchor relative overflow-hidden py-20"
     >
       <PlantSectionBackground wallpaper={wallpaper} overlay={overlay} />
       <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6">

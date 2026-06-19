@@ -56,6 +56,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: var(--site-header-height, 0px);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -76,6 +77,10 @@ body {
   background: var(--cream);
   color: var(--foreground);
   font-family: var(--font-body), system-ui, sans-serif;
+}
+
+.scroll-section-anchor {
+  scroll-margin-top: var(--site-header-height, 0px);
 }
 
 .glass-header {

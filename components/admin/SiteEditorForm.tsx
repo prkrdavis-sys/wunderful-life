@@ -208,7 +208,7 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
                   className={inputClass}
                 />
               </label>
-              <div className="grid gap-4 lg:grid-cols-2">
+              <div className="space-y-4">
                 {form.about.paragraphs.map((paragraph, index) => (
                   <label key={`paragraph-${index}`} className="block text-sm">
                     <span className="text-muted">Paragraph {index + 1}</span>
@@ -224,8 +224,8 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
                           };
                         })
                       }
-                      rows={5}
-                      className={inputClass}
+                      rows={8}
+                      className={`${inputClass} min-h-40 resize-y`}
                     />
                   </label>
                 ))}

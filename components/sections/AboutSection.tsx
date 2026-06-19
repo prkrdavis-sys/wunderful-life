@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  SectionReveal,
-  StaggerChildren,
-  StaggerItem,
-} from "@/components/ui/motion";
+import { SectionReveal } from "@/components/ui/motion";
 import { EmilyPhoto } from "@/components/ui/EmilyPhoto";
 import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
@@ -23,7 +19,7 @@ export function AboutSection() {
   return (
     <section
       id="about"
-      className="relative scroll-mt-24 overflow-hidden px-4 py-16 sm:px-6 sm:py-24"
+      className="scroll-section-anchor relative overflow-hidden px-4 py-16 sm:px-6 sm:py-24"
     >
       <PlantSectionBackground wallpaper={wallpaper} overlay={overlay} />
       <div className="relative z-10 mx-auto max-w-5xl">
@@ -44,15 +40,16 @@ export function AboutSection() {
             </SectionReveal>
           )}
 
-          <StaggerChildren className="min-w-0 space-y-4">
-            {site.about.paragraphs.map((paragraph) => (
-              <StaggerItem key={paragraph.slice(0, 24)}>
-                <p className={`text-base leading-relaxed sm:text-lg ${text.body}`}>
-                  {paragraph}
-                </p>
-              </StaggerItem>
+          <div className="min-w-0 space-y-4">
+            {site.about.paragraphs.map((paragraph, index) => (
+              <p
+                key={`about-paragraph-${index}`}
+                className={`text-base leading-relaxed break-words sm:text-lg ${text.body}`}
+              >
+                {paragraph}
+              </p>
             ))}
-          </StaggerChildren>
+          </div>
         </div>
 
         {galleryPhotos.length > 0 && (

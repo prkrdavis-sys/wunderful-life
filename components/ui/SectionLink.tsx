@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { ComponentProps, MouseEvent, ReactNode } from "react";
+import { scrollToSectionWhenReady } from "@/lib/scrollToSection";
 
 type SectionLinkProps = {
   href: string;
@@ -33,18 +34,15 @@ export function SectionLink({
 
     if (!sectionId) return;
 
+    event.preventDefault();
+
     if (pathname === "/") {
-      event.preventDefault();
-      const target = document.getElementById(sectionId);
-      if (target) {
-        target.scrollIntoView({ behavior: "smooth", block: "start" });
-        window.history.replaceState(null, "", `#${sectionId}`);
-      }
+      scrollToSectionWhenReady(sectionId);
+      window.history.replaceState(null, "", `#${sectionId}`);
       return;
     }
 
-    event.preventDefault();
-    router.push(`/#${sectionId}`);
+    router.push(`/#${sectionId}`, { scroll: false });
   };
 
   return (

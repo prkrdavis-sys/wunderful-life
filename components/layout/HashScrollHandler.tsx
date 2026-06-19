@@ -2,9 +2,10 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { scrollToSectionWhenReady } from "@/lib/scrollToSection";
 
 /**
- * Scrolls to hash targets after navigating from another route (e.g. /work → /#about).
+ * Scrolls to hash targets on the home page — initial load, cross-route nav, and hash changes.
  */
 export function HashScrollHandler() {
   const pathname = usePathname();
@@ -12,14 +13,23 @@ export function HashScrollHandler() {
   useEffect(() => {
     if (pathname !== "/") return;
 
-    const hash = window.location.hash.replace("#", "");
-    if (!hash) return;
+    let cancelScroll = () => {};
 
-    const frame = requestAnimationFrame(() => {
-      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    const scrollToHash = () => {
+      const hash = window.location.hash.replace("#", "");
+      if (!hash) return;
 
-    return () => cancelAnimationFrame(frame);
+      cancelScroll();
+      cancelScroll = scrollToSectionWhenReady(hash);
+    };
+
+    scrollToHash();
+    window.addEventListener("hashchange", scrollToHash);
+
+    return () => {
+      window.removeEventListener("hashchange", scrollToHash);
+      cancelScroll();
+    };
   }, [pathname]);
 
   return null;

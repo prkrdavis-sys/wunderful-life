@@ -18,7 +18,7 @@ export function ServicesSection() {
   return (
     <section
       id="services"
-      className="relative scroll-mt-24 overflow-hidden px-4 py-20 sm:px-6 sm:py-24"
+      className="scroll-section-anchor relative overflow-hidden px-4 py-20 sm:px-6 sm:py-24"
     >
       <PlantSectionBackground wallpaper={wallpaper} overlay={overlay} />
       <div className="relative z-10 mx-auto max-w-6xl">

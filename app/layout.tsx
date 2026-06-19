@@ -9,6 +9,7 @@ import { AdminModeBanner } from "@/components/admin/AdminModePanel";
 import { SiteNav } from "@/components/layout/SiteNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { HashScrollHandler } from "@/components/layout/HashScrollHandler";
+import { SiteHeaderHeightSync } from "@/components/layout/SiteHeaderHeightSync";
 import { AppProviders } from "@/components/layout/AppProviders";
 import { getSiteContent } from "@/lib/site";
 import "./globals.css";
@@ -63,9 +64,10 @@ export default async function RootLayout({
       <body className="relative min-h-full flex flex-col bg-cream font-body antialiased">
         <AppProviders initialSite={site}>
           <HashScrollHandler />
-          <div className="sticky top-0 z-50">
+          <div id="site-header" className="sticky top-0 z-50">
             <SiteNav />
             <AdminModeBanner />
+            <SiteHeaderHeightSync />
           </div>
           <main className="relative z-10 flex-1">{children}</main>
           <SiteFooter />

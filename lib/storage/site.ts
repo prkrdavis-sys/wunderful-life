@@ -22,6 +22,7 @@ function isCompleteSiteContent(value: unknown): value is SiteContent {
     typeof site.tagline === "string" &&
     Boolean(site.about?.headline) &&
     Array.isArray(site.about?.paragraphs) &&
+    site.about.paragraphs.every((paragraph) => typeof paragraph === "string") &&
     Array.isArray(site.about?.photos) &&
     Array.isArray(site.heroLinks) &&
     Boolean(site.social?.instagram) &&
