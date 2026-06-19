@@ -7,9 +7,16 @@ import { uniqueVideosById } from "@/lib/videos/sort";
 import { phoneTilt } from "./constants";
 import { PhoneVideoPlayer } from "./PhoneVideoPlayer";
 
+type CaptionClasses = {
+  title?: string;
+  brand?: string;
+  link?: string;
+};
+
 type PhoneMarqueeProps = {
   videos: PortfolioVideo[];
   emptyClassName?: string;
+  captionClasses?: CaptionClasses;
 };
 
 const INTERACTIVE_SELECTOR = "button, a, video, input, textarea, select, label";
@@ -24,11 +31,13 @@ function PhoneSlide({
   index,
   activeId,
   onActivate,
+  captionClasses,
 }: {
   video: PortfolioVideo;
   index: number;
   activeId: string | null;
   onActivate: (id: string | null) => void;
+  captionClasses?: CaptionClasses;
 }) {
   return (
     <div className="min-w-0 shrink-0 grow-0 basis-auto">
@@ -39,12 +48,17 @@ function PhoneSlide({
         size="md"
         activeId={activeId}
         onActivate={onActivate}
+        captionClasses={captionClasses}
       />
     </div>
   );
 }
 
-export function PhoneMarquee({ videos, emptyClassName = "text-muted" }: PhoneMarqueeProps) {
+export function PhoneMarquee({
+  videos,
+  emptyClassName = "text-muted",
+  captionClasses,
+}: PhoneMarqueeProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isScrollable, setIsScrollable] = useState(false);
   const uniqueVideos = uniqueVideosById(videos);
@@ -105,6 +119,7 @@ export function PhoneMarquee({ videos, emptyClassName = "text-muted" }: PhoneMar
           index={0}
           activeId={activeId}
           onActivate={setActiveId}
+          captionClasses={captionClasses}
         />
       </div>
     );
@@ -124,6 +139,7 @@ export function PhoneMarquee({ videos, emptyClassName = "text-muted" }: PhoneMar
               index={index}
               activeId={activeId}
               onActivate={setActiveId}
+              captionClasses={captionClasses}
             />
           ))}
         </div>

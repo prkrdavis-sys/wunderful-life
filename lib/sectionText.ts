@@ -27,6 +27,11 @@ export const sectionText = {
     heading: `text-paper ${lightOnDarkShadow}`,
     body: `text-lavender ${lightOnDarkShadow}`,
     empty: "text-paper/85",
+    caption: {
+      title: `text-sm font-semibold text-yellow ${lightOnDarkShadow}`,
+      brand: `text-xs font-medium text-lavender ${lightOnDarkShadow}`,
+      link: `text-xs font-semibold text-pink ${lightOnDarkShadow} hover:text-paper`,
+    },
   },
   services: {
     heading: `text-indigo ${paperTextGlowStrong}`,

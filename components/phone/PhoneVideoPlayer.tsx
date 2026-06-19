@@ -7,6 +7,18 @@ import type { PortfolioVideo } from "@/lib/videos/types";
 import { VideoThumbnail } from "@/components/ui/VideoThumbnail";
 import { PhoneFrame } from "./PhoneFrame";
 
+type CaptionClasses = {
+  title?: string;
+  brand?: string;
+  link?: string;
+};
+
+const defaultCaptionClasses: Required<CaptionClasses> = {
+  title: "text-sm font-semibold text-brown",
+  brand: "text-xs text-muted",
+  link: "text-xs font-medium text-pink-deep hover:underline",
+};
+
 type PhoneVideoPlayerProps = {
   video: PortfolioVideo;
   accentIndex?: number;
@@ -16,6 +28,7 @@ type PhoneVideoPlayerProps = {
   onActivate: (id: string | null) => void;
   showTitle?: boolean;
   linkToDetail?: boolean;
+  captionClasses?: CaptionClasses;
 };
 
 export function PhoneVideoPlayer({
@@ -27,7 +40,9 @@ export function PhoneVideoPlayer({
   onActivate,
   showTitle = true,
   linkToDetail = true,
+  captionClasses,
 }: PhoneVideoPlayerProps) {
+  const caption = { ...defaultCaptionClasses, ...captionClasses };
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playbackError, setPlaybackError] = useState(false);
   const isPlaying = activeId === video.id;
@@ -156,12 +171,12 @@ export function PhoneVideoPlayer({
 
       {showTitle && (
         <div className="max-w-[200px] text-center">
-          <p className="text-sm font-semibold text-brown">{video.title}</p>
-          <p className="text-xs text-muted">{video.brand}</p>
+          <p className={caption.title}>{video.title}</p>
+          <p className={caption.brand}>{video.brand}</p>
           {linkToDetail && (
             <Link
               href={`/work/${video.slug}`}
-              className="mt-1 inline-block text-xs font-medium text-pink-deep hover:underline"
+              className={`mt-1 inline-block ${caption.link}`}
             >
               View details
             </Link>

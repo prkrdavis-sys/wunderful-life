@@ -41,7 +41,11 @@ export async function WorkPreviewSection({ videos }: WorkPreviewSectionProps) {
       </div>
 
       <div className="relative z-10 mt-10">
-        <PhoneMarquee videos={marqueeVideos} emptyClassName={text.empty} />
+        <PhoneMarquee
+          videos={marqueeVideos}
+          emptyClassName={text.empty}
+          captionClasses={text.caption}
+        />
       </div>
 
       <div className="relative z-10 mt-10 flex justify-center">
