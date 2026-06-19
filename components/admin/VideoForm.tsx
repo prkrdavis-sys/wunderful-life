@@ -86,6 +86,42 @@ function toErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
+function assetDisplayName(path: string): string {
+  try {
+    if (path.startsWith("http://") || path.startsWith("https://")) {
+      const segment = new URL(path).pathname.split("/").pop();
+      return segment || path;
+    }
+  } catch {
+    // fall through
+  }
+  return path.split("/").pop() || path;
+}
+
+function useMediaPreview(
+  file: File | null,
+  existingPath: string | undefined,
+): string | null {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (file) {
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+
+    if (existingPath) {
+      setPreviewUrl(existingPath);
+      return;
+    }
+
+    setPreviewUrl(null);
+  }, [file, existingPath]);
+
+  return previewUrl;
+}
+
 function isMediaUploadBusy(state: MediaUploadState): boolean {
   return state.status === "preparing" || state.status === "uploading";
 }
@@ -174,6 +210,16 @@ export function VideoForm({
   const uploadConfigRef = useRef<UploadConfig | null>(null);
   const videoUploadGenRef = useRef(0);
   const thumbnailUploadGenRef = useRef(0);
+
+  const videoPreviewUrl = useMediaPreview(videoFile, initial?.videoPath);
+  const thumbnailPreviewUrl = useMediaPreview(thumbnailFile, initial?.thumbnailPath);
+
+  const videoDisplayName =
+    videoFile?.name ??
+    (initial?.videoPath ? assetDisplayName(initial.videoPath) : null);
+  const thumbnailDisplayName =
+    thumbnailFile?.name ??
+    (initial?.thumbnailPath ? assetDisplayName(initial.thumbnailPath) : null);
 
   const uploadBusy =
     saving || isMediaUploadBusy(videoUpload) || isMediaUploadBusy(thumbnailUpload);
@@ -609,7 +655,9 @@ export function VideoForm({
           inputRef={videoInputRef}
           accept={VIDEO_FILE_ACCEPT}
           hint={VIDEO_UPLOAD_HELP}
-          selectedName={videoFile?.name}
+          selectedName={videoDisplayName}
+          previewUrl={videoPreviewUrl}
+          previewType="video"
           required={!initial}
           disabled={isMediaUploadBusy(videoUpload)}
           onChange={(file) => {
@@ -641,7 +689,9 @@ export function VideoForm({
           className="mt-1"
           kind="thumbnail"
           accept="image/png,image/jpeg,image/webp,image/svg+xml"
-          selectedName={thumbnailFile?.name}
+          selectedName={thumbnailDisplayName}
+          previewUrl={thumbnailPreviewUrl}
+          previewType="image"
           required={!initial}
           disabled={isMediaUploadBusy(thumbnailUpload)}
           onChange={(file) => {
