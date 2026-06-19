@@ -8,6 +8,7 @@ import { AdminLoginInline } from "@/components/admin/AdminLoginInline";
 import { SiteEditorForm } from "@/components/admin/SiteEditorForm";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
 import { EditorPanelIcon } from "@/components/ui/EditorPanelIcon";
+import { confirmLeaveDuringUpload } from "@/lib/admin/uploadGuard";
 
 type AdminTab = "content" | "portfolio";
 
@@ -46,14 +47,35 @@ export function AdminModePanel() {
     authRequired,
     panelOpen,
     setPanelOpen,
-    site,
   } = useAdminView();
   const [tab, setTab] = useState<AdminTab>("content");
   const [videos, setVideos] = useState<PortfolioVideo[]>([]);
   const [videosLoaded, setVideosLoaded] = useState(false);
+  const [portfolioUploadBusy, setPortfolioUploadBusy] = useState(false);
 
   const canEdit = authenticated || !authRequired;
   const isOpen = viewMode === "admin" && panelOpen && canEdit;
+
+  const tryClosePanel = () => {
+    if (!confirmLeaveDuringUpload(portfolioUploadBusy)) return;
+    setPanelOpen(false);
+  };
+
+  const trySetTab = (next: AdminTab) => {
+    if (!confirmLeaveDuringUpload(portfolioUploadBusy)) return;
+    setTab(next);
+  };
+
+  useEffect(() => {
+    if (!portfolioUploadBusy) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [portfolioUploadBusy]);
 
   useEffect(() => {
     if (!isOpen || videosLoaded) return;
@@ -110,7 +132,7 @@ export function AdminModePanel() {
             exit={{ opacity: 0 }}
             aria-label="Close admin editor"
             className="fixed inset-0 z-[60] bg-brown/30 backdrop-blur-[2px]"
-            onClick={() => setPanelOpen(false)}
+            onClick={tryClosePanel}
           />
           <motion.div
             role="dialog"
@@ -136,7 +158,7 @@ export function AdminModePanel() {
                 <div className="flex gap-1 rounded-full bg-cream p-1">
                   <button
                     type="button"
-                    onClick={() => setTab("content")}
+                    onClick={() => trySetTab("content")}
                     className={`rounded-full px-3 py-1.5 text-sm font-medium transition sm:px-4 sm:py-2 ${
                       tab === "content"
                         ? "bg-burgundy text-paper"
@@ -147,7 +169,7 @@ export function AdminModePanel() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setTab("portfolio")}
+                    onClick={() => trySetTab("portfolio")}
                     className={`rounded-full px-3 py-1.5 text-sm font-medium transition sm:px-4 sm:py-2 ${
                       tab === "portfolio"
                         ? "bg-burgundy text-paper"
@@ -159,7 +181,7 @@ export function AdminModePanel() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setPanelOpen(false)}
+                  onClick={tryClosePanel}
                   className="rounded-full border border-brown/20 px-3 py-1.5 text-sm text-brown hover:bg-cream"
                 >
                   Close
@@ -178,6 +200,7 @@ export function AdminModePanel() {
                     <AdminDashboard
                       initialVideos={videos}
                       onVideosChange={setVideos}
+                      onUploadBusyChange={setPortfolioUploadBusy}
                     />
                   ) : (
                     <p className="py-6 text-sm text-muted">Loading videos…</p>

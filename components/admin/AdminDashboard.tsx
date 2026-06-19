@@ -4,12 +4,14 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import type { PortfolioVideo } from "@/lib/videos/types";
 import { sortVideos, uniqueVideosById } from "@/lib/videos/sort";
+import { confirmLeaveDuringUpload } from "@/lib/admin/uploadGuard";
 import { VideoForm } from "@/components/admin/VideoForm";
 import { VideoList } from "@/components/admin/VideoList";
 
 type AdminDashboardProps = {
   initialVideos: PortfolioVideo[];
   onVideosChange?: (videos: PortfolioVideo[]) => void;
+  onUploadBusyChange?: (busy: boolean) => void;
 };
 
 type VideoView = "library" | "add";
@@ -22,15 +24,21 @@ const SECTIONS: { id: VideoView; label: string; hint: string }[] = [
 export function AdminDashboard({
   initialVideos,
   onVideosChange,
+  onUploadBusyChange,
 }: AdminDashboardProps) {
   const router = useRouter();
   const [videos, setVideos] = useState(() => uniqueVideosById(initialVideos));
   const [view, setView] = useState<VideoView>("library");
   const [editing, setEditing] = useState<PortfolioVideo | null>(null);
+  const [uploadBusy, setUploadBusy] = useState(false);
 
   useEffect(() => {
     setVideos(uniqueVideosById(initialVideos));
   }, [initialVideos]);
+
+  useEffect(() => {
+    onUploadBusyChange?.(uploadBusy);
+  }, [onUploadBusyChange, uploadBusy]);
 
   const commitVideos = useCallback(
     (next: PortfolioVideo[]) => {
@@ -41,6 +49,15 @@ export function AdminDashboard({
     },
     [onVideosChange],
   );
+
+  const handleUploadBusyChange = useCallback((busy: boolean) => {
+    setUploadBusy(busy);
+  }, []);
+
+  const trySetView = (next: VideoView) => {
+    if (!confirmLeaveDuringUpload(uploadBusy)) return;
+    setView(next);
+  };
 
   const handleSuccess = (video: PortfolioVideo) => {
     setVideos((current) => {
@@ -60,8 +77,14 @@ export function AdminDashboard({
   };
 
   const handleEdit = (video: PortfolioVideo) => {
+    if (!confirmLeaveDuringUpload(uploadBusy)) return;
     setEditing(video);
     setView("library");
+  };
+
+  const handleCancelEdit = () => {
+    if (!confirmLeaveDuringUpload(uploadBusy)) return;
+    setEditing(null);
   };
 
   if (editing) {
@@ -72,7 +95,8 @@ export function AdminDashboard({
           initial={editing}
           layout="panel"
           onSuccess={handleSuccess}
-          onCancel={() => setEditing(null)}
+          onCancel={handleCancelEdit}
+          onUploadBusyChange={handleUploadBusyChange}
         />
       </div>
     );
@@ -89,7 +113,7 @@ export function AdminDashboard({
             <button
               key={item.id}
               type="button"
-              onClick={() => setView(item.id)}
+              onClick={() => trySetView(item.id)}
               className={`shrink-0 rounded-xl px-3 py-2 text-left transition md:w-full md:px-3 md:py-2.5 ${
                 view === item.id
                   ? "bg-burgundy text-paper"
@@ -130,7 +154,7 @@ export function AdminDashboard({
               <div>
                 <h3 className="font-display text-lg text-brown">Add video</h3>
                 <p className="mt-1 text-sm text-muted">
-                  Upload a new portfolio piece for the work page and marquee.
+                  Pick your files first — they upload while you fill in the details.
                 </p>
               </div>
               <VideoForm
@@ -138,6 +162,7 @@ export function AdminDashboard({
                 layout="panel"
                 embedded
                 onSuccess={handleSuccess}
+                onUploadBusyChange={handleUploadBusyChange}
               />
             </section>
           )}

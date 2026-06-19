@@ -13,9 +13,10 @@ import {
   videoContentTypeFromFilename,
   videoUploadErrorMessage,
 } from "@/lib/videos/upload";
-import { prepareVideoForWebUpload } from "@/lib/videos/transcode";
+import { needsWebTranscode, prepareVideoForWebUpload } from "@/lib/videos/transcode";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { FileUploadButton } from "@/components/ui/FileUploadButton";
+import { UploadProgressBar } from "@/components/ui/UploadProgressBar";
 
 type VideoFormProps = {
   initial?: PortfolioVideo | null;
@@ -23,6 +24,7 @@ type VideoFormProps = {
   embedded?: boolean;
   onSuccess: (video: PortfolioVideo) => void;
   onCancel?: () => void;
+  onUploadBusyChange?: (busy: boolean) => void;
 };
 
 const inputClass =
@@ -33,6 +35,24 @@ type UploadConfig = {
   handleUploadUrl: string;
   directUploadLimitBytes: number;
 };
+
+type MediaUploadState = {
+  status: "idle" | "preparing" | "uploading" | "ready" | "error";
+  progress: number;
+  message: string;
+  url: string | null;
+  error: string | null;
+  useClientUpload: boolean;
+};
+
+const idleMediaUpload = (): MediaUploadState => ({
+  status: "idle",
+  progress: 0,
+  message: "",
+  url: null,
+  error: null,
+  useClientUpload: true,
+});
 
 async function readJsonResponse<T>(response: Response): Promise<T> {
   const raw = await response.text();
@@ -52,18 +72,6 @@ async function readJsonResponse<T>(response: Response): Promise<T> {
   }
 }
 
-function shouldUseClientUpload(
-  config: UploadConfig,
-  videoFile: File | null,
-  thumbnailFile: File | null,
-): boolean {
-  if (!config.clientUpload) return false;
-
-  // On Vercel, never attach files to the API route — even one ~4MB video plus
-  // a thumbnail can exceed the serverless 4.5MB body limit (413).
-  return Boolean(videoFile || thumbnailFile);
-}
-
 function uploadContentType(file: File, dir: "videos" | "thumbnails"): string | undefined {
   if (file.type) return file.type;
   if (dir === "videos") {
@@ -78,10 +86,28 @@ function toErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
+function isMediaUploadBusy(state: MediaUploadState): boolean {
+  return state.status === "preparing" || state.status === "uploading";
+}
+
+function isMediaBlockingSave(
+  file: File | null,
+  state: MediaUploadState,
+  required: boolean,
+): boolean {
+  if (!file && !required) return false;
+  if (!file && required) return true;
+  if (!file) return false;
+  if (state.status === "error") return true;
+  if (state.status === "ready") return false;
+  return true;
+}
+
 async function uploadAsset(
   file: File,
   dir: "videos" | "thumbnails",
   handleUploadUrl: string,
+  onProgress?: (percentage: number) => void,
 ): Promise<string> {
   const pathname = uploadFilename(dir, file.name, crypto.randomUUID());
   const contentType = uploadContentType(file, dir);
@@ -91,6 +117,11 @@ async function uploadAsset(
     handleUploadUrl,
     multipart: dir === "videos",
     ...(contentType ? { contentType } : {}),
+    onUploadProgress: onProgress
+      ? (event) => {
+          onProgress(event.percentage);
+        }
+      : undefined,
   });
   return result.url;
 }
@@ -113,6 +144,7 @@ export function VideoForm({
   embedded = false,
   onSuccess,
   onCancel,
+  onUploadBusyChange,
 }: VideoFormProps) {
   const [form, setForm] = useState(() =>
     initial
@@ -131,11 +163,56 @@ export function VideoForm({
   );
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState("Saving…");
+  const [videoUpload, setVideoUpload] = useState<MediaUploadState>(idleMediaUpload);
+  const [thumbnailUpload, setThumbnailUpload] =
+    useState<MediaUploadState>(idleMediaUpload);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("Saving video details…");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const uploadConfigRef = useRef<UploadConfig | null>(null);
+  const videoUploadGenRef = useRef(0);
+  const thumbnailUploadGenRef = useRef(0);
+
+  const uploadBusy =
+    saving || isMediaUploadBusy(videoUpload) || isMediaUploadBusy(thumbnailUpload);
+
+  useEffect(() => {
+    onUploadBusyChange?.(uploadBusy);
+  }, [onUploadBusyChange, uploadBusy]);
+
+  useEffect(() => {
+    return () => {
+      videoUploadGenRef.current += 1;
+      thumbnailUploadGenRef.current += 1;
+      onUploadBusyChange?.(false);
+    };
+  }, [onUploadBusyChange]);
+
+  useEffect(() => {
+    if (!uploadBusy) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [uploadBusy]);
+
+  const getUploadConfig = useCallback(async (): Promise<UploadConfig> => {
+    if (uploadConfigRef.current) return uploadConfigRef.current;
+
+    const response = await fetch("/api/videos/config");
+    const config = await readJsonResponse<UploadConfig>(response);
+    if (!response.ok) {
+      throw new Error("Could not load upload settings.");
+    }
+
+    uploadConfigRef.current = config;
+    return config;
+  }, []);
 
   useEffect(() => {
     if (!initial) return;
@@ -153,6 +230,8 @@ export function VideoForm({
     });
     setVideoFile(null);
     setThumbnailFile(null);
+    setVideoUpload(idleMediaUpload());
+    setThumbnailUpload(idleMediaUpload());
     setError(null);
     setMessage(null);
     if (videoInputRef.current) videoInputRef.current.value = "";
@@ -172,11 +251,192 @@ export function VideoForm({
     };
   }, []);
 
+  const startVideoUpload = useCallback(
+    async (file: File) => {
+      const generation = ++videoUploadGenRef.current;
+
+      setVideoUpload({
+        status: "preparing",
+        progress: 0,
+        message: needsWebTranscode(file)
+          ? "Converting iPhone video for web playback… (can take a minute)"
+          : "Preparing video…",
+        url: null,
+        error: null,
+        useClientUpload: true,
+      });
+
+      try {
+        const config = await getUploadConfig();
+        if (generation !== videoUploadGenRef.current) return;
+
+        const prepared = await prepareVideoForWebUpload(file, (progressMessage) => {
+          if (generation !== videoUploadGenRef.current) return;
+          setVideoUpload((current) => ({
+            ...current,
+            status: "preparing",
+            message: progressMessage,
+          }));
+        });
+
+        if (generation !== videoUploadGenRef.current) return;
+
+        if (!config.clientUpload) {
+          setVideoUpload({
+            status: "ready",
+            progress: 100,
+            message: "Video ready — will upload when you save",
+            url: null,
+            error: null,
+            useClientUpload: false,
+          });
+          return;
+        }
+
+        setVideoUpload({
+          status: "uploading",
+          progress: 0,
+          message: "Uploading video… 0%",
+          url: null,
+          error: null,
+          useClientUpload: true,
+        });
+
+        const url = await uploadAsset(
+          prepared,
+          "videos",
+          config.handleUploadUrl,
+          (percentage) => {
+            if (generation !== videoUploadGenRef.current) return;
+            const rounded = Math.round(percentage);
+            setVideoUpload((current) => ({
+              ...current,
+              status: "uploading",
+              progress: rounded,
+              message: `Uploading video… ${rounded}%`,
+            }));
+          },
+        );
+
+        if (generation !== videoUploadGenRef.current) return;
+
+        setVideoUpload({
+          status: "ready",
+          progress: 100,
+          message: "Video ready — fill in details and save",
+          url,
+          error: null,
+          useClientUpload: true,
+        });
+      } catch (err) {
+        if (generation !== videoUploadGenRef.current) return;
+        const uploadError = toErrorMessage(err, "Video upload failed.");
+        setVideoUpload({
+          status: "error",
+          progress: 0,
+          message: uploadError,
+          url: null,
+          error: uploadError,
+          useClientUpload: true,
+        });
+        setError(uploadError);
+      }
+    },
+    [getUploadConfig],
+  );
+
+  const startThumbnailUpload = useCallback(
+    async (file: File) => {
+      const generation = ++thumbnailUploadGenRef.current;
+
+      setThumbnailUpload({
+        status: "preparing",
+        progress: 0,
+        message: "Preparing thumbnail…",
+        url: null,
+        error: null,
+        useClientUpload: true,
+      });
+
+      try {
+        const config = await getUploadConfig();
+        if (generation !== thumbnailUploadGenRef.current) return;
+
+        if (!config.clientUpload) {
+          setThumbnailUpload({
+            status: "ready",
+            progress: 100,
+            message: "Thumbnail ready — will upload when you save",
+            url: null,
+            error: null,
+            useClientUpload: false,
+          });
+          return;
+        }
+
+        setThumbnailUpload({
+          status: "uploading",
+          progress: 0,
+          message: "Uploading thumbnail… 0%",
+          url: null,
+          error: null,
+          useClientUpload: true,
+        });
+
+        const url = await uploadAsset(
+          file,
+          "thumbnails",
+          config.handleUploadUrl,
+          (percentage) => {
+            if (generation !== thumbnailUploadGenRef.current) return;
+            const rounded = Math.round(percentage);
+            setThumbnailUpload((current) => ({
+              ...current,
+              status: "uploading",
+              progress: rounded,
+              message: `Uploading thumbnail… ${rounded}%`,
+            }));
+          },
+        );
+
+        if (generation !== thumbnailUploadGenRef.current) return;
+
+        setThumbnailUpload({
+          status: "ready",
+          progress: 100,
+          message: "Thumbnail ready",
+          url,
+          error: null,
+          useClientUpload: true,
+        });
+      } catch (err) {
+        if (generation !== thumbnailUploadGenRef.current) return;
+        const uploadError = toErrorMessage(err, "Thumbnail upload failed.");
+        setThumbnailUpload({
+          status: "error",
+          progress: 0,
+          message: uploadError,
+          url: null,
+          error: uploadError,
+          useClientUpload: true,
+        });
+        setError(uploadError);
+      }
+    },
+    [getUploadConfig],
+  );
+
+  const saveBlocked =
+    isMediaBlockingSave(videoFile, videoUpload, !initial) ||
+    isMediaBlockingSave(thumbnailFile, thumbnailUpload, !initial);
+
   const save = async () => {
-    setLoading(true);
+    if (saveBlocked) return;
+
+    setSaving(true);
     setError(null);
     setMessage(null);
-    setLoadingMessage("Saving…");
+    setSaveMessage("Saving video details…");
 
     const payload = new FormData();
     payload.set("title", form.title);
@@ -190,44 +450,22 @@ export function VideoForm({
     payload.set("featured", String(form.featured));
 
     try {
-      const hasNewVideo = Boolean(videoFile);
-      const hasNewThumbnail = Boolean(thumbnailFile);
-      let preparedVideo = videoFile;
-
-      if (hasNewVideo || hasNewThumbnail) {
-        const configResponse = await fetch("/api/videos/config");
-        const config = await readJsonResponse<UploadConfig>(configResponse);
-
-        if (!configResponse.ok) {
-          throw new Error("Could not load upload settings.");
-        }
-
-        if (hasNewVideo && videoFile) {
-          preparedVideo = await prepareVideoForWebUpload(videoFile, setLoadingMessage);
-        }
-
-        if (shouldUseClientUpload(config, preparedVideo, thumbnailFile)) {
-          if (preparedVideo) {
-            setLoadingMessage("Uploading video…");
-            payload.set(
-              "videoUrl",
-              await uploadAsset(preparedVideo, "videos", config.handleUploadUrl),
-            );
-          }
-          if (thumbnailFile) {
-            setLoadingMessage("Uploading thumbnail…");
-            payload.set(
-              "thumbnailUrl",
-              await uploadAsset(thumbnailFile, "thumbnails", config.handleUploadUrl),
-            );
-          }
-        } else {
-          if (preparedVideo) payload.set("video", preparedVideo);
-          if (thumbnailFile) payload.set("thumbnail", thumbnailFile);
+      if (videoFile) {
+        if (videoUpload.url) {
+          payload.set("videoUrl", videoUpload.url);
+        } else if (!videoUpload.useClientUpload) {
+          payload.set("video", videoFile);
         }
       }
 
-      setLoadingMessage("Saving…");
+      if (thumbnailFile) {
+        if (thumbnailUpload.url) {
+          payload.set("thumbnailUrl", thumbnailUpload.url);
+        } else if (!thumbnailUpload.useClientUpload) {
+          payload.set("thumbnail", thumbnailFile);
+        }
+      }
+
       const url = initial ? `/api/videos/${initial.id}` : "/api/videos";
       const method = initial ? "PATCH" : "POST";
       const response = await fetch(url, { method, body: payload });
@@ -254,6 +492,8 @@ export function VideoForm({
         });
         setVideoFile(null);
         setThumbnailFile(null);
+        setVideoUpload(idleMediaUpload());
+        setThumbnailUpload(idleMediaUpload());
         if (videoInputRef.current) videoInputRef.current.value = "";
         setMessage("Saved.");
         onSuccess(saved);
@@ -265,14 +505,37 @@ export function VideoForm({
         setForm(emptyForm);
         setVideoFile(null);
         setThumbnailFile(null);
+        setVideoUpload(idleMediaUpload());
+        setThumbnailUpload(idleMediaUpload());
         if (videoInputRef.current) videoInputRef.current.value = "";
       }
     } catch (err) {
       setError(toErrorMessage(err, "Failed to save video."));
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
+
+  const mediaProgress = (
+    <div className="space-y-3 sm:col-span-2">
+      {videoFile && videoUpload.status !== "idle" && (
+        <UploadProgressBar
+          label="Video"
+          message={videoUpload.message}
+          progress={videoUpload.progress}
+          indeterminate={videoUpload.status === "preparing"}
+        />
+      )}
+      {thumbnailFile && thumbnailUpload.status !== "idle" && (
+        <UploadProgressBar
+          label="Thumbnail"
+          message={thumbnailUpload.message}
+          progress={thumbnailUpload.progress}
+          indeterminate={thumbnailUpload.status === "preparing"}
+        />
+      )}
+    </div>
+  );
 
   const fields = (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -348,16 +611,24 @@ export function VideoForm({
           hint={VIDEO_UPLOAD_HELP}
           selectedName={videoFile?.name}
           required={!initial}
+          disabled={isMediaUploadBusy(videoUpload)}
           onChange={(file) => {
             if (file && !isAcceptedVideoFile(file)) {
               setVideoFile(null);
+              setVideoUpload(idleMediaUpload());
               setError(videoUploadErrorMessage());
               if (videoInputRef.current) videoInputRef.current.value = "";
               return;
             }
             setError(null);
             setVideoFile(file);
-            if (file) readVideoDuration(file);
+            if (file) {
+              readVideoDuration(file);
+              void startVideoUpload(file);
+            } else {
+              videoUploadGenRef.current += 1;
+              setVideoUpload(idleMediaUpload());
+            }
           }}
         />
       </div>
@@ -372,9 +643,20 @@ export function VideoForm({
           accept="image/png,image/jpeg,image/webp,image/svg+xml"
           selectedName={thumbnailFile?.name}
           required={!initial}
-          onChange={(file) => setThumbnailFile(file)}
+          disabled={isMediaUploadBusy(thumbnailUpload)}
+          onChange={(file) => {
+            setThumbnailFile(file);
+            if (file) {
+              void startThumbnailUpload(file);
+            } else {
+              thumbnailUploadGenRef.current += 1;
+              setThumbnailUpload(idleMediaUpload());
+            }
+          }}
         />
       </div>
+
+      {mediaProgress}
 
       <label className="flex items-center gap-2 text-sm sm:col-span-2">
         <input
@@ -405,10 +687,16 @@ export function VideoForm({
 
       <AnimatedButton
         onClick={() => void save()}
-        disabled={loading}
+        disabled={uploadBusy || saveBlocked}
         className="w-full shadow-md shadow-burgundy/15 sm:max-w-xs"
       >
-        {loading ? loadingMessage : initial ? "Save video" : "Add video"}
+        {saving
+          ? saveMessage
+          : saveBlocked
+            ? "Waiting for uploads…"
+            : initial
+              ? "Save video"
+              : "Add video"}
       </AnimatedButton>
     </>
   );
@@ -432,7 +720,8 @@ export function VideoForm({
                 {initial ? "Edit video" : "Add video"}
               </h3>
               <p className="mt-1 text-sm text-muted">
-                {initial?.title ?? "Update details, media, and featured status."}
+                {initial?.title ??
+                  "Pick your video and thumbnail first — they upload while you fill in the details."}
               </p>
             </div>
             {onCancel && (
@@ -467,6 +756,9 @@ export function VideoForm({
       className="rounded-3xl border-2 border-lavender/35 bg-white/80 p-6 backdrop-blur-sm"
     >
       <h2 className="font-display text-xl text-brown">Add New Video</h2>
+      <p className="mt-1 text-sm text-muted">
+        Files upload as soon as you pick them. Save when both are ready.
+      </p>
 
       <div className="mt-6">{fields}</div>
 
@@ -477,8 +769,12 @@ export function VideoForm({
       )}
 
       <div className="mt-6 flex flex-wrap gap-3">
-        <AnimatedButton type="submit" disabled={loading}>
-          {loading ? loadingMessage : "Add Video"}
+        <AnimatedButton type="submit" disabled={uploadBusy || saveBlocked}>
+          {saving
+            ? saveMessage
+            : saveBlocked
+              ? "Waiting for uploads…"
+              : "Add Video"}
         </AnimatedButton>
       </div>
     </form>
