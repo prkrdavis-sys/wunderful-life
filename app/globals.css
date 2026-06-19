@@ -103,15 +103,25 @@ body {
     inset 0 -1px 0 rgb(212 196 232 / 0.2);
 }
 
-.service-glass-layer {
-  background: rgb(255 255 255 / 0.03);
-  backdrop-filter: blur(40px) saturate(125%);
-  -webkit-backdrop-filter: blur(40px) saturate(125%);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22);
+.service-glass-card {
+  box-shadow: 0 10px 36px rgb(74 69 104 / 0.06);
 }
 
-.service-glass-card {
-  box-shadow: 0 8px 32px rgb(74 69 104 / 0.05);
+.service-glass-layer {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgb(255 255 255 / 0.02);
+  backdrop-filter: blur(48px) saturate(120%);
+  -webkit-backdrop-filter: blur(48px) saturate(120%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.28);
+  pointer-events: none;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .service-glass-layer {
+    background: rgb(255 255 255 / 0.1);
+  }
 }
 
 .grain-overlay {
