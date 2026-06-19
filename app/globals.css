@@ -94,13 +94,23 @@ body {
 }
 
 .glass-panel {
-  background: rgb(255 253 249 / 0.16);
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  background: rgb(255 253 249 / 0.38);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   box-shadow:
-    0 12px 40px rgb(74 69 104 / 0.08),
-    inset 0 1px 0 rgb(255 255 255 / 0.42),
-    inset 0 -1px 0 rgb(212 196 232 / 0.1);
+    0 12px 40px rgb(74 69 104 / 0.12),
+    inset 0 1px 0 rgb(255 255 255 / 0.72),
+    inset 0 -1px 0 rgb(212 196 232 / 0.2);
+}
+
+.glass-panel-frosted {
+  background: rgb(255 253 249 / 0.06);
+  backdrop-filter: blur(32px) saturate(140%);
+  -webkit-backdrop-filter: blur(32px) saturate(140%);
+  box-shadow:
+    0 8px 32px rgb(74 69 104 / 0.05),
+    inset 0 1px 0 rgb(255 255 255 / 0.18),
+    inset 0 -1px 0 rgb(212 196 232 / 0.05);
 }
 
 .grain-overlay {

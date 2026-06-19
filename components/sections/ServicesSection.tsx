@@ -34,15 +34,17 @@ export function ServicesSection() {
 
         <StaggerChildren className="mt-12 grid gap-6 sm:grid-cols-2">
           {site.services.map((service) => (
-            <StaggerItem key={service.id}>
-              <article className="glass-panel rounded-3xl border border-white/35 p-6 transition hover:-translate-y-0.5 hover:border-white/55">
-                <h3 className="font-display text-xl text-indigo">
-                  {service.title}
-                </h3>
-                <p className="mt-3 text-sm leading-relaxed text-indigo/85 sm:text-base">
-                  {service.description}
-                </p>
-              </article>
+            <StaggerItem
+              key={service.id}
+              variant="fade"
+              className="glass-panel-frosted rounded-3xl border border-white/25 p-6 transition-[border-color,box-shadow] hover:border-white/40 hover:shadow-[0_16px_48px_rgb(74_69_104/0.08)]"
+            >
+              <h3 className="font-display text-xl text-indigo">
+                {service.title}
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-indigo/85 sm:text-base">
+                {service.description}
+              </p>
             </StaggerItem>
           ))}
         </StaggerChildren>

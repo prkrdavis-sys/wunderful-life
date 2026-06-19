@@ -11,6 +11,7 @@ import type { ComponentProps, ReactNode } from "react";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 export type RevealVariant =
+  | "fade"
   | "fadeUp"
   | "fadeDown"
   | "fadeLeft"
@@ -22,6 +23,10 @@ const revealStates: Record<
   RevealVariant,
   { hidden: Record<string, number | string>; visible: Record<string, number | string> }
 > = {
+  fade: {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1 },
+  },
   fadeUp: {
     hidden: { opacity: 0, y: 32 },
     visible: { opacity: 1, y: 0 },
