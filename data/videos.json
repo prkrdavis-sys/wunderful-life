@@ -1,1 +1,34 @@
-[]
+[
+  {
+    "id": "f77327aa-a53a-4be0-b833-1085a3a1e220",
+    "slug": "hoodlum",
+    "title": "Hoodlum",
+    "brand": "Cmfrt",
+    "platform": "instagram",
+    "hook": "",
+    "cta": "",
+    "durationSec": 21,
+    "tags": [],
+    "thumbnailPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/thumbnails/90d57741-ca1a-461a-a240-2b0c0ab74acc.png",
+    "videoPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/videos/c1b97c11-86cb-411d-8af2-7b4392a90f54.mov",
+    "featured": true,
+    "sortOrder": 0,
+    "createdAt": "2026-06-18T03:08:46.726Z"
+  },
+  {
+    "id": "2b62d48d-ae10-4b31-b915-3624e80b26b2",
+    "slug": "bath-time",
+    "title": "Bath Time",
+    "brand": "Sopay",
+    "platform": "instagram",
+    "hook": "",
+    "cta": "",
+    "durationSec": 6,
+    "tags": [],
+    "thumbnailPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/thumbnails/1343c4dc-3274-4ff2-a332-1fecf2a81b9c.png",
+    "videoPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/videos/77fb96df-eda5-433e-84cb-83712e43b443.mov",
+    "featured": true,
+    "sortOrder": 1,
+    "createdAt": "2026-06-18T03:05:36.283Z"
+  }
+]

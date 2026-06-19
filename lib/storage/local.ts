@@ -31,28 +31,44 @@ async function ensureUploadDirs() {
   await fs.mkdir(THUMB_DIR, { recursive: true });
 }
 
-async function readVideosFromBlob(): Promise<PortfolioVideo[] | null> {
-  if (!getUseBlobStorage()) return null;
-
+async function readVideosFromBlob(): Promise<PortfolioVideo[]> {
   try {
     const result = await get(VIDEOS_METADATA_BLOB_PATH, { access: "public" });
-    if (!result || result.statusCode !== 200 || !result.stream) {
-      return null;
+    if (!result || !result.stream) {
+      return [];
     }
 
     const text = await new Response(result.stream).text();
-    return JSON.parse(text) as PortfolioVideo[];
-  } catch {
-    return null;
+    const parsed = JSON.parse(text) as PortfolioVideo[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    if (error instanceof StorageError) throw error;
+    throw new StorageError(
+      "Could not load video library. Check your connection and try again.",
+      503,
+    );
+  }
+}
+
+async function readVideosFromLocalFile(): Promise<PortfolioVideo[]> {
+  try {
+    const raw = await fs.readFile(DATA_PATH, "utf8");
+    const parsed = JSON.parse(raw) as PortfolioVideo[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return [];
+    }
+    throw error;
   }
 }
 
 async function readVideosFile(): Promise<PortfolioVideo[]> {
-  const blobVideos = await readVideosFromBlob();
-  if (blobVideos !== null) return blobVideos;
+  if (getUseBlobStorage()) {
+    return readVideosFromBlob();
+  }
 
-  const raw = await fs.readFile(DATA_PATH, "utf8");
-  return JSON.parse(raw) as PortfolioVideo[];
+  return readVideosFromLocalFile();
 }
 
 async function writeVideosFile(videos: PortfolioVideo[]) {
@@ -65,10 +81,12 @@ async function writeVideosFile(videos: PortfolioVideo[]) {
       allowOverwrite: true,
       contentType: "application/json",
     });
-    return;
   }
 
-  await fs.writeFile(DATA_PATH, content);
+  if (!getUseBlobStorage() || process.env.VERCEL !== "1") {
+    await fs.mkdir(path.dirname(DATA_PATH), { recursive: true });
+    await fs.writeFile(DATA_PATH, content);
+  }
 }
 
 async function saveUploadFile(
@@ -141,6 +159,13 @@ function isRemoteAssetUrl(value: string | null | undefined): value is string {
   return Boolean(value?.startsWith("https://"));
 }
 
+async function rollbackClientUploads(files?: UploadFiles) {
+  if (!files || !getUseBlobStorage()) return;
+
+  const urls = [files.videoUrl, files.thumbnailUrl].filter(isRemoteAssetUrl);
+  await Promise.all(urls.map((url) => deleteStoredFile(url)));
+}
+
 export async function listVideos() {
   return sortVideos(await readVideosFile());
 }
@@ -158,51 +183,57 @@ export async function getVideoById(id: string) {
 export async function createVideo(input: VideoCreateInput, files?: UploadFiles) {
   assertCanPersistUploads();
   await ensureUploadDirs();
-  const videos = await readVideosFile();
-  const existingSlugs = videos.map((video) => video.slug);
 
-  let thumbnailPath = isRemoteAssetUrl(files?.thumbnailUrl)
-    ? files.thumbnailUrl
-    : null;
-  let videoPath = isRemoteAssetUrl(files?.videoUrl) ? files.videoUrl : null;
+  try {
+    const videos = await readVideosFile();
+    const existingSlugs = videos.map((video) => video.slug);
 
-  if (files?.video) {
-    validateVideoFile(files.video);
-    videoPath = await saveUploadFile(files.video, "videos");
+    let thumbnailPath = isRemoteAssetUrl(files?.thumbnailUrl)
+      ? files.thumbnailUrl
+      : null;
+    let videoPath = isRemoteAssetUrl(files?.videoUrl) ? files.videoUrl : null;
+
+    if (files?.video) {
+      validateVideoFile(files.video);
+      videoPath = await saveUploadFile(files.video, "videos");
+    }
+
+    if (files?.thumbnail) {
+      thumbnailPath = await saveUploadFile(files.thumbnail, "thumbnails");
+    }
+
+    if (!thumbnailPath || !videoPath) {
+      throw new StorageError("Both thumbnail and video are required.");
+    }
+
+    const slug = input.slug
+      ? uniqueSlug(input.slug, existingSlugs)
+      : uniqueSlug(input.title, existingSlugs);
+
+    const video: PortfolioVideo = {
+      id: randomUUID(),
+      slug,
+      title: input.title,
+      brand: input.brand,
+      platform: input.platform,
+      hook: input.hook,
+      cta: input.cta,
+      durationSec: input.durationSec,
+      tags: input.tags,
+      thumbnailPath,
+      videoPath,
+      featured: input.featured,
+      sortOrder: input.sortOrder ?? videos.length,
+      createdAt: new Date().toISOString(),
+    };
+
+    videos.push(video);
+    await writeVideosFile(videos);
+    return video;
+  } catch (error) {
+    await rollbackClientUploads(files);
+    throw error;
   }
-
-  if (files?.thumbnail) {
-    thumbnailPath = await saveUploadFile(files.thumbnail, "thumbnails");
-  }
-
-  if (!thumbnailPath || !videoPath) {
-    throw new StorageError("Both thumbnail and video are required.");
-  }
-
-  const slug = input.slug
-    ? uniqueSlug(input.slug, existingSlugs)
-    : uniqueSlug(input.title, existingSlugs);
-
-  const video: PortfolioVideo = {
-    id: randomUUID(),
-    slug,
-    title: input.title,
-    brand: input.brand,
-    platform: input.platform,
-    hook: input.hook,
-    cta: input.cta,
-    durationSec: input.durationSec,
-    tags: input.tags,
-    thumbnailPath,
-    videoPath,
-    featured: input.featured,
-    sortOrder: input.sortOrder ?? videos.length,
-    createdAt: new Date().toISOString(),
-  };
-
-  videos.push(video);
-  await writeVideosFile(videos);
-  return video;
 }
 
 export async function updateVideo(
