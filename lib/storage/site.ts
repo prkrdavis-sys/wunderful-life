@@ -2,6 +2,7 @@ import { del, get, put } from "@vercel/blob";
 import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
+import { normalizeSiteContent } from "@/lib/site/normalize";
 import type { SiteContent } from "@/lib/site/types";
 import {
   getUseBlobStorage,
@@ -33,7 +34,8 @@ function isCompleteSiteContent(value: unknown): value is SiteContent {
 
 async function readSiteFromFile(): Promise<SiteContent> {
   const raw = await fs.readFile(SITE_PATH, "utf8");
-  return JSON.parse(raw) as SiteContent;
+  const parsed = JSON.parse(raw) as SiteContent;
+  return normalizeSiteContent(parsed);
 }
 
 async function ensurePhotoDir() {
@@ -51,7 +53,7 @@ async function readSiteFromBlob(): Promise<SiteContent | null> {
 
     const text = await new Response(result.stream).text();
     const parsed = JSON.parse(text) as SiteContent;
-    return isCompleteSiteContent(parsed) ? parsed : null;
+    return isCompleteSiteContent(parsed) ? normalizeSiteContent(parsed) : null;
   } catch {
     return null;
   }
@@ -109,8 +111,9 @@ function toErrorMessage(error: unknown, fallback: string): string {
 }
 
 export async function updateSiteContent(content: SiteContent) {
-  await writeSiteContent(content);
-  return content;
+  const normalized = normalizeSiteContent(content);
+  await writeSiteContent(normalized);
+  return normalized;
 }
 
 async function deleteStoredPhoto(imagePath: string) {

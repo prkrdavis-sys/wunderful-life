@@ -15,45 +15,65 @@ export function AboutSection() {
   const mainPhoto = photos[0];
   const accentPhoto = photos[1];
   const galleryPhotos = photos.slice(2);
+  const paragraphs = site.about.paragraphs;
+  const leadParagraphs =
+    paragraphs.length > 1 ? paragraphs.slice(0, -1) : paragraphs;
+  const closingParagraph =
+    paragraphs.length > 1 ? paragraphs[paragraphs.length - 1] : null;
 
   return (
     <section
       id="about"
-      className="scroll-section-anchor relative overflow-hidden px-4 py-16 sm:px-6 sm:py-24"
+      className="scroll-section-anchor relative overflow-hidden px-4 py-14 sm:px-6 sm:py-20"
     >
       <PlantSectionBackground wallpaper={wallpaper} overlay={overlay} />
       <div className="relative z-10 mx-auto max-w-5xl">
-        <SectionReveal className="mb-10 text-center md:mb-12 md:text-left">
+        <SectionReveal className="mb-8 text-center md:mb-10 md:text-left">
           <h2 className={`font-display text-3xl sm:text-4xl ${text.heading}`}>
             {site.about.headline}
           </h2>
-          <p className={`mt-3 max-w-xl text-base sm:text-lg ${text.subheading}`}>
+          <p className={`mt-2 max-w-xl text-base sm:text-lg ${text.subheading}`}>
             Meet {site.name} — creative, aesthetic, and unapologetically myself.
           </p>
         </SectionReveal>
 
-        <div className="grid gap-10 md:grid-cols-[minmax(0,280px)_minmax(0,1fr)] md:items-start md:gap-12 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] lg:gap-14">
-          {(mainPhoto || accentPhoto) && (
-            <SectionReveal className="mx-auto flex w-full max-w-xs flex-col items-center gap-6 md:mx-0 md:max-w-none md:items-start">
-              {mainPhoto && <EmilyPhoto photo={mainPhoto} size="lg" />}
-              {accentPhoto && <EmilyPhoto photo={accentPhoto} size="md" />}
+        <div className="grid gap-8 md:grid-cols-2 md:grid-rows-[auto_auto] md:items-start md:gap-x-12 md:gap-y-8 lg:gap-x-14">
+          {mainPhoto && (
+            <SectionReveal className="mx-auto w-full max-w-xs md:col-start-1 md:row-start-1 md:mx-0 md:max-w-none">
+              <EmilyPhoto photo={mainPhoto} size="lg" />
             </SectionReveal>
           )}
 
-          <div className="min-w-0 space-y-4">
-            {site.about.paragraphs.map((paragraph, index) => (
-              <p
-                key={`about-paragraph-${index}`}
-                className={`text-base leading-relaxed break-words sm:text-lg ${text.body}`}
-              >
-                {paragraph}
-              </p>
-            ))}
-          </div>
+          {leadParagraphs.length > 0 && (
+            <div className="min-w-0 space-y-4 md:col-start-2 md:row-start-1 md:self-start">
+              {leadParagraphs.map((paragraph, index) => (
+                <p
+                  key={`about-lead-${index}`}
+                  className={`text-base leading-relaxed break-words sm:text-lg ${text.body}`}
+                >
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          )}
+
+          {closingParagraph && (
+            <p
+              className={`min-w-0 text-base leading-relaxed break-words sm:text-lg md:col-start-1 md:row-start-2 md:self-end ${text.body}`}
+            >
+              {closingParagraph}
+            </p>
+          )}
+
+          {accentPhoto && (
+            <SectionReveal className="mx-auto w-full max-w-[220px] sm:max-w-[250px] md:col-start-2 md:row-start-2 md:mx-0 md:ml-auto md:self-end">
+              <EmilyPhoto photo={accentPhoto} size="md" />
+            </SectionReveal>
+          )}
         </div>
 
         {galleryPhotos.length > 0 && (
-          <SectionReveal className="mt-14 md:mt-16">
+          <SectionReveal className="mt-12 md:mt-14">
             <h3 className={`font-display text-xl sm:text-2xl ${text.heading}`}>
               A little more {site.name}
             </h3>

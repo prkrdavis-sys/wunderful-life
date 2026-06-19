@@ -14,35 +14,30 @@
       {
         "id": "portrait-main",
         "caption": "I love the outdoors",
-        "accent": "green",
         "rotate": -3,
         "imagePath": "/about-photos/portrait-main-3f704aaf-7b62-4d22-af40-32bf7c7d078c.png"
       },
       {
         "id": "creator-desk",
         "caption": "I'm also a fairy princess",
-        "accent": "pink",
         "rotate": 4,
         "imagePath": "/about-photos/creator-desk-02960e91-5572-45f9-85ad-870acd81e15d.png"
       },
       {
         "id": "outdoors",
         "caption": "Emily on a nature walk — where ideas bloom",
-        "accent": "blue",
         "rotate": -5,
         "imagePath": "/about-photos/outdoors-6f2b672b-7355-48bc-a798-a82e1b5984d6.png"
       },
       {
         "id": "filming",
         "caption": "Emily filming UGC — behind the scenes",
-        "accent": "yellow",
         "rotate": 2,
         "imagePath": "/about-photos/filming-c44dcede-eefc-4714-8107-fbeb2b7a7262.png"
       },
       {
         "id": "candid",
         "caption": "Emily candid — personality over perfection",
-        "accent": "brown",
         "rotate": -2,
         "imagePath": "/about-photos/candid-104bf6ba-b0ce-473a-ad48-343518136b3b.png"
       }
@@ -68,34 +63,34 @@
       "href": "/#contact"
     }
   ],
+  "contact": {
+    "headline": "Let's Create Together",
+    "body": "Want content that converts and a creator brands actually want to work with again? Hi — I'm Emily. Let's chat."
+  },
   "social": {
     "instagram": "#https://www.instagram.com/wunderfull.life777/",
-    "email": "mailto:hello@wunderfullife.com"
+    "email": "mailto:hello@wunderfulife.com"
   },
   "services": [
     {
       "id": "tiktok-reels",
       "title": "TikTok & Reels",
-      "description": "Short-form vertical video with strong hooks, trending audio, and that effortless Emily energy brands remember.",
-      "accent": "pink"
+      "description": "Short-form vertical video with strong hooks, trending audio, and that effortless Emily energy brands remember."
     },
     {
       "id": "instagram",
       "title": "Instagram Content",
-      "description": "Static posts, carousels, and Stories with an airy, nature-driven look that still converts.",
-      "accent": "green"
+      "description": "Static posts, carousels, and Stories with an airy, nature-driven look that still converts."
     },
     {
       "id": "testimonial",
       "title": "Testimonials",
-      "description": "Talking-head UGC that builds trust — warm, honest, and unmistakably me on camera.",
-      "accent": "blue"
+      "description": "Talking-head UGC that builds trust — warm, honest, and unmistakably me on camera."
     },
     {
       "id": "unboxing",
       "title": "Unboxing & Demos",
-      "description": "Product-first content with creative girl charm — polished enough for ads, real enough to relate.",
-      "accent": "yellow"
+      "description": "Product-first content with creative girl charm — polished enough for ads, real enough to relate."
     }
   ]
 }

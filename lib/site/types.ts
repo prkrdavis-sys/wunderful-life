@@ -8,7 +8,6 @@ export type HeroLink = {
 export type AboutPhoto = {
   id: string;
   caption: string;
-  accent: string;
   rotate: number;
   imagePath?: string;
 };
@@ -24,6 +23,10 @@ export type SiteContent = {
     photos: AboutPhoto[];
   };
   heroLinks: HeroLink[];
+  contact: {
+    headline: string;
+    body: string;
+  };
   social: {
     instagram: string;
     email: string;
@@ -32,6 +35,5 @@ export type SiteContent = {
     id: string;
     title: string;
     description: string;
-    accent: string;
   }[];
 };

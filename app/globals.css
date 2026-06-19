@@ -211,21 +211,3 @@ body {
     rgba(247, 243, 236, 0.8) 100%
   );
 }
-
-.accent-green { color: var(--burgundy); }
-.accent-blue { color: var(--blue-deep); }
-.accent-brown { color: var(--brown); }
-.accent-yellow { color: var(--brown); }
-.accent-pink { color: var(--pink-deep); }
-
-.bg-accent-green { background-color: var(--lavender); }
-.bg-accent-blue { background-color: var(--blue); }
-.bg-accent-brown { background-color: var(--brown-light); }
-.bg-accent-yellow { background-color: var(--yellow); }
-.bg-accent-pink { background-color: var(--pink); }
-
-.border-accent-green { border-color: var(--lavender-deep); }
-.border-accent-blue { border-color: var(--blue); }
-.border-accent-brown { border-color: var(--brown-light); }
-.border-accent-yellow { border-color: var(--yellow-deep); }
-.border-accent-pink { border-color: var(--pink); }

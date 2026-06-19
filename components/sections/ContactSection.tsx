@@ -21,11 +21,10 @@ export function ContactSection() {
       <div className="relative z-10 mx-auto max-w-3xl text-center">
         <SectionReveal>
           <h2 className={`font-display text-3xl sm:text-4xl ${text.heading}`}>
-            Let&apos;s Create Together
+            {site.contact.headline}
           </h2>
           <p className={`glass-panel mx-auto mt-6 max-w-2xl rounded-2xl border border-white/50 px-6 py-5 text-base leading-relaxed sm:px-8 sm:text-lg ${text.body}`}>
-            Want content that converts and a creator brands actually want to
-            work with again? Hi — I&apos;m {site.name}. Let&apos;s chat.
+            {site.contact.body}
           </p>
         </SectionReveal>
 

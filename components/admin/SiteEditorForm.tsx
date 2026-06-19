@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import type { SiteContent } from "@/lib/site/types";
-import { PHOTO_ACCENTS } from "@/lib/site/accents";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { FileUploadButton } from "@/components/ui/FileUploadButton";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
@@ -18,7 +17,7 @@ const SECTIONS: { id: ContentSection; label: string; hint: string }[] = [
   { id: "about", label: "About", hint: "Headline & copy" },
   { id: "photos", label: "Photos", hint: "Images & captions" },
   { id: "services", label: "Services", hint: "Offerings list" },
-  { id: "contact", label: "Contact", hint: "Social links" },
+  { id: "contact", label: "Contact", hint: "Headline, copy & links" },
 ];
 
 const inputClass =
@@ -238,7 +237,7 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
               <div>
                 <h3 className="font-display text-lg text-brown">About photos</h3>
                 <p className="mt-1 text-sm text-muted">
-                  Upload images, captions, and styling for each photo.
+                  Upload images, captions, and rotation for each photo.
                 </p>
               </div>
               <div className="grid gap-4 lg:grid-cols-2">
@@ -270,55 +269,27 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
                         className={inputClass}
                       />
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <label className="block text-sm">
-                        <span className="text-muted">Accent</span>
-                        <select
-                          value={photo.accent}
-                          onChange={(event) =>
-                            setForm((current) => {
-                              const photos = [...current.about.photos];
-                              photos[index] = {
-                                ...photos[index],
-                                accent: event.target.value,
-                              };
-                              return {
-                                ...current,
-                                about: { ...current.about, photos },
-                              };
-                            })
-                          }
-                          className={inputClass}
-                        >
-                          {PHOTO_ACCENTS.map((accent) => (
-                            <option key={accent.value} value={accent.value}>
-                              {accent.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="block text-sm">
-                        <span className="text-muted">Rotate (deg)</span>
-                        <input
-                          type="number"
-                          value={photo.rotate}
-                          onChange={(event) =>
-                            setForm((current) => {
-                              const photos = [...current.about.photos];
-                              photos[index] = {
-                                ...photos[index],
-                                rotate: Number(event.target.value),
-                              };
-                              return {
-                                ...current,
-                                about: { ...current.about, photos },
-                              };
-                            })
-                          }
-                          className={inputClass}
-                        />
-                      </label>
-                    </div>
+                    <label className="block text-sm">
+                      <span className="text-muted">Rotate (deg)</span>
+                      <input
+                        type="number"
+                        value={photo.rotate}
+                        onChange={(event) =>
+                          setForm((current) => {
+                            const photos = [...current.about.photos];
+                            photos[index] = {
+                              ...photos[index],
+                              rotate: Number(event.target.value),
+                            };
+                            return {
+                              ...current,
+                              about: { ...current.about, photos },
+                            };
+                          })
+                        }
+                        className={inputClass}
+                      />
+                    </label>
                     <div className="block text-sm">
                       <span className="text-muted">Photo</span>
                       <FileUploadButton
@@ -347,7 +318,7 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
               <div>
                 <h3 className="font-display text-lg text-brown">Services</h3>
                 <p className="mt-1 text-sm text-muted">
-                  Titles, descriptions, and accent colors for each offering.
+                  Titles and descriptions for each offering.
                 </p>
               </div>
               <div className="grid gap-4 lg:grid-cols-2">
@@ -394,29 +365,6 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
                         className={inputClass}
                       />
                     </label>
-                    <label className="block text-sm">
-                      <span className="text-muted">Accent</span>
-                      <select
-                        value={service.accent}
-                        onChange={(event) =>
-                          setForm((current) => {
-                            const services = [...current.services];
-                            services[index] = {
-                              ...services[index],
-                              accent: event.target.value,
-                            };
-                            return { ...current, services };
-                          })
-                        }
-                        className={inputClass}
-                      >
-                        {PHOTO_ACCENTS.map((accent) => (
-                          <option key={accent.value} value={accent.value}>
-                            {accent.label}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
                   </div>
                 ))}
               </div>
@@ -428,9 +376,40 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
               <div>
                 <h3 className="font-display text-lg text-brown">Contact</h3>
                 <p className="mt-1 text-sm text-muted">
-                  Links shown in the footer and contact areas.
+                  The &ldquo;Let&apos;s Create Together&rdquo; section — headline,
+                  message, and social links.
                 </p>
               </div>
+              <label className="block max-w-2xl text-sm">
+                <span className="text-muted">Section headline</span>
+                <input
+                  value={form.contact.headline}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      contact: {
+                        ...current.contact,
+                        headline: event.target.value,
+                      },
+                    }))
+                  }
+                  className={inputClass}
+                />
+              </label>
+              <label className="block max-w-2xl text-sm">
+                <span className="text-muted">Message</span>
+                <textarea
+                  value={form.contact.body}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      contact: { ...current.contact, body: event.target.value },
+                    }))
+                  }
+                  rows={8}
+                  className={`${inputClass} min-h-40 resize-y`}
+                />
+              </label>
               <div className="grid max-w-2xl gap-4">
                 <label className="block text-sm">
                   <span className="text-muted">Instagram URL</span>

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { AboutPhoto } from "@/lib/site/types";
-import { photoAccentGradient } from "@/lib/site/accents";
+
+const PHOTO_FRAME_GRADIENT = "from-lavender/55 via-lavender/22 to-cream";
 
 type EmilyPhotoProps = {
   photo: AboutPhoto;
@@ -40,15 +41,13 @@ export function EmilyPhoto({
   size = "md",
   className = "",
 }: EmilyPhotoProps) {
-  const gradient = photoAccentGradient(photo.accent);
-
   return (
     <figure
       className={`max-w-full ${sizeClasses[size]} ${frameClasses[size]} rotate-[var(--photo-rotate)] rounded-sm border border-white/90 bg-paper shadow-lg shadow-indigo/10 ring-1 ring-lavender/20 ${className}`}
       style={{ ["--photo-rotate" as string]: `${photo.rotate}deg` }}
     >
       <div
-        className={`relative aspect-[4/5] overflow-hidden rounded-sm bg-gradient-to-br ${gradient}`}
+        className={`relative aspect-[4/5] overflow-hidden rounded-sm bg-gradient-to-br ${PHOTO_FRAME_GRADIENT}`}
       >
         {photo.imagePath ? (
           <Image
