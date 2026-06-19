@@ -35,7 +35,7 @@ export function ServicesSection() {
         <StaggerChildren className="mt-12 grid gap-6 sm:grid-cols-2">
           {site.services.map((service) => (
             <StaggerItem key={service.id}>
-              <article className="glass-panel rounded-3xl border border-white/50 p-6 transition hover:-translate-y-0.5 hover:border-white/70">
+              <article className="glass-panel rounded-3xl border border-white/35 p-6 transition hover:-translate-y-0.5 hover:border-white/55">
                 <h3 className="font-display text-xl text-indigo">
                   {service.title}
                 </h3>
