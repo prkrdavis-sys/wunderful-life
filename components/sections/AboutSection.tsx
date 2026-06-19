@@ -21,6 +21,8 @@ export function AboutSection() {
   const closingParagraph =
     paragraphs.length > 1 ? paragraphs[paragraphs.length - 1] : null;
 
+  const paragraphClass = `text-base leading-relaxed break-words sm:text-lg ${text.body}`;
+
   return (
     <section
       id="about"
@@ -28,7 +30,7 @@ export function AboutSection() {
     >
       <PlantSectionBackground wallpaper={wallpaper} overlay={overlay} />
       <div className="relative z-10 mx-auto max-w-5xl">
-        <SectionReveal className="mb-8 text-center md:mb-10 md:text-left">
+        <SectionReveal className="mb-8 text-center md:mb-9 md:text-left">
           <h2 className={`font-display text-3xl sm:text-4xl ${text.heading}`}>
             {site.about.headline}
           </h2>
@@ -37,39 +39,40 @@ export function AboutSection() {
           </p>
         </SectionReveal>
 
-        <div className="grid gap-8 md:grid-cols-2 md:grid-rows-[auto_auto] md:items-start md:gap-x-12 md:gap-y-8 lg:gap-x-14">
+        <div className="grid items-start gap-8 md:grid-cols-[minmax(0,280px)_minmax(0,1fr)] md:gap-x-10 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)] lg:gap-x-12">
           {mainPhoto && (
-            <SectionReveal className="mx-auto w-full max-w-xs md:col-start-1 md:row-start-1 md:mx-0 md:max-w-none">
+            <SectionReveal className="mx-auto w-full max-w-xs md:sticky md:top-28 md:mx-0 md:max-w-none md:self-start">
               <EmilyPhoto photo={mainPhoto} size="lg" />
             </SectionReveal>
           )}
 
-          {leadParagraphs.length > 0 && (
-            <div className="min-w-0 space-y-4 md:col-start-2 md:row-start-1 md:self-start">
-              {leadParagraphs.map((paragraph, index) => (
-                <p
-                  key={`about-lead-${index}`}
-                  className={`text-base leading-relaxed break-words sm:text-lg ${text.body}`}
-                >
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-          )}
+          <div className="min-w-0 space-y-4">
+            {leadParagraphs.map((paragraph, index) => (
+              <p key={`about-lead-${index}`} className={paragraphClass}>
+                {paragraph}
+              </p>
+            ))}
 
-          {closingParagraph && (
-            <p
-              className={`min-w-0 text-base leading-relaxed break-words sm:text-lg md:col-start-1 md:row-start-2 md:self-end ${text.body}`}
-            >
-              {closingParagraph}
-            </p>
-          )}
+            {(closingParagraph || accentPhoto) && (
+              <div className="flex flex-col gap-5 pt-1 md:flex-row md:items-start md:justify-between md:gap-6 lg:gap-8">
+                {closingParagraph && (
+                  <p className={`min-w-0 flex-1 md:max-w-[72%] lg:max-w-[68%] ${paragraphClass}`}>
+                    {closingParagraph}
+                  </p>
+                )}
 
-          {accentPhoto && (
-            <SectionReveal className="mx-auto w-full max-w-[220px] sm:max-w-[250px] md:col-start-2 md:row-start-2 md:mx-0 md:ml-auto md:self-end">
-              <EmilyPhoto photo={accentPhoto} size="md" />
-            </SectionReveal>
-          )}
+                {accentPhoto && (
+                  <SectionReveal
+                    className={`mx-auto w-full max-w-[200px] sm:max-w-[220px] md:mx-0 md:shrink-0 md:pt-0.5 ${
+                      closingParagraph ? "md:-mt-1 md:ml-auto" : "md:ml-auto"
+                    }`}
+                  >
+                    <EmilyPhoto photo={accentPhoto} size="md" />
+                  </SectionReveal>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {galleryPhotos.length > 0 && (
