@@ -1,7 +1,8 @@
 "use client";
 
+import AutoScroll from "embla-carousel-auto-scroll";
 import useEmblaCarousel from "embla-carousel-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { PortfolioVideo } from "@/lib/videos/types";
 import { uniqueVideosById } from "@/lib/videos/sort";
 import { phoneTilt } from "./constants";
@@ -20,10 +21,13 @@ type PhoneMarqueeProps = {
 };
 
 const INTERACTIVE_SELECTOR = "button, a, video, input, textarea, select, label";
+const MIN_MARQUEE_SLIDES = 6;
+const AUTO_SCROLL_SPEED = 0.45;
 
-function initialSnapIndex(count: number): number {
-  if (count <= 2) return 0;
-  return Math.floor((count - 1) / 2);
+function buildMarqueeSlides(videos: PortfolioVideo[]): PortfolioVideo[] {
+  if (videos.length === 0) return [];
+  const repeats = Math.ceil(MIN_MARQUEE_SLIDES / videos.length);
+  return Array.from({ length: repeats }, () => videos).flat();
 }
 
 function PhoneSlide({
@@ -59,9 +63,9 @@ export function PhoneMarquee({
   emptyClassName = "text-muted",
   captionClasses,
 }: PhoneMarqueeProps) {
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [isScrollable, setIsScrollable] = useState(false);
-  const uniqueVideos = uniqueVideosById(videos);
+  const [activeSlideKey, setActiveSlideKey] = useState<string | null>(null);
+  const uniqueVideos = useMemo(() => uniqueVideosById(videos), [videos]);
+  const marqueeSlides = useMemo(() => buildMarqueeSlides(uniqueVideos), [uniqueVideos]);
 
   const watchDrag = useCallback((_emblaApi: unknown, event: MouseEvent | TouchEvent) => {
     const target = event.target;
@@ -69,39 +73,35 @@ export function PhoneMarquee({
     return !target.closest(INTERACTIVE_SELECTOR);
   }, []);
 
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    align: "center",
-    containScroll: "trimSnaps",
-    dragFree: true,
-    watchDrag,
-  });
+  const plugins = useMemo(
+    () => [
+      AutoScroll({
+        speed: AUTO_SCROLL_SPEED,
+        direction: "forward",
+        playOnInit: true,
+        startDelay: 0,
+        stopOnInteraction: true,
+        stopOnMouseEnter: true,
+        stopOnFocusIn: false,
+      }),
+    ],
+    [],
+  );
 
-  const syncScrollState = useCallback(() => {
-    if (!emblaApi) return;
-    const scrollable = emblaApi.canScrollPrev() || emblaApi.canScrollNext();
-    setIsScrollable((prev) => (prev === scrollable ? prev : scrollable));
-    return scrollable;
-  }, [emblaApi]);
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    {
+      loop: true,
+      align: "start",
+      dragFree: true,
+      watchDrag,
+    },
+    plugins,
+  );
 
   useEffect(() => {
-    if (!emblaApi) return;
-
-    const onReInit = () => {
-      const scrollable = syncScrollState() ?? false;
-      if (scrollable) {
-        emblaApi.scrollTo(initialSnapIndex(uniqueVideos.length), true);
-      } else {
-        emblaApi.scrollTo(0, true);
-      }
-    };
-
-    emblaApi.on("reInit", onReInit);
-    queueMicrotask(onReInit);
-
-    return () => {
-      emblaApi.off("reInit", onReInit);
-    };
-  }, [emblaApi, uniqueVideos.length, syncScrollState]);
+    if (!emblaApi || !activeSlideKey) return;
+    emblaApi.plugins()?.autoScroll?.stop();
+  }, [activeSlideKey, emblaApi]);
 
   if (uniqueVideos.length === 0) {
     return (
@@ -111,37 +111,28 @@ export function PhoneMarquee({
     );
   }
 
-  if (uniqueVideos.length === 1) {
-    return (
-      <div className="flex justify-center px-4 py-6">
-        <PhoneSlide
-          video={uniqueVideos[0]}
-          index={0}
-          activeId={activeId}
-          onActivate={setActiveId}
-          captionClasses={captionClasses}
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="relative py-4">
       <div
         ref={emblaRef}
-        className={`overflow-hidden px-4 ${isScrollable ? "cursor-grab select-none active:cursor-grabbing" : ""}`}
+        className="cursor-grab select-none overflow-hidden px-4 active:cursor-grabbing"
       >
-        <div className={`flex gap-8 py-2 ${!isScrollable ? "mx-auto w-max" : ""}`}>
-          {uniqueVideos.map((video, index) => (
-            <PhoneSlide
-              key={video.id}
-              video={video}
-              index={index}
-              activeId={activeId}
-              onActivate={setActiveId}
-              captionClasses={captionClasses}
-            />
-          ))}
+        <div className="flex gap-8 py-2">
+          {marqueeSlides.map((video, index) => {
+            const slideKey = `${video.id}-${index}`;
+            const sourceIndex = index % uniqueVideos.length;
+
+            return (
+              <PhoneSlide
+                key={slideKey}
+                video={video}
+                index={sourceIndex}
+                activeId={activeSlideKey === slideKey ? video.id : null}
+                onActivate={(id) => setActiveSlideKey(id ? slideKey : null)}
+                captionClasses={captionClasses}
+              />
+            );
+          })}
         </div>
       </div>
     </div>
