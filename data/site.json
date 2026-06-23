@@ -48,6 +48,42 @@
       }
     ]
   },
+  "homePhotoGrid": {
+    "photos": [
+      {
+        "id": "home-grid-1",
+        "alt": "Home photo grid image 1"
+      },
+      {
+        "id": "home-grid-2",
+        "alt": "Home photo grid image 2"
+      },
+      {
+        "id": "home-grid-3",
+        "alt": "Home photo grid image 3"
+      },
+      {
+        "id": "home-grid-4",
+        "alt": "Home photo grid image 4"
+      },
+      {
+        "id": "home-grid-5",
+        "alt": "Home photo grid image 5"
+      },
+      {
+        "id": "home-grid-6",
+        "alt": "Home photo grid image 6"
+      },
+      {
+        "id": "home-grid-7",
+        "alt": "Home photo grid image 7"
+      },
+      {
+        "id": "home-grid-8",
+        "alt": "Home photo grid image 8"
+      }
+    ]
+  },
   "whatIsUgc": {
     "heading": "What Is UGC?",
     "body": "UGC, or user-generated content, is brand content made to feel like it came from a real customer, creator, or everyday experience. It blends strategy with natural storytelling, helping people understand how a product fits into real life without feeling like a traditional ad.",

@@ -1,4 +1,5 @@
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
+import { HomePhotoGrid } from "@/components/sections/HomePhotoGrid";
 import { SectionReveal } from "@/components/ui/motion";
 import { PhoneMarquee } from "@/components/phone/PhoneMarquee";
 import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
@@ -47,6 +48,8 @@ export async function WorkPreviewSection({ videos }: WorkPreviewSectionProps) {
           captionClasses={text.caption}
         />
       </div>
+
+      <HomePhotoGrid />
 
       <div className="relative z-10 mt-10 flex justify-center">
         <AnimatedButton href="/work" variant="soft">

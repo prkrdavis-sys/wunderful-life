@@ -1,4 +1,4 @@
-import type { AboutPhoto, SiteContent } from "@/lib/site/types";
+import type { AboutPhoto, GridPhoto, SiteContent } from "@/lib/site/types";
 
 const DEFAULT_CONTACT_HEADLINE = "Let's Create Together";
 
@@ -56,8 +56,20 @@ const DEFAULT_FOURTH_GALLERY_PHOTO: AboutPhoto = {
   rotate: 3,
 };
 
-type SiteContentInput = Omit<SiteContent, "contact" | "whatIsUgc" | "testimonials"> & {
+const DEFAULT_HOME_GRID_PHOTOS: GridPhoto[] = Array.from(
+  { length: 8 },
+  (_, index) => ({
+    id: `home-grid-${index + 1}`,
+    alt: `Home photo grid image ${index + 1}`,
+  }),
+);
+
+type SiteContentInput = Omit<
+  SiteContent,
+  "contact" | "homePhotoGrid" | "whatIsUgc" | "testimonials"
+> & {
   contact?: Partial<SiteContent["contact"]>;
+  homePhotoGrid?: Partial<SiteContent["homePhotoGrid"]>;
   whatIsUgc?: Partial<SiteContent["whatIsUgc"]>;
   testimonials?: Partial<SiteContent["testimonials"]>;
 };
@@ -97,6 +109,23 @@ function normalizeHeroLinks(links: SiteContent["heroLinks"]): SiteContent["heroL
   });
 }
 
+function normalizeHomeGridPhotos(
+  photos: GridPhoto[] | undefined,
+): GridPhoto[] {
+  const byId = new Map((photos ?? []).map((photo) => [photo.id, photo]));
+
+  return DEFAULT_HOME_GRID_PHOTOS.map((fallback) => {
+    const photo = byId.get(fallback.id);
+    if (!photo) return fallback;
+
+    return {
+      id: fallback.id,
+      alt: typeof photo.alt === "string" ? photo.alt : fallback.alt,
+      ...(photo.imagePath ? { imagePath: photo.imagePath } : {}),
+    };
+  });
+}
+
 export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
   const whatIsUgc = raw.whatIsUgc ?? DEFAULT_WHAT_IS_UGC;
   const testimonials = raw.testimonials ?? DEFAULT_TESTIMONIALS;
@@ -110,6 +139,9 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
       headline: raw.about.headline,
       paragraphs: raw.about.paragraphs,
       photos: normalizeAboutPhotos(raw.about.photos),
+    },
+    homePhotoGrid: {
+      photos: normalizeHomeGridPhotos(raw.homePhotoGrid?.photos),
     },
     whatIsUgc: {
       heading:

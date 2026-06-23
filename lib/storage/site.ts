@@ -11,7 +11,8 @@ import {
 import { StorageError } from "./types";
 
 const SITE_PATH = path.join(process.cwd(), "data", "site.json");
-const PHOTO_DIR = path.join(process.cwd(), "public", "about-photos");
+const ABOUT_PHOTO_DIR = path.join(process.cwd(), "public", "about-photos");
+const HOME_GRID_PHOTO_DIR = path.join(process.cwd(), "public", "home-grid-photos");
 
 function isCompleteSiteContent(value: unknown): value is SiteContent {
   if (!value || typeof value !== "object") return false;
@@ -38,8 +39,8 @@ async function readSiteFromFile(): Promise<SiteContent> {
   return normalizeSiteContent(parsed);
 }
 
-async function ensurePhotoDir() {
-  await fs.mkdir(PHOTO_DIR, { recursive: true });
+async function ensurePhotoDir(dir: string) {
+  await fs.mkdir(dir, { recursive: true });
 }
 
 async function readSiteFromBlob(): Promise<SiteContent | null> {
@@ -130,6 +131,7 @@ async function deleteStoredPhoto(imagePath: string) {
 
   if (
     imagePath.startsWith("/about-photos/") ||
+    imagePath.startsWith("/home-grid-photos/") ||
     imagePath.startsWith("/uploads/photos/")
   ) {
     const absolute = path.join(process.cwd(), "public", imagePath);
@@ -141,22 +143,27 @@ async function deleteStoredPhoto(imagePath: string) {
   }
 }
 
-async function savePhotoFile(photoId: string, file: File): Promise<string> {
+async function savePhotoFile(
+  photoId: string,
+  file: File,
+  folder: "about-photos" | "home-grid-photos",
+): Promise<string> {
   const ext = path.extname(file.name) || ".jpg";
   const filename = `${photoId}-${randomUUID()}${ext}`;
 
   if (getUseBlobStorage()) {
-    const blob = await put(`about-photos/${filename}`, file, {
+    const blob = await put(`${folder}/${filename}`, file, {
       access: "public",
       addRandomSuffix: false,
     });
     return blob.url;
   }
 
-  await ensurePhotoDir();
+  const photoDir = folder === "about-photos" ? ABOUT_PHOTO_DIR : HOME_GRID_PHOTO_DIR;
+  await ensurePhotoDir(photoDir);
   const buffer = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(path.join(PHOTO_DIR, filename), buffer);
-  return `/about-photos/${filename}`;
+  await fs.writeFile(path.join(photoDir, filename), buffer);
+  return `/${folder}/${filename}`;
 }
 
 export async function uploadAboutPhoto(photoId: string, file: File) {
@@ -168,13 +175,35 @@ export async function uploadAboutPhoto(photoId: string, file: File) {
   }
 
   const current = site.about.photos[photoIndex];
-  const imagePath = await savePhotoFile(photoId, file);
+  const imagePath = await savePhotoFile(photoId, file, "about-photos");
 
   if (current.imagePath) {
     await deleteStoredPhoto(current.imagePath);
   }
 
   site.about.photos[photoIndex] = { ...current, imagePath };
+  await writeSiteContent(site);
+  return site;
+}
+
+export async function uploadHomeGridPhoto(photoId: string, file: File) {
+  const site = await readSiteContent();
+  const photoIndex = site.homePhotoGrid.photos.findIndex(
+    (photo) => photo.id === photoId,
+  );
+
+  if (photoIndex === -1) {
+    throw new StorageError("Photo not found.", 404);
+  }
+
+  const current = site.homePhotoGrid.photos[photoIndex];
+  const imagePath = await savePhotoFile(photoId, file, "home-grid-photos");
+
+  if (current.imagePath) {
+    await deleteStoredPhoto(current.imagePath);
+  }
+
+  site.homePhotoGrid.photos[photoIndex] = { ...current, imagePath };
   await writeSiteContent(site);
   return site;
 }

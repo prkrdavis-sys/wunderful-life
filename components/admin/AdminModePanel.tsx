@@ -47,6 +47,8 @@ export function AdminModePanel() {
     authRequired,
     panelOpen,
     setPanelOpen,
+    editorSection,
+    setEditorSection,
   } = useAdminView();
   const [tab, setTab] = useState<AdminTab>("content");
   const [videos, setVideos] = useState<PortfolioVideo[]>([]);
@@ -55,6 +57,7 @@ export function AdminModePanel() {
 
   const canEdit = authenticated || !authRequired;
   const isOpen = viewMode === "admin" && panelOpen && canEdit;
+  const activeTab = editorSection ? "content" : tab;
 
   const tryClosePanel = () => {
     if (!confirmLeaveDuringUpload(portfolioUploadBusy)) return;
@@ -63,6 +66,7 @@ export function AdminModePanel() {
 
   const trySetTab = (next: AdminTab) => {
     if (!confirmLeaveDuringUpload(portfolioUploadBusy)) return;
+    setEditorSection(null);
     setTab(next);
   };
 
@@ -160,7 +164,7 @@ export function AdminModePanel() {
                     type="button"
                     onClick={() => trySetTab("content")}
                     className={`rounded-full px-3 py-1.5 text-sm font-medium transition sm:px-4 sm:py-2 ${
-                      tab === "content"
+                      activeTab === "content"
                         ? "bg-burgundy text-paper"
                         : "text-indigo hover:bg-lavender/25"
                     }`}
@@ -171,7 +175,7 @@ export function AdminModePanel() {
                     type="button"
                     onClick={() => trySetTab("portfolio")}
                     className={`rounded-full px-3 py-1.5 text-sm font-medium transition sm:px-4 sm:py-2 ${
-                      tab === "portfolio"
+                      activeTab === "portfolio"
                         ? "bg-burgundy text-paper"
                         : "text-indigo hover:bg-lavender/25"
                     }`}
@@ -190,7 +194,7 @@ export function AdminModePanel() {
             </div>
 
             <div className="min-h-0 flex-1 overflow-hidden">
-              {tab === "content" ? (
+              {activeTab === "content" ? (
                 <div className="flex h-full min-h-0 flex-col">
                   <SiteEditorForm />
                 </div>

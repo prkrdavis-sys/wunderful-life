@@ -4,25 +4,20 @@ import { useState } from "react";
 import type { SiteContent } from "@/lib/site/types";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { FileUploadButton } from "@/components/ui/FileUploadButton";
-import { useAdminView } from "@/components/admin/AdminViewProvider";
+import {
+  useAdminView,
+  type SiteEditorSection,
+} from "@/components/admin/AdminViewProvider";
 
 type SiteEditorFormProps = {
   onSaved?: (site: SiteContent) => void;
 };
 
-type ContentSection =
-  | "profile"
-  | "about"
-  | "photos"
-  | "ugc"
-  | "services"
-  | "testimonials"
-  | "contact";
-
-const SECTIONS: { id: ContentSection; label: string; hint: string }[] = [
+const SECTIONS: { id: SiteEditorSection; label: string; hint: string }[] = [
   { id: "profile", label: "Profile", hint: "Name & tagline" },
   { id: "about", label: "About", hint: "Headline & copy" },
   { id: "photos", label: "Photos", hint: "Images & captions" },
+  { id: "homeGrid", label: "Home grid", hint: "8 photo slots" },
   { id: "ugc", label: "What is UGC", hint: "Definition & cards" },
   { id: "services", label: "Services", hint: "Offerings list" },
   { id: "testimonials", label: "Testimonials", hint: "Quotes & visibility" },
@@ -33,9 +28,10 @@ const inputClass =
   "mt-1 w-full rounded-xl border border-brown/20 bg-white px-3 py-2 text-brown";
 
 export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
-  const { site, setSite } = useAdminView();
+  const { site, setSite, editorSection, setEditorSection } = useAdminView();
   const [form, setForm] = useState(site);
-  const [section, setSection] = useState<ContentSection>("profile");
+  const [section, setSection] = useState<SiteEditorSection>("profile");
+  const activeSection = editorSection ?? section;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -68,7 +64,11 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
     }
   };
 
-  const uploadPhoto = async (photoId: string, file: File) => {
+  const uploadPhoto = async (
+    photoId: string,
+    file: File,
+    kind: "about" | "homeGrid" = "about",
+  ) => {
     setLoading(true);
     setError(null);
     setMessage(null);
@@ -76,7 +76,11 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
     try {
       const payload = new FormData();
       payload.set("photo", file);
-      const response = await fetch(`/api/site/photos/${photoId}`, {
+      const endpoint =
+        kind === "homeGrid"
+          ? `/api/site/home-grid-photos/${photoId}`
+          : `/api/site/photos/${photoId}`;
+      const response = await fetch(endpoint, {
         method: "POST",
         body: payload,
       });
@@ -107,9 +111,12 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
             <button
               key={item.id}
               type="button"
-              onClick={() => setSection(item.id)}
+              onClick={() => {
+                setEditorSection(null);
+                setSection(item.id);
+              }}
               className={`shrink-0 rounded-xl px-3 py-2 text-left transition md:w-full md:px-3 md:py-2.5 ${
-                section === item.id
+                activeSection === item.id
                   ? "bg-burgundy text-paper"
                   : "text-indigo hover:bg-white/80"
               }`}
@@ -117,7 +124,7 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
               <span className="block text-sm font-medium">{item.label}</span>
               <span
                 className={`hidden text-xs md:block ${
-                  section === item.id ? "text-paper/75" : "text-muted"
+                  activeSection === item.id ? "text-paper/75" : "text-muted"
                 }`}
               >
                 {item.hint}
@@ -129,7 +136,7 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-5">
-          {section === "profile" && (
+          {activeSection === "profile" && (
             <section className="space-y-4">
               <div>
                 <h3 className="font-display text-lg text-brown">Profile</h3>
@@ -195,7 +202,7 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
             </section>
           )}
 
-          {section === "about" && (
+          {activeSection === "about" && (
             <section className="space-y-4">
               <div>
                 <h3 className="font-display text-lg text-brown">About copy</h3>
@@ -241,7 +248,7 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
             </section>
           )}
 
-          {section === "photos" && (
+          {activeSection === "photos" && (
             <section className="space-y-4">
               <div>
                 <h3 className="font-display text-lg text-brown">About photos</h3>
@@ -322,7 +329,76 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
             </section>
           )}
 
-          {section === "ugc" && (
+          {activeSection === "homeGrid" && (
+            <section className="space-y-4">
+              <div>
+                <h3 className="font-display text-lg text-brown">
+                  Home photo grid
+                </h3>
+                <p className="mt-1 text-sm text-muted">
+                  Eight clean square images shown under the home page phone
+                  slider.
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                {form.homePhotoGrid.photos.map((photo, index) => (
+                  <div
+                    key={photo.id}
+                    className="space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4"
+                  >
+                    <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+                      Grid photo {index + 1}
+                    </p>
+                    <label className="block text-sm">
+                      <span className="text-muted">Alt text</span>
+                      <input
+                        value={photo.alt}
+                        onChange={(event) =>
+                          setForm((current) => {
+                            const photos = [...current.homePhotoGrid.photos];
+                            photos[index] = {
+                              ...photos[index],
+                              alt: event.target.value,
+                            };
+                            return {
+                              ...current,
+                              homePhotoGrid: {
+                                ...current.homePhotoGrid,
+                                photos,
+                              },
+                            };
+                          })
+                        }
+                        className={inputClass}
+                      />
+                    </label>
+                    <div className="block text-sm">
+                      <span className="text-muted">Photo</span>
+                      <FileUploadButton
+                        className="mt-1"
+                        kind="photo"
+                        accept="image/*"
+                        selectedName={photo.imagePath}
+                        previewUrl={photo.imagePath}
+                        buttonLabel={photo.imagePath ? "Swap photo" : "Add a photo"}
+                        onChange={(file) => {
+                          if (file) void uploadPhoto(photo.id, file, "homeGrid");
+                        }}
+                      />
+                      {photo.imagePath && (
+                        <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-indigo">
+                          <span aria-hidden>🌸</span>
+                          Live on your site
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {activeSection === "ugc" && (
             <section className="space-y-4">
               <div>
                 <h3 className="font-display text-lg text-brown">What is UGC</h3>
@@ -425,7 +501,7 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
             </section>
           )}
 
-          {section === "services" && (
+          {activeSection === "services" && (
             <section className="space-y-4">
               <div>
                 <h3 className="font-display text-lg text-brown">Services</h3>
@@ -483,7 +559,7 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
             </section>
           )}
 
-          {section === "testimonials" && (
+          {activeSection === "testimonials" && (
             <section className="space-y-4">
               <div>
                 <h3 className="font-display text-lg text-brown">Testimonials</h3>
@@ -634,7 +710,7 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
             </section>
           )}
 
-          {section === "contact" && (
+          {activeSection === "contact" && (
             <section className="space-y-4">
               <div>
                 <h3 className="font-display text-lg text-brown">Contact</h3>

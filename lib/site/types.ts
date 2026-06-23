@@ -12,6 +12,12 @@ export type AboutPhoto = {
   imagePath?: string;
 };
 
+export type GridPhoto = {
+  id: string;
+  alt: string;
+  imagePath?: string;
+};
+
 export type WhatIsUgcHighlight = {
   id: string;
   title: string;
@@ -34,6 +40,9 @@ export type SiteContent = {
     headline: string;
     paragraphs: string[];
     photos: AboutPhoto[];
+  };
+  homePhotoGrid: {
+    photos: GridPhoto[];
   };
   whatIsUgc: {
     heading: string;
