@@ -40,6 +40,32 @@
         "caption": "Emily candid — personality over perfection",
         "rotate": -2,
         "imagePath": "/about-photos/candid-104bf6ba-b0ce-473a-ad48-343518136b3b.png"
+      },
+      {
+        "id": "ugc-moment",
+        "caption": "New UGC moment — upload Emily's fourth gallery photo here",
+        "rotate": 3
+      }
+    ]
+  },
+  "whatIsUgc": {
+    "heading": "What Is UGC?",
+    "body": "UGC, or user-generated content, is brand content made to feel like it came from a real customer, creator, or everyday experience. It blends strategy with natural storytelling, helping people understand how a product fits into real life without feeling like a traditional ad.",
+    "highlights": [
+      {
+        "id": "authenticity",
+        "title": "Authentic by design",
+        "description": "It sounds human, feels relaxed, and lets the product live inside a believable moment."
+      },
+      {
+        "id": "conversion",
+        "title": "Built for trust",
+        "description": "Strong UGC gives shoppers social proof, clear benefits, and an easy reason to keep watching."
+      },
+      {
+        "id": "versatility",
+        "title": "Ready for every channel",
+        "description": "Use it across organic social, paid ads, product pages, emails, and launch campaigns."
       }
     ]
   },
@@ -92,5 +118,24 @@
       "title": "Unboxing & Demos",
       "description": "Product-first content with creative girl charm — polished enough for ads, real enough to relate."
     }
-  ]
+  ],
+  "testimonials": {
+    "visible": true,
+    "heading": "Kind Words",
+    "intro": "A few example notes to show how client feedback can live here once Emily starts collecting testimonials.",
+    "items": [
+      {
+        "id": "warm-natural",
+        "quote": "Emily brought such a warm, natural presence to the content. The video felt polished without losing that real-life charm.",
+        "name": "Sample Brand Partner",
+        "role": "Lifestyle campaign"
+      },
+      {
+        "id": "easy-collaboration",
+        "quote": "The creative direction was thoughtful, on-brand, and easy to use across our social channels.",
+        "name": "Example Client",
+        "role": "Wellness launch"
+      }
+    ]
+  }
 }

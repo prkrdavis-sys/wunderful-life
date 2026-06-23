@@ -10,13 +10,22 @@ type SiteEditorFormProps = {
   onSaved?: (site: SiteContent) => void;
 };
 
-type ContentSection = "profile" | "about" | "photos" | "services" | "contact";
+type ContentSection =
+  | "profile"
+  | "about"
+  | "photos"
+  | "ugc"
+  | "services"
+  | "testimonials"
+  | "contact";
 
 const SECTIONS: { id: ContentSection; label: string; hint: string }[] = [
   { id: "profile", label: "Profile", hint: "Name & tagline" },
   { id: "about", label: "About", hint: "Headline & copy" },
   { id: "photos", label: "Photos", hint: "Images & captions" },
+  { id: "ugc", label: "What is UGC", hint: "Definition & cards" },
   { id: "services", label: "Services", hint: "Offerings list" },
+  { id: "testimonials", label: "Testimonials", hint: "Quotes & visibility" },
   { id: "contact", label: "Contact", hint: "Headline, copy & links" },
 ];
 
@@ -313,6 +322,109 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
             </section>
           )}
 
+          {section === "ugc" && (
+            <section className="space-y-4">
+              <div>
+                <h3 className="font-display text-lg text-brown">What is UGC</h3>
+                <p className="mt-1 text-sm text-muted">
+                  Definition copy and supporting cards for the UGC explainer.
+                </p>
+              </div>
+              <label className="block max-w-2xl text-sm">
+                <span className="text-muted">Section headline</span>
+                <input
+                  value={form.whatIsUgc.heading}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      whatIsUgc: {
+                        ...current.whatIsUgc,
+                        heading: event.target.value,
+                      },
+                    }))
+                  }
+                  className={inputClass}
+                />
+              </label>
+              <label className="block max-w-2xl text-sm">
+                <span className="text-muted">Definition</span>
+                <textarea
+                  value={form.whatIsUgc.body}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      whatIsUgc: {
+                        ...current.whatIsUgc,
+                        body: event.target.value,
+                      },
+                    }))
+                  }
+                  rows={7}
+                  className={`${inputClass} min-h-36 resize-y`}
+                />
+              </label>
+              <div className="grid gap-4 lg:grid-cols-3">
+                {form.whatIsUgc.highlights.map((highlight, index) => (
+                  <div
+                    key={highlight.id}
+                    className="space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4"
+                  >
+                    <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+                      UGC card {index + 1}
+                    </p>
+                    <label className="block text-sm">
+                      <span className="text-muted">Title</span>
+                      <input
+                        value={highlight.title}
+                        onChange={(event) =>
+                          setForm((current) => {
+                            const highlights = [...current.whatIsUgc.highlights];
+                            highlights[index] = {
+                              ...highlights[index],
+                              title: event.target.value,
+                            };
+                            return {
+                              ...current,
+                              whatIsUgc: {
+                                ...current.whatIsUgc,
+                                highlights,
+                              },
+                            };
+                          })
+                        }
+                        className={inputClass}
+                      />
+                    </label>
+                    <label className="block text-sm">
+                      <span className="text-muted">Description</span>
+                      <textarea
+                        value={highlight.description}
+                        onChange={(event) =>
+                          setForm((current) => {
+                            const highlights = [...current.whatIsUgc.highlights];
+                            highlights[index] = {
+                              ...highlights[index],
+                              description: event.target.value,
+                            };
+                            return {
+                              ...current,
+                              whatIsUgc: {
+                                ...current.whatIsUgc,
+                                highlights,
+                              },
+                            };
+                          })
+                        }
+                        rows={4}
+                        className={inputClass}
+                      />
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           {section === "services" && (
             <section className="space-y-4">
               <div>
@@ -362,6 +474,157 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
                           })
                         }
                         rows={3}
+                        className={inputClass}
+                      />
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {section === "testimonials" && (
+            <section className="space-y-4">
+              <div>
+                <h3 className="font-display text-lg text-brown">Testimonials</h3>
+                <p className="mt-1 text-sm text-muted">
+                  Quotes for social proof. Hide this section from regular view
+                  until Emily is ready to publish it.
+                </p>
+              </div>
+              <label className="flex max-w-2xl items-center justify-between gap-4 rounded-2xl border border-brown/15 bg-cream/55 p-4 text-sm">
+                <span>
+                  <span className="block font-semibold text-brown">
+                    Show testimonials in regular view
+                  </span>
+                  <span className="mt-1 block text-muted">
+                    Admin view can still preview this section while hidden.
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={form.testimonials.visible}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      testimonials: {
+                        ...current.testimonials,
+                        visible: event.target.checked,
+                      },
+                    }))
+                  }
+                  className="h-5 w-5 accent-burgundy"
+                />
+              </label>
+              <label className="block max-w-2xl text-sm">
+                <span className="text-muted">Section headline</span>
+                <input
+                  value={form.testimonials.heading}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      testimonials: {
+                        ...current.testimonials,
+                        heading: event.target.value,
+                      },
+                    }))
+                  }
+                  className={inputClass}
+                />
+              </label>
+              <label className="block max-w-2xl text-sm">
+                <span className="text-muted">Intro</span>
+                <textarea
+                  value={form.testimonials.intro}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      testimonials: {
+                        ...current.testimonials,
+                        intro: event.target.value,
+                      },
+                    }))
+                  }
+                  rows={4}
+                  className={inputClass}
+                />
+              </label>
+              <div className="grid gap-4 lg:grid-cols-2">
+                {form.testimonials.items.map((testimonial, index) => (
+                  <div
+                    key={testimonial.id}
+                    className="space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4"
+                  >
+                    <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+                      Testimonial {index + 1}
+                    </p>
+                    <label className="block text-sm">
+                      <span className="text-muted">Quote</span>
+                      <textarea
+                        value={testimonial.quote}
+                        onChange={(event) =>
+                          setForm((current) => {
+                            const items = [...current.testimonials.items];
+                            items[index] = {
+                              ...items[index],
+                              quote: event.target.value,
+                            };
+                            return {
+                              ...current,
+                              testimonials: {
+                                ...current.testimonials,
+                                items,
+                              },
+                            };
+                          })
+                        }
+                        rows={5}
+                        className={inputClass}
+                      />
+                    </label>
+                    <label className="block text-sm">
+                      <span className="text-muted">Name</span>
+                      <input
+                        value={testimonial.name}
+                        onChange={(event) =>
+                          setForm((current) => {
+                            const items = [...current.testimonials.items];
+                            items[index] = {
+                              ...items[index],
+                              name: event.target.value,
+                            };
+                            return {
+                              ...current,
+                              testimonials: {
+                                ...current.testimonials,
+                                items,
+                              },
+                            };
+                          })
+                        }
+                        className={inputClass}
+                      />
+                    </label>
+                    <label className="block text-sm">
+                      <span className="text-muted">Role or context</span>
+                      <input
+                        value={testimonial.role}
+                        onChange={(event) =>
+                          setForm((current) => {
+                            const items = [...current.testimonials.items];
+                            items[index] = {
+                              ...items[index],
+                              role: event.target.value,
+                            };
+                            return {
+                              ...current,
+                              testimonials: {
+                                ...current.testimonials,
+                                items,
+                              },
+                            };
+                          })
+                        }
                         className={inputClass}
                       />
                     </label>

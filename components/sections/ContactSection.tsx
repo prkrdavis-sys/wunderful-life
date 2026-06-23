@@ -7,6 +7,43 @@ import { useSiteContent } from "@/components/admin/AdminViewProvider";
 import { sectionWallpapers } from "@/lib/plants";
 import { sectionText } from "@/lib/sectionText";
 
+function InstagramIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
+      <circle cx="12" cy="12" r="3.6" />
+      <path d="M17.35 6.75h.01" />
+    </svg>
+  );
+}
+
+function EmailIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3.5" y="5.5" width="17" height="13" rx="3" />
+      <path d="m5 8 7 5 7-5" />
+    </svg>
+  );
+}
+
 export function ContactSection() {
   const site = useSiteContent();
   const { wallpaper, overlay } = sectionWallpapers.contact;
@@ -31,19 +68,21 @@ export function ContactSection() {
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <motion.a
             href={site.social.instagram}
+            aria-label="Open Instagram"
             whileHover={{ scale: 1.04, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            className="inline-flex items-center gap-2 rounded-full border border-burgundy/45 bg-paper/92 px-8 py-4 text-sm font-semibold text-burgundy shadow-sm backdrop-blur-sm transition hover:border-burgundy hover:bg-paper"
+            className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-burgundy/35 bg-paper/82 text-burgundy shadow-lg shadow-burgundy/10 ring-1 ring-white/50 backdrop-blur-md transition hover:border-burgundy/55 hover:bg-paper hover:shadow-burgundy/15"
           >
-            Instagram
+            <InstagramIcon />
           </motion.a>
           <motion.a
             href={site.social.email}
+            aria-label="Send email"
             whileHover={{ scale: 1.04, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            className="inline-flex items-center gap-2 rounded-full border border-indigo/35 bg-paper/92 px-8 py-4 text-sm font-semibold text-indigo shadow-sm backdrop-blur-sm transition hover:border-indigo/55 hover:bg-paper"
+            className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-indigo/30 bg-paper/82 text-indigo shadow-lg shadow-indigo/10 ring-1 ring-white/50 backdrop-blur-md transition hover:border-indigo/50 hover:bg-paper hover:shadow-indigo/15"
           >
-            Email
+            <EmailIcon />
           </motion.a>
         </div>
       </div>

@@ -12,6 +12,19 @@ export type AboutPhoto = {
   imagePath?: string;
 };
 
+export type WhatIsUgcHighlight = {
+  id: string;
+  title: string;
+  description: string;
+};
+
+export type Testimonial = {
+  id: string;
+  quote: string;
+  name: string;
+  role: string;
+};
+
 export type SiteContent = {
   fullName: string;
   name: string;
@@ -21,6 +34,11 @@ export type SiteContent = {
     headline: string;
     paragraphs: string[];
     photos: AboutPhoto[];
+  };
+  whatIsUgc: {
+    heading: string;
+    body: string;
+    highlights: WhatIsUgcHighlight[];
   };
   heroLinks: HeroLink[];
   contact: {
@@ -36,4 +54,10 @@ export type SiteContent = {
     title: string;
     description: string;
   }[];
+  testimonials: {
+    visible: boolean;
+    heading: string;
+    intro: string;
+    items: Testimonial[];
+  };
 };

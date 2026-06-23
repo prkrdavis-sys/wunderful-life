@@ -14,7 +14,7 @@ export function AboutSection() {
   const photos = site.about.photos;
   const mainPhoto = photos[0];
   const accentPhoto = photos[1];
-  const galleryPhotos = photos.slice(2);
+  const galleryPhotos = photos.slice(2, 6);
   const paragraphs = site.about.paragraphs;
   const leadParagraphs =
     paragraphs.length > 1 ? paragraphs.slice(0, -1) : paragraphs;
@@ -80,7 +80,7 @@ export function AboutSection() {
             <h3 className={`font-display text-xl sm:text-2xl ${text.heading}`}>
               A little more {site.name}
             </h3>
-            <div className="mt-6 flex flex-wrap gap-6 sm:gap-8">
+            <div className="mx-auto mt-6 grid max-w-4xl grid-cols-2 justify-items-center gap-x-5 gap-y-8 sm:gap-x-8 lg:grid-cols-4">
               {galleryPhotos.map((photo) => (
                 <EmilyPhoto key={photo.id} photo={photo} size="md" />
               ))}
