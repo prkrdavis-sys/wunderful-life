@@ -1,7 +1,7 @@
 "use client";
 
 import { upload } from "@vercel/blob/client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Platform, PortfolioVideo } from "@/lib/videos/types";
 import { PLATFORMS } from "@/lib/videos/types";
 import { slugify } from "@/lib/videos/slugify";
@@ -102,24 +102,15 @@ function useMediaPreview(
   file: File | null,
   existingPath: string | undefined,
 ): string | null {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const objectUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
 
   useEffect(() => {
-    if (file) {
-      const objectUrl = URL.createObjectURL(file);
-      setPreviewUrl(objectUrl);
+    if (objectUrl) {
       return () => URL.revokeObjectURL(objectUrl);
     }
+  }, [objectUrl]);
 
-    if (existingPath) {
-      setPreviewUrl(existingPath);
-      return;
-    }
-
-    setPreviewUrl(null);
-  }, [file, existingPath]);
-
-  return previewUrl;
+  return objectUrl ?? existingPath ?? null;
 }
 
 function isMediaUploadBusy(state: MediaUploadState): boolean {
@@ -169,7 +160,6 @@ const emptyForm = {
   hook: "",
   cta: "",
   durationSec: 0,
-  tags: "",
   slug: "",
   featured: false,
 };
@@ -191,7 +181,6 @@ export function VideoForm({
           hook: initial.hook,
           cta: initial.cta,
           durationSec: initial.durationSec,
-          tags: initial.tags.join(", "),
           slug: initial.slug,
           featured: initial.featured,
         }
@@ -259,29 +248,6 @@ export function VideoForm({
     uploadConfigRef.current = config;
     return config;
   }, []);
-
-  useEffect(() => {
-    if (!initial) return;
-
-    setForm({
-      title: initial.title,
-      brand: initial.brand,
-      platform: initial.platform,
-      hook: initial.hook,
-      cta: initial.cta,
-      durationSec: initial.durationSec,
-      tags: initial.tags.join(", "),
-      slug: initial.slug,
-      featured: initial.featured,
-    });
-    setVideoFile(null);
-    setThumbnailFile(null);
-    setVideoUpload(idleMediaUpload());
-    setThumbnailUpload(idleMediaUpload());
-    setError(null);
-    setMessage(null);
-    if (videoInputRef.current) videoInputRef.current.value = "";
-  }, [initial?.id]);
 
   const readVideoDuration = useCallback((file: File) => {
     const url = URL.createObjectURL(file);
@@ -491,7 +457,6 @@ export function VideoForm({
     payload.set("hook", form.hook);
     payload.set("cta", form.cta);
     payload.set("durationSec", String(form.durationSec));
-    payload.set("tags", form.tags);
     payload.set("slug", form.slug || slugify(form.title));
     payload.set("featured", String(form.featured));
 
@@ -532,7 +497,6 @@ export function VideoForm({
           hook: saved.hook,
           cta: saved.cta,
           durationSec: saved.durationSec,
-          tags: saved.tags.join(", "),
           slug: saved.slug,
           featured: saved.featured,
         });
@@ -591,7 +555,6 @@ export function VideoForm({
           ["brand", "Brand", "text"],
           ["hook", "Hook", "text"],
           ["cta", "CTA", "text"],
-          ["tags", "Tags (comma-separated)", "text"],
           ["slug", "Slug (optional)", "text"],
         ] as const
       ).map(([key, label, type]) => (

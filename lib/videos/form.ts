@@ -19,17 +19,6 @@ function getUrlEntry(form: FormData, key: string): string | null {
   return typeof value === "string" && value.length > 0 ? value : null;
 }
 
-function parseTags(
-  value: FormDataEntryValue | null,
-  mode: "create" | "update",
-): string[] | undefined {
-  if (mode === "update" && value === null) return undefined;
-  return String(value ?? "")
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter(Boolean);
-}
-
 function parseOptionalPlatform(
   value: FormDataEntryValue | null,
 ): Platform | undefined {
@@ -62,7 +51,7 @@ export function parseCreateVideoForm(form: FormData): VideoCreateInput {
     hook: String(form.get("hook") ?? ""),
     cta: String(form.get("cta") ?? ""),
     durationSec: Number(form.get("durationSec") ?? 0),
-    tags: parseTags(form.get("tags"), "create") ?? [],
+    tags: [],
     featured: parseBoolean(form.get("featured")),
     sortOrder: Number(form.get("sortOrder") ?? 999),
     slug: String(form.get("slug") ?? ""),
@@ -79,7 +68,7 @@ export function parseUpdateVideoForm(form: FormData): VideoUpdateInput {
     durationSec: form.has("durationSec")
       ? Number(form.get("durationSec"))
       : undefined,
-    tags: parseTags(form.get("tags"), "update"),
+    tags: [],
     featured: form.has("featured")
       ? parseBoolean(form.get("featured"))
       : undefined,

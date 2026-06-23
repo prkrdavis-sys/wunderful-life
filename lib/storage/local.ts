@@ -25,6 +25,17 @@ const THUMB_DIR = path.join(UPLOADS_ROOT, "thumbnails");
 
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 
+function normalizeVideo(video: PortfolioVideo): PortfolioVideo {
+  return {
+    ...video,
+    tags: [],
+  };
+}
+
+function normalizeVideos(videos: PortfolioVideo[]): PortfolioVideo[] {
+  return videos.map(normalizeVideo);
+}
+
 async function ensureUploadDirs() {
   if (getUseBlobStorage()) return;
   await fs.mkdir(VIDEO_DIR, { recursive: true });
@@ -40,7 +51,7 @@ async function readVideosFromBlob(): Promise<PortfolioVideo[]> {
 
     const text = await new Response(result.stream).text();
     const parsed = JSON.parse(text) as PortfolioVideo[];
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? normalizeVideos(parsed) : [];
   } catch (error) {
     if (error instanceof StorageError) throw error;
     throw new StorageError(
@@ -54,7 +65,7 @@ async function readVideosFromLocalFile(): Promise<PortfolioVideo[]> {
   try {
     const raw = await fs.readFile(DATA_PATH, "utf8");
     const parsed = JSON.parse(raw) as PortfolioVideo[];
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? normalizeVideos(parsed) : [];
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return [];
@@ -72,7 +83,7 @@ async function readVideosFile(): Promise<PortfolioVideo[]> {
 }
 
 async function writeVideosFile(videos: PortfolioVideo[]) {
-  const content = `${JSON.stringify(sortVideos(videos), null, 2)}\n`;
+  const content = `${JSON.stringify(sortVideos(normalizeVideos(videos)), null, 2)}\n`;
 
   if (getUseBlobStorage()) {
     await put(VIDEOS_METADATA_BLOB_PATH, content, {

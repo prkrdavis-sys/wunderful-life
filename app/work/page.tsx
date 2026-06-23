@@ -9,13 +9,8 @@ export const metadata = {
   title: "Work",
 };
 
-type WorkPageProps = {
-  searchParams: Promise<{ tag?: string }>;
-};
-
-export default async function WorkPage({ searchParams }: WorkPageProps) {
+export default async function WorkPage() {
   const site = await getSiteContent();
-  const { tag } = await searchParams;
   const videos = await listVideos();
   const { wallpaper, overlay } = sectionWallpapers.workPage;
   const text = sectionText.services;
@@ -33,10 +28,10 @@ export default async function WorkPage({ searchParams }: WorkPageProps) {
           {site.name}&apos;s UGC Work
         </h1>
         <p className={`mt-4 max-w-2xl ${text.body}`}>
-          Drag through the carousel, filter by platform or tag, and tap any
-          phone to play.
+          A curated library of Emily&apos;s UGC videos, laid out for easy browsing.
+          Tap a thumbnail to watch or open the details for more context.
         </p>
-        <WorkPageClient initialVideos={videos} initialTag={tag} />
+        <WorkPageClient initialVideos={videos} />
       </div>
     </div>
   );

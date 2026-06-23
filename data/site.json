@@ -76,7 +76,7 @@
     },
     {
       "label": "My Work",
-      "href": "/#work",
+      "href": "/work",
       "emphasis": "primary",
       "activePathPrefix": "/work"
     },

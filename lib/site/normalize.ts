@@ -84,6 +84,19 @@ function normalizeAboutPhotos(photos: AboutPhoto[]): AboutPhoto[] {
   return normalized;
 }
 
+function normalizeHeroLinks(links: SiteContent["heroLinks"]): SiteContent["heroLinks"] {
+  return links.map((link) => {
+    if (link.activePathPrefix === "/work" || link.href === "/#work") {
+      return {
+        ...link,
+        href: "/work",
+      };
+    }
+
+    return link;
+  });
+}
+
 export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
   const whatIsUgc = raw.whatIsUgc ?? DEFAULT_WHAT_IS_UGC;
   const testimonials = raw.testimonials ?? DEFAULT_TESTIMONIALS;
@@ -124,7 +137,7 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
           }))
         : DEFAULT_WHAT_IS_UGC.highlights,
     },
-    heroLinks: raw.heroLinks,
+    heroLinks: normalizeHeroLinks(raw.heroLinks),
     contact: {
       headline:
         typeof raw.contact?.headline === "string" && raw.contact.headline.trim()
