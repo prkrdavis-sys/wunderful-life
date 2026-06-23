@@ -312,6 +312,8 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
                         className="mt-1"
                         kind="photo"
                         accept="image/*"
+                        selectedName={photo.imagePath}
+                        previewUrl={photo.imagePath}
                         onChange={(file) => {
                           if (file) void uploadPhoto(photo.id, file);
                         }}
