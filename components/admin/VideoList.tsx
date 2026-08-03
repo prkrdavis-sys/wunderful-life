@@ -13,7 +13,7 @@ type VideoListProps = {
 
 function PlatformChip({ platform }: { platform: PortfolioVideo["platform"] }) {
   return (
-    <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-indigo uppercase backdrop-blur-sm">
+    <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-ink uppercase backdrop-blur-sm">
       {platformLabel(platform)}
     </span>
   );
@@ -122,7 +122,7 @@ export function VideoList({ videos, onEdit, onChange }: VideoListProps) {
   return (
     <div className="space-y-4">
       {error && (
-        <p className="rounded-xl bg-pink/15 px-4 py-2 text-sm text-brown">{error}</p>
+        <p className="rounded-xl bg-blush/15 px-4 py-2 text-sm text-brown">{error}</p>
       )}
 
       <p className="text-sm text-muted">
@@ -155,7 +155,11 @@ export function VideoList({ videos, onEdit, onChange }: VideoListProps) {
               onClick={() => onEdit(video)}
               className="relative aspect-[9/16] w-full overflow-hidden bg-brown/10 text-left"
             >
-              <VideoThumbnail src={video.thumbnailPath} alt={video.title} />
+              <VideoThumbnail
+                src={video.thumbnailPath}
+                alt={video.title}
+                videoSrc={video.videoPath}
+              />
               <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-1 p-2">
                 <span className="rounded-md bg-brown/55 px-1.5 py-0.5 font-label text-[10px] font-semibold tracking-wider text-paper uppercase backdrop-blur-sm">
                   #{index + 1}
@@ -163,7 +167,7 @@ export function VideoList({ videos, onEdit, onChange }: VideoListProps) {
                 <PlatformChip platform={video.platform} />
               </div>
               {video.featured && (
-                <span className="absolute bottom-2 left-2 rounded-full bg-burgundy px-2 py-0.5 text-[10px] font-semibold text-paper">
+                <span className="absolute bottom-2 left-2 rounded-full bg-forest px-2 py-0.5 text-[10px] font-semibold text-paper">
                   Featured
                 </span>
               )}
@@ -183,7 +187,7 @@ export function VideoList({ videos, onEdit, onChange }: VideoListProps) {
                 </p>
                 <p className="mt-0.5 truncate text-xs text-muted">{video.brand}</p>
                 {video.hook && (
-                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-indigo/80">
+                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-ink/80">
                     {video.hook}
                   </p>
                 )}
@@ -196,7 +200,7 @@ export function VideoList({ videos, onEdit, onChange }: VideoListProps) {
                 <button
                   type="button"
                   onClick={() => onEdit(video)}
-                  className="rounded-lg px-2 py-1 text-xs font-medium text-burgundy transition hover:bg-white/80"
+                  className="rounded-lg px-2 py-1 text-xs font-medium text-forest transition hover:bg-white/80"
                 >
                   Edit
                 </button>
@@ -204,7 +208,7 @@ export function VideoList({ videos, onEdit, onChange }: VideoListProps) {
                   type="button"
                   disabled={busyId === video.id}
                   onClick={() => void toggleFeatured(video)}
-                  className="rounded-lg px-2 py-1 text-xs font-medium text-indigo transition hover:bg-white/80 disabled:opacity-50"
+                  className="rounded-lg px-2 py-1 text-xs font-medium text-ink transition hover:bg-white/80 disabled:opacity-50"
                 >
                   {video.featured ? "Unfeature" : "Feature"}
                 </button>
@@ -212,7 +216,7 @@ export function VideoList({ videos, onEdit, onChange }: VideoListProps) {
                   type="button"
                   disabled={busyId === video.id}
                   onClick={() => void handleDelete(video.id)}
-                  className="rounded-lg px-2 py-1 text-xs font-medium text-pink-deep transition hover:bg-white/80 disabled:opacity-50"
+                  className="rounded-lg px-2 py-1 text-xs font-medium text-blush-deep transition hover:bg-white/80 disabled:opacity-50"
                 >
                   Delete
                 </button>

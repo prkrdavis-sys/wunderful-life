@@ -104,11 +104,10 @@ export type SectionWallpaperConfig = {
 /** Site share / app thumbnail — same cloud photo used as About Me default wallpaper. */
 export const siteThumbnailWallpaper: PlantWallpaperId = "hero-sky";
 
+/**
+ * Only the hero still falls back to a photographic wallpaper (when no hero
+ * video is uploaded); every other section now uses a gradient `SectionSurface`.
+ */
 export const sectionWallpapers: Record<string, SectionWallpaperConfig> = {
   hero: { wallpaper: "about-sky", overlay: "minimal" },
-  about: { wallpaper: siteThumbnailWallpaper, overlay: "minimal" },
-  services: { wallpaper: "services-pexels", overlay: "none" },
-  work: { wallpaper: "work-pexels", overlay: "minimal" },
-  contact: { wallpaper: "contact-pexels", overlay: "minimal" },
-  workPage: { wallpaper: "services-pexels", overlay: "minimal" },
 };

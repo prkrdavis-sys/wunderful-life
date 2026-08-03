@@ -15,13 +15,18 @@ export type ViewMode = "regular" | "admin";
 export type SiteEditorSection =
   | "profile"
   | "hero"
+  | "stats"
   | "about"
   | "photos"
-  | "homeGrid"
-  | "ugc"
+  | "work"
+  | "photography"
+  | "brands"
   | "services"
+  | "ugc"
   | "testimonials"
-  | "contact";
+  | "cta";
+
+export type AdminPanelTab = "content" | "portfolio";
 
 type AdminViewContextValue = {
   viewMode: ViewMode;
@@ -32,7 +37,10 @@ type AdminViewContextValue = {
   setPanelOpen: (open: boolean) => void;
   editorSection: SiteEditorSection | null;
   setEditorSection: (section: SiteEditorSection | null) => void;
+  preferredTab: AdminPanelTab | null;
+  clearPreferredTab: () => void;
   openSiteEditor: (section?: SiteEditorSection) => void;
+  openPortfolioEditor: () => void;
   refreshSession: () => Promise<void>;
   site: SiteContent;
   setSite: (site: SiteContent) => void;
@@ -60,6 +68,7 @@ export function AdminViewProvider({
   const [authRequired, setAuthRequired] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const [editorSection, setEditorSection] = useState<SiteEditorSection | null>(null);
+  const [preferredTab, setPreferredTab] = useState<AdminPanelTab | null>(null);
   const [site, setSite] = useState(initialSite);
 
   const refreshSession = useCallback(async () => {
@@ -92,8 +101,19 @@ export function AdminViewProvider({
     [],
   );
 
+  const clearPreferredTab = useCallback(() => {
+    setPreferredTab(null);
+  }, []);
+
   const openSiteEditor = useCallback((section?: SiteEditorSection) => {
     setEditorSection(section ?? null);
+    setPreferredTab("content");
+    setPanelOpen(true);
+  }, []);
+
+  const openPortfolioEditor = useCallback(() => {
+    setEditorSection(null);
+    setPreferredTab("portfolio");
     setPanelOpen(true);
   }, []);
 
@@ -107,7 +127,10 @@ export function AdminViewProvider({
       setPanelOpen,
       editorSection,
       setEditorSection,
+      preferredTab,
+      clearPreferredTab,
       openSiteEditor,
+      openPortfolioEditor,
       refreshSession,
       site,
       setSite,
@@ -119,7 +142,10 @@ export function AdminViewProvider({
       authRequired,
       panelOpen,
       editorSection,
+      preferredTab,
+      clearPreferredTab,
       openSiteEditor,
+      openPortfolioEditor,
       refreshSession,
       site,
     ],

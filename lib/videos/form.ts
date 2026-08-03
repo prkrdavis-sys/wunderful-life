@@ -34,6 +34,18 @@ function parseBoolean(value: FormDataEntryValue | null): boolean {
   return value === "on" || value === "true";
 }
 
+/** Category ids arrive as repeated `tags` entries from the admin multi-select. */
+function parseTags(form: FormData): string[] {
+  const seen = new Set<string>();
+
+  for (const value of form.getAll("tags")) {
+    const tag = String(value).trim();
+    if (tag) seen.add(tag);
+  }
+
+  return [...seen];
+}
+
 export function parseUploadFiles(form: FormData): UploadFiles {
   return {
     video: getFileEntry(form, "video"),
@@ -51,7 +63,7 @@ export function parseCreateVideoForm(form: FormData): VideoCreateInput {
     hook: String(form.get("hook") ?? ""),
     cta: String(form.get("cta") ?? ""),
     durationSec: Number(form.get("durationSec") ?? 0),
-    tags: [],
+    tags: parseTags(form),
     featured: parseBoolean(form.get("featured")),
     sortOrder: Number(form.get("sortOrder") ?? 999),
     slug: String(form.get("slug") ?? ""),
@@ -68,7 +80,7 @@ export function parseUpdateVideoForm(form: FormData): VideoUpdateInput {
     durationSec: form.has("durationSec")
       ? Number(form.get("durationSec"))
       : undefined,
-    tags: [],
+    tags: form.has("tags") || form.has("tagsPresent") ? parseTags(form) : undefined,
     featured: form.has("featured")
       ? parseBoolean(form.get("featured"))
       : undefined,

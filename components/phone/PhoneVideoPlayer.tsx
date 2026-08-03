@@ -16,7 +16,7 @@ type CaptionClasses = {
 const defaultCaptionClasses: Required<CaptionClasses> = {
   title: "text-sm font-semibold text-brown",
   brand: "text-xs text-muted",
-  link: "text-xs font-medium text-pink-deep hover:underline",
+  link: "text-xs font-medium text-blush-deep hover:underline",
 };
 
 type PhoneVideoPlayerProps = {
@@ -108,13 +108,14 @@ export function PhoneVideoPlayer({
                 exit={{ opacity: 0 }}
                 onClick={handleActivate}
                 onKeyDown={handleKeyDown}
-                className="group relative h-full w-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-burgundy/50 focus-visible:ring-offset-2 focus-visible:ring-offset-indigo/20"
+                className="group relative h-full w-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/50 focus-visible:ring-offset-2 focus-visible:ring-offset-ink/20"
                 aria-label={`Play ${video.title}`}
               >
                 <VideoThumbnail
                   src={video.thumbnailPath}
                   alt={video.title}
                   sizes="(max-width: 768px) 160px, 260px"
+                  videoSrc={video.videoPath}
                 />
                 <div className="absolute inset-0 bg-brown/10 transition group-hover:bg-brown/5" />
                 <motion.div

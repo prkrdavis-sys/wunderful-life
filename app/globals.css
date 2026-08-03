@@ -4,22 +4,22 @@
   --cream: #f7f3ec;
   --paper: #fffdf9;
   --white: #ffffff;
-  --green: #7cb87c;
-  --green-deep: #4a7c59;
-  --blue: #5b8def;
-  --blue-deep: #4a90a4;
-  --sky: #c8dff5;
-  --sky-deep: #8eb8e8;
-  --lavender: #d4c4e8;
-  --lavender-deep: #9a84c4;
-  --indigo: #4a4568;
-  --burgundy: #7a3b4a;
+  /* Sage is the primary hue; forest carries the full-bleed bands. */
+  --sage: #9baa8c;
+  --sage-light: #c3cfb4;
+  --sage-deep: #6f8262;
+  --forest: #33513d;
+  --forest-deep: #23392a;
   --brown: #6b5344;
   --brown-light: #a08060;
-  --yellow: #f5e6a8;
-  --yellow-deep: #e8c547;
-  --pink: #e8a0bf;
-  --pink-deep: #d4789a;
+  --blush: #e0b6bc;
+  --blush-deep: #c1848f;
+  --lavender: #d4c4e8;
+  --lavender-deep: #9a84c4;
+  --honey: #e9d9ae;
+  --honey-deep: #c9a95f;
+  /* Warm bark ink used for body copy and headings on light surfaces. */
+  --ink: #3d372e;
   --foreground: #2d2a26;
   --muted: #5c564e;
   --background: var(--cream);
@@ -29,22 +29,20 @@
   --color-cream: var(--cream);
   --color-paper: var(--paper);
   --color-white: var(--white);
-  --color-green: var(--green);
-  --color-green-deep: var(--green-deep);
-  --color-blue: var(--blue);
-  --color-blue-deep: var(--blue-deep);
-  --color-sky: var(--sky);
-  --color-sky-deep: var(--sky-deep);
+  --color-sage: var(--sage);
+  --color-sage-light: var(--sage-light);
+  --color-sage-deep: var(--sage-deep);
+  --color-forest: var(--forest);
+  --color-forest-deep: var(--forest-deep);
   --color-lavender: var(--lavender);
   --color-lavender-deep: var(--lavender-deep);
-  --color-indigo: var(--indigo);
-  --color-burgundy: var(--burgundy);
+  --color-ink: var(--ink);
   --color-brown: var(--brown);
   --color-brown-light: var(--brown-light);
-  --color-yellow: var(--yellow);
-  --color-yellow-deep: var(--yellow-deep);
-  --color-pink: var(--pink);
-  --color-pink-deep: var(--pink-deep);
+  --color-honey: var(--honey);
+  --color-honey-deep: var(--honey-deep);
+  --color-blush: var(--blush);
+  --color-blush-deep: var(--blush-deep);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-background: var(--background);
@@ -85,23 +83,68 @@ body {
 }
 
 .glass-header {
-  background: rgb(255 253 249 / 0.58);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  isolation: isolate;
+  background: linear-gradient(
+    to bottom,
+    rgb(255 253 249 / 0.88),
+    rgb(255 253 249 / 0.8)
+  );
+  backdrop-filter: blur(48px) saturate(190%);
+  -webkit-backdrop-filter: blur(48px) saturate(190%);
   box-shadow:
-    0 4px 24px rgb(74 69 104 / 0.06),
-    inset 0 1px 0 rgb(255 255 255 / 0.75),
-    inset 0 -1px 0 rgb(212 196 232 / 0.22);
+    0 4px 28px rgb(61 55 46 / 0.08),
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    inset 0 -1px 0 rgb(155 170 140 / 0.22);
+}
+
+/* Fine grain that reads like iOS frosted glass, not flat transparency. */
+.glass-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.45;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-header {
+    background: rgb(255 253 249 / 0.94);
+  }
 }
 
 .glass-panel {
-  background: rgb(255 253 249 / 0.38);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background: rgb(255 253 249 / 0.82);
+  backdrop-filter: blur(40px) saturate(170%);
+  -webkit-backdrop-filter: blur(40px) saturate(170%);
   box-shadow:
-    0 12px 40px rgb(74 69 104 / 0.12),
-    inset 0 1px 0 rgb(255 255 255 / 0.72),
-    inset 0 -1px 0 rgb(212 196 232 / 0.2);
+    0 12px 40px rgb(61 55 46 / 0.12),
+    inset 0 1px 0 rgb(255 255 255 / 0.85),
+    inset 0 -1px 0 rgb(155 170 140 / 0.24);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-panel {
+    background: rgb(255 253 249 / 0.96);
+  }
+}
+
+/* Frosted plate used for the centered "photography" label over the collage. */
+.frosted-panel {
+  background: rgb(255 253 249 / 0.58);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  box-shadow:
+    0 14px 44px rgb(61 55 46 / 0.18),
+    inset 0 1px 0 rgb(255 255 255 / 0.8);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .frosted-panel {
+    background: rgb(255 253 249 / 0.9);
+  }
 }
 
 .scalloped-banner-edge {
@@ -114,7 +157,7 @@ body {
   translate: 0 100%;
   background: radial-gradient(
     circle calc(var(--scallop-diameter) / 2) at 50% 0,
-    var(--burgundy) 99%,
+    var(--scallop-color, var(--forest)) 99%,
     transparent 100%
   );
   background-size: var(--scallop-diameter) calc(var(--scallop-diameter) / 2);
@@ -129,7 +172,7 @@ body {
 }
 
 .service-glass-card {
-  box-shadow: 0 10px 36px rgb(74 69 104 / 0.06);
+  box-shadow: 0 10px 36px rgb(61 55 46 / 0.07);
 }
 
 .service-glass-layer {
@@ -151,9 +194,9 @@ body {
 
 .ugc-benefits-section {
   background:
-    radial-gradient(circle at 16% 18%, rgb(255 253 249 / 0.16), transparent 22rem),
-    radial-gradient(circle at 84% 76%, rgb(74 124 89 / 0.22), transparent 24rem),
-    linear-gradient(145deg, #9ba88d 0%, #aeb89f 48%, #8b9b82 100%);
+    radial-gradient(circle at 16% 18%, rgb(255 253 249 / 0.18), transparent 22rem),
+    radial-gradient(circle at 84% 76%, rgb(35 57 42 / 0.24), transparent 24rem),
+    linear-gradient(145deg, #9baa8c 0%, #b3bfa4 48%, #82956f 100%);
 }
 
 .ugc-stat-card {
@@ -174,22 +217,22 @@ body {
 }
 
 .ugc-stat-card-light {
-  background: rgb(229 232 213 / 0.86);
-  color: var(--green-deep);
+  background: rgb(232 236 220 / 0.88);
+  color: var(--forest);
 }
 
 .ugc-stat-card-paper {
-  background: rgb(247 243 236 / 0.88);
+  background: rgb(247 243 236 / 0.9);
   color: var(--brown);
 }
 
 .ugc-stat-card-dark {
-  background: rgb(70 84 68 / 0.9);
+  background: rgb(51 81 61 / 0.92);
   color: var(--paper);
 }
 
 .ugc-benefits-card {
-  background: rgb(231 235 217 / 0.88);
+  background: rgb(240 240 228 / 0.9);
   box-shadow:
     0 18px 45px rgb(45 42 38 / 0.13),
     inset 0 1px 0 rgb(255 255 255 / 0.5);
@@ -295,24 +338,72 @@ body {
   animation: blob-float 16s ease-in-out infinite;
 }
 
-.section-wash-green {
+/*
+ * Section washes: soft gradients that replaced the photographic wallpapers.
+ * Each keeps an ivory top so headings stay legible, then drifts into its hue.
+ */
+.section-wash-ivory {
   background:
-    linear-gradient(165deg, rgba(255, 253, 249, 0.94) 0%, rgba(212, 196, 232, 0.14) 35%, rgba(122, 59, 74, 0.05) 100%);
+    radial-gradient(circle at 82% 12%, rgba(224, 182, 188, 0.12), transparent 26rem),
+    linear-gradient(170deg, #fffdf9 0%, #f7f3ec 55%, #f1eee2 100%);
 }
 
-.section-wash-blue {
+.section-wash-sage {
   background:
-    linear-gradient(165deg, rgba(255, 253, 249, 0.95) 0%, rgba(212, 196, 232, 0.14) 40%, rgba(142, 184, 232, 0.08) 100%);
+    radial-gradient(circle at 14% 16%, rgba(255, 253, 249, 0.7), transparent 28rem),
+    linear-gradient(168deg, #f4f4ea 0%, #e4eadb 48%, #d3ddc6 100%);
 }
 
-.section-wash-pink {
+.section-wash-blush {
   background:
-    linear-gradient(165deg, rgba(255, 253, 249, 0.92) 0%, rgba(232, 160, 191, 0.08) 38%, rgba(245, 230, 168, 0.1) 100%);
+    radial-gradient(circle at 86% 20%, rgba(212, 196, 232, 0.18), transparent 26rem),
+    linear-gradient(168deg, #fffdf9 0%, #f8efe9 52%, #f0dfe0 100%);
+}
+
+.section-wash-lavender {
+  background:
+    radial-gradient(circle at 18% 82%, rgba(195, 207, 180, 0.22), transparent 26rem),
+    linear-gradient(168deg, #fffdf9 0%, #f3eef6 52%, #e6dff0 100%);
 }
 
 .section-wash-brown {
   background:
-    linear-gradient(165deg, rgba(255, 253, 249, 0.94) 0%, rgba(122, 59, 74, 0.06) 35%, rgba(212, 196, 232, 0.08) 100%);
+    radial-gradient(circle at 80% 78%, rgba(233, 217, 174, 0.2), transparent 26rem),
+    linear-gradient(168deg, #fbf7ef 0%, #f1e8db 52%, #e4d7c4 100%);
+}
+
+.section-wash-forest {
+  background:
+    radial-gradient(circle at 20% 18%, rgba(255, 253, 249, 0.12), transparent 26rem),
+    linear-gradient(168deg, #3d5f48 0%, #33513d 52%, #23392a 100%);
+}
+
+/* Full-bleed accent band that punctuates the page between light sections. */
+.band-forest {
+  /* Vertical so the bottom edge matches --forest-deep and the scallops blend. */
+  background:
+    radial-gradient(circle at 12% 0%, rgba(255, 253, 249, 0.09), transparent 20rem),
+    linear-gradient(180deg, #35543f 0%, #2c4735 58%, #23392a 100%);
+}
+
+/* Decorative butterfly / moon / star silhouettes. */
+.motif-float {
+  animation: motif-drift var(--motif-duration, 18s) ease-in-out infinite;
+  animation-delay: var(--motif-delay, 0s);
+  will-change: transform;
+}
+
+@keyframes motif-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(var(--motif-rotate, 0deg));
+  }
+  33% {
+    transform: translate3d(6px, -14px, 0) rotate(calc(var(--motif-rotate, 0deg) + 5deg));
+  }
+  66% {
+    transform: translate3d(-8px, 8px, 0) rotate(calc(var(--motif-rotate, 0deg) - 4deg));
+  }
 }
 
 .plant-wallpaper-overlay-none {

@@ -99,7 +99,7 @@ export function SiteNav() {
         type="button"
         onClick={handleRegularView}
         className={`block w-full px-4 py-3 text-left text-sm font-medium transition hover:bg-white/25 ${
-          viewMode === "regular" ? "text-burgundy" : "text-indigo"
+          viewMode === "regular" ? "text-forest" : "text-ink"
         }`}
       >
         Regular view {viewMode === "regular" ? "✓" : ""}
@@ -110,7 +110,7 @@ export function SiteNav() {
           type="button"
           onClick={handleAdminView}
           className={`block w-full px-4 py-3 text-left text-sm font-medium transition hover:bg-white/25 ${
-            viewMode === "admin" ? "text-burgundy" : "text-indigo"
+            viewMode === "admin" ? "text-forest" : "text-ink"
           }`}
         >
           Admin view {viewMode === "admin" ? "✓" : ""}
@@ -119,8 +119,8 @@ export function SiteNav() {
         {viewMode === "admin" && (
           <div className="mx-3 mb-3 space-y-2">
             {authRequired && !authenticated ? (
-              <div className="overflow-hidden rounded-xl border border-burgundy/20 bg-burgundy/8 p-3">
-                <p className="mb-2 text-xs font-medium text-indigo/85">
+              <div className="overflow-hidden rounded-xl border border-forest/20 bg-forest/8 p-3">
+                <p className="mb-2 text-xs font-medium text-ink/85">
                   Sign in to open the editing panel
                 </p>
                 <AdminLoginInline />
@@ -131,22 +131,19 @@ export function SiteNav() {
                 onClick={openEditorPanel}
                 className={`flex w-full items-start gap-3 rounded-xl border px-3 py-3 text-left transition ${
                   panelOpen
-                    ? "border-burgundy/35 bg-burgundy/12 shadow-inner"
-                    : "border-burgundy/20 bg-white/40 hover:border-burgundy/35 hover:bg-white/55"
+                    ? "border-forest/35 bg-forest/12 shadow-inner"
+                    : "border-forest/20 bg-white/40 hover:border-forest/35 hover:bg-white/55"
                 }`}
               >
                 <span
                   aria-hidden
-                  className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-burgundy/20 bg-paper/90 text-burgundy shadow-sm"
+                  className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-forest/20 bg-paper/90 text-forest shadow-sm"
                 >
                   <EditorPanelIcon />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-burgundy">
+                  <span className="block text-sm font-semibold text-forest">
                     {panelOpen ? "Editing panel open" : "Open editing panel"}
-                  </span>
-                  <span className="mt-0.5 block text-xs leading-snug text-indigo/75">
-                    Floats over the site — stays on this page
                   </span>
                 </span>
               </button>
@@ -159,7 +156,7 @@ export function SiteNav() {
         <button
           type="button"
           onClick={() => void handleSignOut()}
-          className="block w-full border-t border-white/35 px-4 py-3 text-left text-sm font-medium text-indigo/70 transition hover:bg-white/25"
+          className="block w-full border-t border-white/35 px-4 py-3 text-left text-sm font-medium text-ink/70 transition hover:bg-white/25"
         >
           Sign out
         </button>
@@ -174,10 +171,10 @@ export function SiteNav() {
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
         <SectionLink href="/" className="group flex flex-col">
-          <span className="font-display text-lg font-semibold text-indigo transition-colors group-hover:text-burgundy">
+          <span className="font-display text-lg font-semibold text-ink transition-colors group-hover:text-forest">
             {site.fullName}
           </span>
-          <span className="text-xs tracking-widest text-indigo/60 uppercase">
+          <span className="text-xs tracking-widest text-ink/60 uppercase">
             {site.brand}
           </span>
         </SectionLink>
@@ -187,8 +184,8 @@ export function SiteNav() {
             <SectionLink
               key={link.href}
               href={link.href}
-              className={`text-sm font-medium transition-colors hover:text-burgundy ${
-                isActive(link) ? "text-burgundy" : "text-indigo/85"
+              className={`text-sm font-medium transition-colors hover:text-forest ${
+                isActive(link) ? "text-forest" : "text-ink/85"
               }`}
             >
               {link.label}
@@ -201,8 +198,8 @@ export function SiteNav() {
               onClick={() => setAdminOpen((open) => !open)}
               className={`flex items-center gap-1 rounded-full border-2 px-3 py-1.5 text-sm font-medium transition ${
                 viewMode === "admin"
-                  ? "border-burgundy/40 bg-burgundy/10 text-burgundy"
-                  : "border-white/50 bg-white/20 text-indigo backdrop-blur-sm hover:border-burgundy/35 hover:bg-white/30"
+                  ? "border-forest/40 bg-forest/10 text-forest"
+                  : "border-white/50 bg-white/20 text-ink backdrop-blur-sm hover:border-forest/35 hover:bg-white/30"
               }`}
               aria-expanded={adminOpen}
               aria-haspopup="true"
@@ -229,7 +226,7 @@ export function SiteNav() {
 
         <button
           type="button"
-          className="rounded-lg border border-white/50 bg-white/20 px-3 py-2 text-sm text-indigo backdrop-blur-sm md:hidden"
+          className="rounded-lg border border-white/50 bg-white/20 px-3 py-2 text-sm text-ink backdrop-blur-sm md:hidden"
           onClick={() => setMenuOpen((open) => !open)}
           aria-expanded={menuOpen}
         >
@@ -251,7 +248,7 @@ export function SiteNav() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-indigo hover:bg-white/20 hover:text-burgundy"
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-ink hover:bg-white/20 hover:text-forest"
                 >
                   {link.label}
                 </SectionLink>

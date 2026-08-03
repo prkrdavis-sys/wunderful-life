@@ -43,7 +43,7 @@ export function EmilyPhoto({
 }: EmilyPhotoProps) {
   return (
     <figure
-      className={`max-w-full ${sizeClasses[size]} ${frameClasses[size]} rotate-[var(--photo-rotate)] rounded-sm border border-white/90 bg-paper shadow-lg shadow-indigo/10 ring-1 ring-lavender/20 ${className}`}
+      className={`max-w-full ${sizeClasses[size]} ${frameClasses[size]} rotate-[var(--photo-rotate)] rounded-sm border border-white/90 bg-paper shadow-lg shadow-ink/10 ring-1 ring-lavender/20 ${className}`}
       style={{ ["--photo-rotate" as string]: `${photo.rotate}deg` }}
     >
       <div
@@ -68,7 +68,7 @@ export function EmilyPhoto({
           </div>
         )}
       </div>
-      <figcaption className="font-label mt-3 text-center text-xs tracking-wide text-indigo/90 sm:text-sm">
+      <figcaption className="font-label mt-3 text-center text-xs tracking-wide text-ink/90 sm:text-sm">
         {photo.caption}
       </figcaption>
     </figure>

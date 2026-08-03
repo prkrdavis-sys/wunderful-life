@@ -20,13 +20,29 @@ type PhoneMarqueeProps = {
   captionClasses?: CaptionClasses;
 };
 
-const INTERACTIVE_SELECTOR = "button, a, video, input, textarea, select, label";
-const MIN_MARQUEE_SLIDES = 6;
+/** Native controls that should keep their own pointer behavior. */
+const INTERACTIVE_SELECTOR = "a, video, input, textarea, select, label";
+/** Phone width (md) + gap — used to guarantee the track overflows the viewport. */
+const ESTIMATED_SLIDE_WIDTH = 250;
+/** Keep at least this many slides so short lists still feel like a marquee. */
+const MIN_MARQUEE_SLIDES = 8;
+/** Track should span this many viewport widths for seamless loop scrolling. */
+const VIEWPORT_COVERAGE = 2.25;
 const AUTO_SCROLL_SPEED = 0.45;
 
-function buildMarqueeSlides(videos: PortfolioVideo[]): PortfolioVideo[] {
+function slidesNeededForWidth(viewportWidth: number): number {
+  const fromViewport = Math.ceil(
+    (Math.max(viewportWidth, 320) * VIEWPORT_COVERAGE) / ESTIMATED_SLIDE_WIDTH,
+  );
+  return Math.max(MIN_MARQUEE_SLIDES, fromViewport);
+}
+
+function buildMarqueeSlides(
+  videos: PortfolioVideo[],
+  minSlides: number,
+): PortfolioVideo[] {
   if (videos.length === 0) return [];
-  const repeats = Math.ceil(MIN_MARQUEE_SLIDES / videos.length);
+  const repeats = Math.ceil(minSlides / videos.length);
   return Array.from({ length: repeats }, () => videos).flat();
 }
 
@@ -65,12 +81,18 @@ export function PhoneMarquee({
 }: PhoneMarqueeProps) {
   const [activeSlideKey, setActiveSlideKey] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  // Desktop-first default so the first paint already overflows wide viewports.
+  const [minSlides, setMinSlides] = useState(() => slidesNeededForWidth(1440));
   const uniqueVideos = useMemo(() => uniqueVideosById(videos), [videos]);
-  const marqueeSlides = useMemo(() => buildMarqueeSlides(uniqueVideos), [uniqueVideos]);
+  const marqueeSlides = useMemo(
+    () => buildMarqueeSlides(uniqueVideos, minSlides),
+    [uniqueVideos, minSlides],
+  );
 
   const watchDrag = useCallback((_emblaApi: unknown, event: MouseEvent | TouchEvent) => {
     const target = event.target;
     if (!(target instanceof Element)) return true;
+    // Allow dragging from phone play buttons; Embla still distinguishes click vs drag.
     return !target.closest(INTERACTIVE_SELECTOR);
   }, []);
 
@@ -98,6 +120,32 @@ export function PhoneMarquee({
     },
     plugins,
   );
+
+  const setViewportRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      emblaRef(node);
+    },
+    [emblaRef],
+  );
+
+  useEffect(() => {
+    const node = emblaApi?.rootNode();
+    if (!node || typeof ResizeObserver === "undefined") return;
+
+    const updateMinSlides = () => {
+      setMinSlides(slidesNeededForWidth(node.clientWidth));
+    };
+
+    updateMinSlides();
+    const observer = new ResizeObserver(updateMinSlides);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    emblaApi.reInit();
+  }, [emblaApi, marqueeSlides.length]);
 
   const syncAutoScroll = useCallback(() => {
     const autoScroll = emblaApi?.plugins()?.autoScroll;
@@ -141,7 +189,7 @@ export function PhoneMarquee({
   return (
     <div className="relative py-4">
       <div
-        ref={emblaRef}
+        ref={setViewportRef}
         className="cursor-grab select-none overflow-hidden px-4 active:cursor-grabbing"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}

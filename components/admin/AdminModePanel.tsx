@@ -6,11 +6,12 @@ import type { PortfolioVideo } from "@/lib/videos/types";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { AdminLoginInline } from "@/components/admin/AdminLoginInline";
 import { SiteEditorForm } from "@/components/admin/SiteEditorForm";
-import { useAdminView } from "@/components/admin/AdminViewProvider";
+import {
+  useAdminView,
+  type AdminPanelTab,
+} from "@/components/admin/AdminViewProvider";
 import { EditorPanelIcon } from "@/components/ui/EditorPanelIcon";
 import { confirmLeaveDuringUpload } from "@/lib/admin/uploadGuard";
-
-type AdminTab = "content" | "portfolio";
 
 export function AdminModeBanner() {
   const { viewMode, authenticated, authRequired, setPanelOpen } = useAdminView();
@@ -20,7 +21,7 @@ export function AdminModeBanner() {
   const needsLogin = authRequired && !authenticated;
 
   return (
-    <div className="relative z-0 border-b border-lavender/35 bg-burgundy/92 px-4 py-2 text-center text-sm text-paper backdrop-blur-sm">
+    <div className="relative z-0 border-b border-lavender/35 bg-forest/92 px-4 py-2 text-center text-sm text-paper backdrop-blur-sm">
       {needsLogin ? (
         <span>Admin view — sign in from the Menu to make edits.</span>
       ) : (
@@ -49,8 +50,10 @@ export function AdminModePanel() {
     setPanelOpen,
     editorSection,
     setEditorSection,
+    preferredTab,
+    clearPreferredTab,
   } = useAdminView();
-  const [tab, setTab] = useState<AdminTab>("content");
+  const [tab, setTab] = useState<AdminPanelTab>("content");
   const [videos, setVideos] = useState<PortfolioVideo[]>([]);
   const [videosLoaded, setVideosLoaded] = useState(false);
   const [portfolioUploadBusy, setPortfolioUploadBusy] = useState(false);
@@ -64,11 +67,18 @@ export function AdminModePanel() {
     setPanelOpen(false);
   };
 
-  const trySetTab = (next: AdminTab) => {
+  const trySetTab = (next: AdminPanelTab) => {
     if (!confirmLeaveDuringUpload(portfolioUploadBusy)) return;
     setEditorSection(null);
+    clearPreferredTab();
     setTab(next);
   };
+
+  useEffect(() => {
+    if (!preferredTab) return;
+    setTab(preferredTab);
+    clearPreferredTab();
+  }, [preferredTab, clearPreferredTab]);
 
   useEffect(() => {
     if (!portfolioUploadBusy) return;
@@ -149,24 +159,15 @@ export function AdminModePanel() {
             className="fixed inset-3 z-[70] flex flex-col overflow-hidden rounded-2xl border border-brown/15 bg-paper shadow-2xl sm:inset-4 md:inset-6 lg:inset-8"
           >
             <div className="flex shrink-0 items-center justify-between gap-4 border-b border-brown/10 px-4 py-3 sm:px-6">
-              <div className="min-w-0">
-                <h2
-                  id="admin-editor-title"
-                  className="font-display text-xl text-brown sm:text-2xl"
-                >
-                  Edit portfolio
-                </h2>
-              </div>
-
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 items-center gap-3">
                 <div className="flex gap-1 rounded-full bg-cream p-1">
                   <button
                     type="button"
                     onClick={() => trySetTab("content")}
                     className={`rounded-full px-3 py-1.5 text-sm font-medium transition sm:px-4 sm:py-2 ${
                       activeTab === "content"
-                        ? "bg-burgundy text-paper"
-                        : "text-indigo hover:bg-lavender/25"
+                        ? "bg-forest text-paper"
+                        : "text-ink hover:bg-lavender/25"
                     }`}
                   >
                     Site
@@ -176,27 +177,37 @@ export function AdminModePanel() {
                     onClick={() => trySetTab("portfolio")}
                     className={`rounded-full px-3 py-1.5 text-sm font-medium transition sm:px-4 sm:py-2 ${
                       activeTab === "portfolio"
-                        ? "bg-burgundy text-paper"
-                        : "text-indigo hover:bg-lavender/25"
+                        ? "bg-forest text-paper"
+                        : "text-ink hover:bg-lavender/25"
                     }`}
                   >
                     Videos
                   </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={tryClosePanel}
-                  className="rounded-full border border-brown/20 px-3 py-1.5 text-sm text-brown hover:bg-cream"
+                <h2
+                  id="admin-editor-title"
+                  className="truncate font-display text-xl text-brown sm:text-2xl"
                 >
-                  Close
-                </button>
+                  Edit portfolio
+                </h2>
               </div>
+
+              <button
+                type="button"
+                onClick={tryClosePanel}
+                className="shrink-0 rounded-full border border-brown/20 px-3 py-1.5 text-sm text-brown hover:bg-cream"
+              >
+                Close
+              </button>
             </div>
 
             <div className="min-h-0 flex-1 overflow-hidden">
               {activeTab === "content" ? (
                 <div className="flex h-full min-h-0 flex-col">
-                  <SiteEditorForm />
+                  <SiteEditorForm
+                    portfolioVideos={videos}
+                    portfolioVideosLoaded={videosLoaded}
+                  />
                 </div>
               ) : (
                 <div className="flex h-full min-h-0 flex-col">

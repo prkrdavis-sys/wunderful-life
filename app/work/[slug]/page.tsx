@@ -44,7 +44,7 @@ export default async function WorkDetailPage({ params }: WorkDetailPageProps) {
   ].filter((item): item is { label: string; value: string } => item !== null);
 
   return (
-    <div className="section-wash-pink relative min-h-screen px-4 py-16 sm:px-6">
+    <div className="section-wash-blush relative min-h-screen px-4 py-16 sm:px-6">
       <div className="mx-auto max-w-5xl">
         <AnimatedButton href="/work" variant="ghost" className="mb-8">
           ← Back to Work
@@ -72,7 +72,7 @@ export default async function WorkDetailPage({ params }: WorkDetailPageProps) {
                     key={item.label}
                     className="rounded-2xl border-2 border-brown/10 bg-white/70 p-4 backdrop-blur-sm"
                   >
-                    <h2 className="font-label text-xs font-semibold tracking-[0.18em] text-pink-deep uppercase">
+                    <h2 className="font-label text-xs font-semibold tracking-[0.18em] text-blush-deep uppercase">
                       {item.label}
                     </h2>
                     <p className="mt-2 text-brown">{item.value}</p>

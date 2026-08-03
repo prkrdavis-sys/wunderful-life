@@ -7,7 +7,7 @@ import { SectionLink } from "@/components/ui/SectionLink";
 type AnimatedButtonProps = {
   children: ReactNode;
   href?: string;
-  variant?: "primary" | "secondary" | "ghost" | "burgundy" | "soft";
+  variant?: "primary" | "secondary" | "ghost" | "soft";
   className?: string;
   onClick?: () => void;
   type?: "button" | "submit";
@@ -16,15 +16,13 @@ type AnimatedButtonProps = {
 
 const variants = {
   primary:
-    "border border-burgundy/50 bg-burgundy/90 text-paper shadow-md shadow-burgundy/20 hover:bg-burgundy",
+    "border border-forest/50 bg-forest/90 text-paper shadow-md shadow-forest/20 hover:bg-forest",
   secondary:
-    "border border-lavender-deep/40 bg-lavender/25 text-indigo shadow-sm hover:border-burgundy/35 hover:bg-lavender/40 backdrop-blur-sm",
+    "border border-lavender-deep/40 bg-lavender/25 text-ink shadow-sm hover:border-forest/35 hover:bg-lavender/40 backdrop-blur-sm",
   ghost:
-    "border border-lavender/35 bg-paper/90 text-indigo backdrop-blur-sm hover:border-burgundy/40 hover:bg-white",
-  burgundy:
-    "border border-burgundy/50 bg-burgundy/90 text-paper shadow-md shadow-burgundy/20 hover:bg-burgundy",
+    "border border-lavender/35 bg-paper/90 text-ink backdrop-blur-sm hover:border-forest/40 hover:bg-white",
   soft:
-    "border border-lavender-deep/45 bg-paper/88 text-indigo backdrop-blur-sm hover:border-burgundy/40 hover:bg-paper",
+    "border border-lavender-deep/45 bg-paper/88 text-ink backdrop-blur-sm hover:border-forest/40 hover:bg-paper",
 };
 
 export function AnimatedButton({

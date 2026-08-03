@@ -12,8 +12,11 @@ import { StorageError } from "./types";
 
 const SITE_PATH = path.join(process.cwd(), "data", "site.json");
 const ABOUT_PHOTO_DIR = path.join(process.cwd(), "public", "about-photos");
-const HOME_GRID_PHOTO_DIR = path.join(process.cwd(), "public", "home-grid-photos");
+/** Folder name kept from the old home grid so existing uploads still resolve. */
+const COLLAGE_PHOTO_DIR = path.join(process.cwd(), "public", "home-grid-photos");
+const BRAND_LOGO_DIR = path.join(process.cwd(), "public", "brand-logos");
 const HERO_VIDEO_DIR = path.join(process.cwd(), "public", "uploads", "hero");
+const CTA_VIDEO_DIR = path.join(process.cwd(), "public", "uploads", "cta");
 
 function isCompleteSiteContent(value: unknown): value is SiteContent {
   if (!value || typeof value !== "object") return false;
@@ -30,7 +33,13 @@ function isCompleteSiteContent(value: unknown): value is SiteContent {
     Array.isArray(site.heroLinks) &&
     Boolean(site.social?.instagram) &&
     Boolean(site.social?.email) &&
-    Array.isArray(site.services)
+    Array.isArray(site.services) &&
+    Array.isArray(site.statsBanner?.items) &&
+    Array.isArray(site.work?.categories) &&
+    Array.isArray(site.photography?.photos) &&
+    Array.isArray(site.brands?.items) &&
+    Array.isArray(site.ugcBenefits?.benefits) &&
+    Boolean(site.closingCta?.headline)
   );
 }
 
@@ -133,8 +142,10 @@ async function deleteStoredPhoto(imagePath: string) {
   if (
     imagePath.startsWith("/about-photos/") ||
     imagePath.startsWith("/home-grid-photos/") ||
+    imagePath.startsWith("/brand-logos/") ||
     imagePath.startsWith("/uploads/photos/") ||
-    imagePath.startsWith("/uploads/hero/")
+    imagePath.startsWith("/uploads/hero/") ||
+    imagePath.startsWith("/uploads/cta/")
   ) {
     const absolute = path.join(process.cwd(), "public", imagePath);
     try {
@@ -145,10 +156,18 @@ async function deleteStoredPhoto(imagePath: string) {
   }
 }
 
+type PhotoFolder = "about-photos" | "home-grid-photos" | "brand-logos";
+
+const PHOTO_DIRS: Record<PhotoFolder, string> = {
+  "about-photos": ABOUT_PHOTO_DIR,
+  "home-grid-photos": COLLAGE_PHOTO_DIR,
+  "brand-logos": BRAND_LOGO_DIR,
+};
+
 async function savePhotoFile(
   photoId: string,
   file: File,
-  folder: "about-photos" | "home-grid-photos",
+  folder: PhotoFolder,
 ): Promise<string> {
   const ext = path.extname(file.name) || ".jpg";
   const filename = `${photoId}-${randomUUID()}${ext}`;
@@ -161,10 +180,9 @@ async function savePhotoFile(
     return blob.url;
   }
 
-  const photoDir = folder === "about-photos" ? ABOUT_PHOTO_DIR : HOME_GRID_PHOTO_DIR;
-  await ensurePhotoDir(photoDir);
+  await ensurePhotoDir(PHOTO_DIRS[folder]);
   const buffer = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(path.join(photoDir, filename), buffer);
+  await fs.writeFile(path.join(PHOTO_DIRS[folder], filename), buffer);
   return `/${folder}/${filename}`;
 }
 
@@ -188,12 +206,19 @@ export async function uploadAboutPhoto(photoId: string, file: File) {
   return site;
 }
 
-async function saveHeroVideoFile(file: File): Promise<string> {
+type VideoSlot = "hero" | "cta";
+
+const VIDEO_DIRS: Record<VideoSlot, string> = {
+  hero: HERO_VIDEO_DIR,
+  cta: CTA_VIDEO_DIR,
+};
+
+async function saveVideoFile(slot: VideoSlot, file: File): Promise<string> {
   const ext = path.extname(file.name) || ".mp4";
-  const filename = `hero-${randomUUID()}${ext}`;
+  const filename = `${slot}-${randomUUID()}${ext}`;
 
   if (getUseBlobStorage()) {
-    const blob = await put(`hero/${filename}`, file, {
+    const blob = await put(`${slot}/${filename}`, file, {
       access: "public",
       addRandomSuffix: false,
       ...(file.type ? { contentType: file.type } : {}),
@@ -201,17 +226,26 @@ async function saveHeroVideoFile(file: File): Promise<string> {
     return blob.url;
   }
 
-  await ensurePhotoDir(HERO_VIDEO_DIR);
+  await ensurePhotoDir(VIDEO_DIRS[slot]);
   const buffer = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(path.join(HERO_VIDEO_DIR, filename), buffer);
-  return `/uploads/hero/${filename}`;
+  await fs.writeFile(path.join(VIDEO_DIRS[slot], filename), buffer);
+  return `/uploads/${slot}/${filename}`;
 }
 
-async function replaceHeroVideoPath(videoPath: string): Promise<SiteContent> {
+async function replaceVideoPath(
+  slot: VideoSlot,
+  videoPath: string,
+): Promise<SiteContent> {
   const site = await readSiteContent();
-  const previous = site.hero.videoPath;
+  const previous =
+    slot === "hero" ? site.hero.videoPath : site.closingCta.videoPath;
 
-  site.hero = { ...site.hero, videoPath };
+  if (slot === "hero") {
+    site.hero = { ...site.hero, videoPath };
+  } else {
+    site.closingCta = { ...site.closingCta, videoPath };
+  }
+
   await writeSiteContent(site);
 
   if (previous && previous !== videoPath) {
@@ -223,18 +257,25 @@ async function replaceHeroVideoPath(videoPath: string): Promise<SiteContent> {
 
 /** Local/dev path: the video file arrives in the request body. */
 export async function uploadHeroVideo(file: File): Promise<SiteContent> {
-  const videoPath = await saveHeroVideoFile(file);
-  return replaceHeroVideoPath(videoPath);
+  return replaceVideoPath("hero", await saveVideoFile("hero", file));
 }
 
 /** Production path: the file was client-uploaded to Blob; persist its URL. */
 export async function setHeroVideoUrl(url: string): Promise<SiteContent> {
-  return replaceHeroVideoPath(url);
+  return replaceVideoPath("hero", url);
 }
 
-export async function uploadHomeGridPhoto(photoId: string, file: File) {
+export async function uploadCtaVideo(file: File): Promise<SiteContent> {
+  return replaceVideoPath("cta", await saveVideoFile("cta", file));
+}
+
+export async function setCtaVideoUrl(url: string): Promise<SiteContent> {
+  return replaceVideoPath("cta", url);
+}
+
+export async function uploadCollagePhoto(photoId: string, file: File) {
   const site = await readSiteContent();
-  const photoIndex = site.homePhotoGrid.photos.findIndex(
+  const photoIndex = site.photography.photos.findIndex(
     (photo) => photo.id === photoId,
   );
 
@@ -242,14 +283,34 @@ export async function uploadHomeGridPhoto(photoId: string, file: File) {
     throw new StorageError("Photo not found.", 404);
   }
 
-  const current = site.homePhotoGrid.photos[photoIndex];
+  const current = site.photography.photos[photoIndex];
   const imagePath = await savePhotoFile(photoId, file, "home-grid-photos");
 
   if (current.imagePath) {
     await deleteStoredPhoto(current.imagePath);
   }
 
-  site.homePhotoGrid.photos[photoIndex] = { ...current, imagePath };
+  site.photography.photos[photoIndex] = { ...current, imagePath };
+  await writeSiteContent(site);
+  return site;
+}
+
+export async function uploadBrandLogo(brandId: string, file: File) {
+  const site = await readSiteContent();
+  const brandIndex = site.brands.items.findIndex((brand) => brand.id === brandId);
+
+  if (brandIndex === -1) {
+    throw new StorageError("Brand not found.", 404);
+  }
+
+  const current = site.brands.items[brandIndex];
+  const logoPath = await savePhotoFile(brandId, file, "brand-logos");
+
+  if (current.logoPath) {
+    await deleteStoredPhoto(current.logoPath);
+  }
+
+  site.brands.items[brandIndex] = { ...current, logoPath };
   await writeSiteContent(site);
   return site;
 }

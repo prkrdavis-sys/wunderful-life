@@ -49,14 +49,14 @@ export function AdminLoginForm() {
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          className="mt-1 w-full rounded-xl border border-brown/20 bg-cream px-3 py-2 text-brown outline-none focus:border-burgundy/50"
+          className="mt-1 w-full rounded-xl border border-brown/20 bg-cream px-3 py-2 text-brown outline-none focus:border-forest/50"
           required
           autoComplete="current-password"
         />
       </label>
 
       {error && (
-        <p className="mt-4 rounded-xl bg-pink/20 px-4 py-2 text-sm text-brown">
+        <p className="mt-4 rounded-xl bg-blush/20 px-4 py-2 text-sm text-brown">
           {error}
         </p>
       )}

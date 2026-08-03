@@ -2,7 +2,8 @@
 
 import { upload } from "@vercel/blob/client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { SiteContent } from "@/lib/site/types";
+import type { CollagePhotoShape, SiteContent } from "@/lib/site/types";
+import type { PortfolioVideo } from "@/lib/videos/types";
 import {
   isAcceptedVideoFile,
   VIDEO_FILE_ACCEPT,
@@ -14,6 +15,7 @@ import { needsWebTranscode, prepareVideoForWebUpload } from "@/lib/videos/transc
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { FileUploadButton } from "@/components/ui/FileUploadButton";
 import { UploadProgressBar } from "@/components/ui/UploadProgressBar";
+import { VideoThumbnail } from "@/components/ui/VideoThumbnail";
 import {
   useAdminView,
   type SiteEditorSection,
@@ -21,36 +23,135 @@ import {
 
 type SiteEditorFormProps = {
   onSaved?: (site: SiteContent) => void;
+  portfolioVideos?: PortfolioVideo[];
+  portfolioVideosLoaded?: boolean;
 };
 
-const SECTIONS: { id: SiteEditorSection; label: string; hint: string }[] = [
-  { id: "profile", label: "Profile", hint: "Name & tagline" },
-  { id: "hero", label: "Hero", hint: "Background video & subtitle" },
-  { id: "about", label: "About", hint: "Headline & copy" },
-  { id: "photos", label: "Photos", hint: "Images & captions" },
-  { id: "homeGrid", label: "Home grid", hint: "8 photo slots" },
-  { id: "ugc", label: "What is UGC", hint: "Definition & cards" },
-  { id: "services", label: "Services", hint: "Offerings list" },
-  { id: "testimonials", label: "Testimonials", hint: "Quotes & visibility" },
-  { id: "contact", label: "Contact", hint: "Headline, copy & links" },
+const SECTIONS: { id: SiteEditorSection; label: string }[] = [
+  { id: "profile", label: "Profile" },
+  { id: "hero", label: "Hero" },
+  { id: "stats", label: "Stats banner" },
+  { id: "about", label: "About" },
+  { id: "photos", label: "About photos" },
+  { id: "work", label: "Videos" },
+  { id: "photography", label: "Photography" },
+  { id: "brands", label: "Brands" },
+  { id: "services", label: "Services" },
+  { id: "ugc", label: "Why UGC" },
+  { id: "testimonials", label: "Testimonials" },
+  { id: "cta", label: "Closing CTA" },
 ];
 
 const inputClass =
   "mt-1 w-full rounded-xl border border-brown/20 bg-white px-3 py-2 text-brown";
 
-type HeroUploadState = {
+const cardClass = "space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4";
+
+const smallButtonClass =
+  "rounded-lg border border-brown/25 bg-white px-2 py-1 text-xs font-medium text-brown transition hover:border-forest/45 hover:text-forest disabled:cursor-not-allowed disabled:opacity-40";
+
+/** Move an item within a list, returning a new array. */
+function moveItem<T>(items: T[], index: number, delta: number): T[] {
+  const target = index + delta;
+  if (target < 0 || target >= items.length) return items;
+  const next = [...items];
+  [next[index], next[target]] = [next[target], next[index]];
+  return next;
+}
+
+function uniqueId(prefix: string): string {
+  return `${prefix}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/** Reorder / remove controls shared by every repeatable list row. */
+function RowControls({
+  label,
+  index,
+  count,
+  onMove,
+  onRemove,
+}: {
+  label: string;
+  index: number;
+  count: number;
+  onMove: (delta: number) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+        {label} {index + 1}
+      </p>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => onMove(-1)}
+          disabled={index === 0}
+          aria-label={`Move ${label} ${index + 1} up`}
+          className={smallButtonClass}
+        >
+          ↑
+        </button>
+        <button
+          type="button"
+          onClick={() => onMove(1)}
+          disabled={index === count - 1}
+          aria-label={`Move ${label} ${index + 1} down`}
+          className={smallButtonClass}
+        >
+          ↓
+        </button>
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label={`Remove ${label} ${index + 1}`}
+          className={`${smallButtonClass} hover:border-blush-deep/60 hover:text-blush-deep`}
+        >
+          Remove
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AddRowButton({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-xl border border-dashed border-forest/40 px-4 py-2 text-sm font-medium text-forest transition hover:bg-forest/5"
+    >
+      + {label}
+    </button>
+  );
+}
+
+type VideoSlot = "hero" | "cta";
+
+type VideoUploadState = {
   status: "idle" | "preparing" | "uploading" | "ready" | "error";
   progress: number;
   message: string;
 };
 
-const idleHeroUpload = (): HeroUploadState => ({
+const idleVideoUpload = (): VideoUploadState => ({
   status: "idle",
   progress: 0,
   message: "",
 });
 
-function heroVideoDisplayName(path: string): string {
+const SLOT_COPY: Record<VideoSlot, { noun: string; endpoint: string }> = {
+  hero: { noun: "hero video", endpoint: "/api/site/hero-video" },
+  cta: { noun: "CTA video", endpoint: "/api/site/cta-video" },
+};
+
+function videoDisplayName(path: string): string {
   try {
     if (path.startsWith("http://") || path.startsWith("https://")) {
       const segment = new URL(path).pathname.split("/").pop();
@@ -62,41 +163,69 @@ function heroVideoDisplayName(path: string): string {
   return path.split("/").pop() || path;
 }
 
-export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
-  const { site, setSite, editorSection, setEditorSection } = useAdminView();
+export function SiteEditorForm({
+  onSaved,
+  portfolioVideos = [],
+  portfolioVideosLoaded = false,
+}: SiteEditorFormProps) {
+  const {
+    site,
+    setSite,
+    editorSection,
+    setEditorSection,
+    openPortfolioEditor,
+  } = useAdminView();
   const [form, setForm] = useState(site);
   const [section, setSection] = useState<SiteEditorSection>("profile");
   const activeSection = editorSection ?? section;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [heroVideoFile, setHeroVideoFile] = useState<File | null>(null);
-  const [heroUpload, setHeroUpload] = useState<HeroUploadState>(idleHeroUpload);
-  const heroUploadGenRef = useRef(0);
+  const [videoFiles, setVideoFiles] = useState<Record<VideoSlot, File | null>>({
+    hero: null,
+    cta: null,
+  });
+  const [videoUploads, setVideoUploads] = useState<
+    Record<VideoSlot, VideoUploadState>
+  >({
+    hero: idleVideoUpload(),
+    cta: idleVideoUpload(),
+  });
+  const videoUploadGenRef = useRef<Record<VideoSlot, number>>({ hero: 0, cta: 0 });
   const heroVideoInputRef = useRef<HTMLInputElement>(null);
+  const ctaVideoInputRef = useRef<HTMLInputElement>(null);
 
-  const heroUploadBusy =
-    heroUpload.status === "preparing" || heroUpload.status === "uploading";
+  const isBusy = (state: VideoUploadState) =>
+    state.status === "preparing" || state.status === "uploading";
+  const uploadBusy = isBusy(videoUploads.hero) || isBusy(videoUploads.cta);
 
-  const heroVideoPreviewUrl = useMemo(
-    () => (heroVideoFile ? URL.createObjectURL(heroVideoFile) : null),
-    [heroVideoFile],
+  const videoPreviewUrls = useMemo(
+    () => ({
+      hero: videoFiles.hero ? URL.createObjectURL(videoFiles.hero) : null,
+      cta: videoFiles.cta ? URL.createObjectURL(videoFiles.cta) : null,
+    }),
+    [videoFiles],
   );
 
   useEffect(() => {
-    if (heroVideoPreviewUrl) {
-      return () => URL.revokeObjectURL(heroVideoPreviewUrl);
-    }
-  }, [heroVideoPreviewUrl]);
+    return () => {
+      for (const url of Object.values(videoPreviewUrls)) {
+        if (url) URL.revokeObjectURL(url);
+      }
+    };
+  }, [videoPreviewUrls]);
 
   useEffect(() => {
+    // Bumping the generations on unmount abandons any in-flight upload.
+    const generations = videoUploadGenRef.current;
     return () => {
-      heroUploadGenRef.current += 1;
+      generations.hero += 1;
+      generations.cta += 1;
     };
   }, []);
 
   useEffect(() => {
-    if (!heroUploadBusy) return;
+    if (!uploadBusy) return;
 
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
@@ -104,13 +233,26 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
 
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [heroUploadBusy]);
+  }, [uploadBusy]);
 
-  const startHeroVideoUpload = async (file: File) => {
-    const generation = ++heroUploadGenRef.current;
+  const setSlotUpload = (slot: VideoSlot, state: VideoUploadState) =>
+    setVideoUploads((current) => ({ ...current, [slot]: state }));
+
+  const patchSlotUpload = (
+    slot: VideoSlot,
+    patch: Partial<VideoUploadState>,
+  ) =>
+    setVideoUploads((current) => ({
+      ...current,
+      [slot]: { ...current[slot], ...patch },
+    }));
+
+  const startVideoUpload = async (slot: VideoSlot, file: File) => {
+    const generation = ++videoUploadGenRef.current[slot];
+    const { noun, endpoint } = SLOT_COPY[slot];
     setError(null);
     setMessage(null);
-    setHeroUpload({
+    setSlotUpload(slot, {
       status: "preparing",
       progress: 0,
       message: needsWebTranscode(file)
@@ -127,85 +269,85 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
       if (!configResponse.ok) {
         throw new Error("Could not load upload settings.");
       }
-      if (generation !== heroUploadGenRef.current) return;
+      if (generation !== videoUploadGenRef.current[slot]) return;
 
       const prepared = await prepareVideoForWebUpload(file, (progressMessage) => {
-        if (generation !== heroUploadGenRef.current) return;
-        setHeroUpload((current) => ({
-          ...current,
-          status: "preparing",
-          message: progressMessage,
-        }));
+        if (generation !== videoUploadGenRef.current[slot]) return;
+        patchSlotUpload(slot, { status: "preparing", message: progressMessage });
       });
-      if (generation !== heroUploadGenRef.current) return;
+      if (generation !== videoUploadGenRef.current[slot]) return;
 
       const payload = new FormData();
 
       if (config.clientUpload) {
-        setHeroUpload({
+        setSlotUpload(slot, {
           status: "uploading",
           progress: 0,
-          message: "Uploading hero video… 0%",
+          message: `Uploading ${noun}… 0%`,
         });
 
         const ext = prepared.name.slice(prepared.name.lastIndexOf(".")) || ".mp4";
         const contentType =
           prepared.type || videoContentTypeFromFilename(prepared.name);
-        const blob = await upload(`hero/hero-${crypto.randomUUID()}${ext}`, prepared, {
-          access: "public",
-          handleUploadUrl: config.handleUploadUrl,
-          multipart: true,
-          ...(contentType ? { contentType } : {}),
-          onUploadProgress: (event) => {
-            if (generation !== heroUploadGenRef.current) return;
-            const rounded = Math.round(event.percentage);
-            setHeroUpload((current) => ({
-              ...current,
-              status: "uploading",
-              progress: rounded,
-              message: `Uploading hero video… ${rounded}%`,
-            }));
+        const blob = await upload(
+          `${slot}/${slot}-${crypto.randomUUID()}${ext}`,
+          prepared,
+          {
+            access: "public",
+            handleUploadUrl: config.handleUploadUrl,
+            multipart: true,
+            ...(contentType ? { contentType } : {}),
+            onUploadProgress: (event) => {
+              if (generation !== videoUploadGenRef.current[slot]) return;
+              const rounded = Math.round(event.percentage);
+              patchSlotUpload(slot, {
+                status: "uploading",
+                progress: rounded,
+                message: `Uploading ${noun}… ${rounded}%`,
+              });
+            },
           },
-        });
-        if (generation !== heroUploadGenRef.current) return;
+        );
+        if (generation !== videoUploadGenRef.current[slot]) return;
         payload.set("videoUrl", blob.url);
       } else {
-        setHeroUpload({
+        setSlotUpload(slot, {
           status: "uploading",
           progress: 0,
-          message: "Uploading hero video…",
+          message: `Uploading ${noun}…`,
         });
         payload.set("video", prepared);
       }
 
-      const response = await fetch("/api/site/hero-video", {
+      const response = await fetch(endpoint, {
         method: "POST",
         body: payload,
       });
       const data = await response.json();
-      if (generation !== heroUploadGenRef.current) return;
+      if (generation !== videoUploadGenRef.current[slot]) return;
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to upload hero video.");
+        throw new Error(data.error ?? `Failed to upload ${noun}.`);
       }
 
       setForm(data);
       setSite(data);
-      setHeroVideoFile(null);
-      if (heroVideoInputRef.current) heroVideoInputRef.current.value = "";
-      setHeroUpload({
+      setVideoFiles((current) => ({ ...current, [slot]: null }));
+      const inputRef = slot === "hero" ? heroVideoInputRef : ctaVideoInputRef;
+      if (inputRef.current) inputRef.current.value = "";
+      setSlotUpload(slot, {
         status: "ready",
         progress: 100,
-        message: "Hero video is live on your site.",
+        message: `The ${noun} is live on your site.`,
       });
-      setMessage("Hero video uploaded.");
+      setMessage(`${noun[0].toUpperCase()}${noun.slice(1)} uploaded.`);
     } catch (err) {
-      if (generation !== heroUploadGenRef.current) return;
+      if (generation !== videoUploadGenRef.current[slot]) return;
       const uploadError =
         err instanceof Error && err.message
           ? err.message
-          : "Hero video upload failed.";
-      setHeroUpload({ status: "error", progress: 0, message: uploadError });
+          : `${noun} upload failed.`;
+      setSlotUpload(slot, { status: "error", progress: 0, message: uploadError });
       setError(uploadError);
     }
   };
@@ -238,10 +380,16 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
     }
   };
 
+  const PHOTO_ENDPOINTS = {
+    about: "/api/site/photos",
+    collage: "/api/site/collage-photos",
+    brandLogo: "/api/site/brand-logos",
+  } as const;
+
   const uploadPhoto = async (
     photoId: string,
     file: File,
-    kind: "about" | "homeGrid" = "about",
+    kind: keyof typeof PHOTO_ENDPOINTS = "about",
   ) => {
     setLoading(true);
     setError(null);
@@ -250,10 +398,7 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
     try {
       const payload = new FormData();
       payload.set("photo", file);
-      const endpoint =
-        kind === "homeGrid"
-          ? `/api/site/home-grid-photos/${photoId}`
-          : `/api/site/photos/${photoId}`;
+      const endpoint = `${PHOTO_ENDPOINTS[kind]}/${photoId}`;
       const response = await fetch(endpoint, {
         method: "POST",
         body: payload,
@@ -274,6 +419,68 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
     }
   };
 
+  /** Ids present in the saved content; uploads need a persisted row to target. */
+  const savedCollageIds = new Set(site.photography.photos.map((photo) => photo.id));
+  const savedBrandIds = new Set(site.brands.items.map((brand) => brand.id));
+  const featuredPortfolioVideos = portfolioVideos.filter((video) => video.featured);
+  const marqueeVideos =
+    featuredPortfolioVideos.length > 0
+      ? featuredPortfolioVideos
+      : portfolioVideos;
+
+  const renderVideoUpload = (slot: VideoSlot, videoPath: string | undefined) => {
+    const state = videoUploads[slot];
+    const busy = isBusy(state);
+    const inputRef = slot === "hero" ? heroVideoInputRef : ctaVideoInputRef;
+    const { noun } = SLOT_COPY[slot];
+
+    return (
+      <>
+        <FileUploadButton
+          kind="video"
+          inputRef={inputRef}
+          accept={VIDEO_FILE_ACCEPT}
+          hint={VIDEO_UPLOAD_HELP}
+          selectedName={
+            videoFiles[slot]?.name ??
+            (videoPath ? videoDisplayName(videoPath) : null)
+          }
+          previewUrl={videoPreviewUrls[slot] ?? videoPath ?? null}
+          previewType="video"
+          disabled={busy}
+          buttonLabel={videoPath ? "Swap video" : "Add a video"}
+          onChange={(file) => {
+            if (!file) return;
+            if (!isAcceptedVideoFile(file)) {
+              setVideoFiles((current) => ({ ...current, [slot]: null }));
+              setSlotUpload(slot, idleVideoUpload());
+              setError(videoUploadErrorMessage());
+              if (inputRef.current) inputRef.current.value = "";
+              return;
+            }
+            setError(null);
+            setVideoFiles((current) => ({ ...current, [slot]: file }));
+            void startVideoUpload(slot, file);
+          }}
+        />
+        {state.status !== "idle" && (
+          <UploadProgressBar
+            label={noun}
+            message={state.message}
+            progress={state.progress}
+            indeterminate={state.status === "preparing"}
+          />
+        )}
+        {videoPath && !busy && (
+          <p className="inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">
+            <span aria-hidden>🌸</span>
+            Live on your site
+          </p>
+        )}
+      </>
+    );
+  };
+
   return (
     <div className="flex min-h-0 flex-1 flex-col md:flex-row">
       <nav
@@ -289,20 +496,13 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
                 setEditorSection(null);
                 setSection(item.id);
               }}
-              className={`shrink-0 rounded-xl px-3 py-2 text-left transition md:w-full md:px-3 md:py-2.5 ${
+              className={`shrink-0 rounded-xl px-3 py-2 text-left text-sm font-medium transition md:w-full md:px-3 md:py-2.5 ${
                 activeSection === item.id
-                  ? "bg-burgundy text-paper"
-                  : "text-indigo hover:bg-white/80"
+                  ? "bg-forest text-paper"
+                  : "text-ink hover:bg-white/80"
               }`}
             >
-              <span className="block text-sm font-medium">{item.label}</span>
-              <span
-                className={`hidden text-xs md:block ${
-                  activeSection === item.id ? "text-paper/75" : "text-muted"
-                }`}
-              >
-                {item.hint}
-              </span>
+              {item.label}
             </button>
           ))}
         </div>
@@ -416,51 +616,139 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
                   Uploads as soon as you pick a file and replaces the current
                   video. Without a video, the hero shows the plant wallpaper.
                 </p>
-                <FileUploadButton
-                  kind="video"
-                  inputRef={heroVideoInputRef}
-                  accept={VIDEO_FILE_ACCEPT}
-                  hint={VIDEO_UPLOAD_HELP}
-                  selectedName={
-                    heroVideoFile?.name ??
-                    (form.hero.videoPath
-                      ? heroVideoDisplayName(form.hero.videoPath)
-                      : null)
-                  }
-                  previewUrl={heroVideoPreviewUrl ?? form.hero.videoPath ?? null}
-                  previewType="video"
-                  disabled={heroUploadBusy}
-                  onChange={(file) => {
-                    if (!file) return;
-                    if (!isAcceptedVideoFile(file)) {
-                      setHeroVideoFile(null);
-                      setHeroUpload(idleHeroUpload());
-                      setError(videoUploadErrorMessage());
-                      if (heroVideoInputRef.current) {
-                        heroVideoInputRef.current.value = "";
-                      }
-                      return;
-                    }
-                    setError(null);
-                    setHeroVideoFile(file);
-                    void startHeroVideoUpload(file);
-                  }}
-                />
-                {heroUpload.status !== "idle" && (
-                  <UploadProgressBar
-                    label="Hero video"
-                    message={heroUpload.message}
-                    progress={heroUpload.progress}
-                    indeterminate={heroUpload.status === "preparing"}
-                  />
-                )}
-                {form.hero.videoPath && !heroUploadBusy && (
-                  <p className="inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-indigo">
-                    <span aria-hidden>🌸</span>
-                    Live on your site
-                  </p>
-                )}
+                {renderVideoUpload("hero", form.hero.videoPath)}
               </div>
+            </section>
+          )}
+
+          {activeSection === "stats" && (
+            <section className="space-y-4">
+              <div>
+                <h3 className="font-display text-lg text-brown">Stats banner</h3>
+                <p className="mt-1 text-sm text-muted">
+                  The band directly under the hero video. Add as many figures as
+                  you like — they spread evenly across the banner.
+                </p>
+              </div>
+
+              <label className="flex max-w-2xl items-center justify-between gap-4 rounded-2xl border border-brown/15 bg-cream/55 p-4 text-sm">
+                <span>
+                  <span className="block font-semibold text-brown">
+                    Show the stats banner
+                  </span>
+                  <span className="mt-1 block text-muted">
+                    Admin view still previews it while hidden.
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={form.statsBanner.visible}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      statsBanner: {
+                        ...current.statsBanner,
+                        visible: event.target.checked,
+                      },
+                    }))
+                  }
+                  className="h-5 w-5 accent-forest"
+                />
+              </label>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                {form.statsBanner.items.map((stat, index) => (
+                  <div key={stat.id} className={cardClass}>
+                    <RowControls
+                      label="Stat"
+                      index={index}
+                      count={form.statsBanner.items.length}
+                      onMove={(delta) =>
+                        setForm((current) => ({
+                          ...current,
+                          statsBanner: {
+                            ...current.statsBanner,
+                            items: moveItem(
+                              current.statsBanner.items,
+                              index,
+                              delta,
+                            ),
+                          },
+                        }))
+                      }
+                      onRemove={() =>
+                        setForm((current) => ({
+                          ...current,
+                          statsBanner: {
+                            ...current.statsBanner,
+                            items: current.statsBanner.items.filter(
+                              (_, i) => i !== index,
+                            ),
+                          },
+                        }))
+                      }
+                    />
+                    <label className="block text-sm">
+                      <span className="text-muted">Figure (cursive)</span>
+                      <input
+                        value={stat.value}
+                        onChange={(event) =>
+                          setForm((current) => {
+                            const items = [...current.statsBanner.items];
+                            items[index] = {
+                              ...items[index],
+                              value: event.target.value,
+                            };
+                            return {
+                              ...current,
+                              statsBanner: { ...current.statsBanner, items },
+                            };
+                          })
+                        }
+                        placeholder="10k"
+                        className={inputClass}
+                      />
+                    </label>
+                    <label className="block text-sm">
+                      <span className="text-muted">Label</span>
+                      <input
+                        value={stat.label}
+                        onChange={(event) =>
+                          setForm((current) => {
+                            const items = [...current.statsBanner.items];
+                            items[index] = {
+                              ...items[index],
+                              label: event.target.value,
+                            };
+                            return {
+                              ...current,
+                              statsBanner: { ...current.statsBanner, items },
+                            };
+                          })
+                        }
+                        placeholder="Instagram"
+                        className={inputClass}
+                      />
+                    </label>
+                  </div>
+                ))}
+              </div>
+
+              <AddRowButton
+                label="Add stat"
+                onClick={() =>
+                  setForm((current) => ({
+                    ...current,
+                    statsBanner: {
+                      ...current.statsBanner,
+                      items: [
+                        ...current.statsBanner.items,
+                        { id: uniqueId("stat"), value: "", label: "" },
+                      ],
+                    },
+                  }))
+                }
+              />
             </section>
           )}
 
@@ -581,7 +869,7 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
                         }}
                       />
                       {photo.imagePath && (
-                        <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-indigo">
+                        <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">
                           <span aria-hidden>🌸</span>
                           Live on your site
                         </p>
@@ -593,43 +881,503 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
             </section>
           )}
 
-          {activeSection === "homeGrid" && (
+          {activeSection === "work" && (
+            <section className="space-y-4">
+              <div>
+                <h3 className="font-display text-lg text-brown">Videos section</h3>
+                <p className="mt-1 text-sm text-muted">
+                  Phone carousel clips live in the Videos tab. Feature a video to
+                  put it on the landing marquee. Below, edit the cursive title and
+                  content-type chips.
+                </p>
+              </div>
+
+              <div className={cardClass}>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+                      Carousel videos
+                    </p>
+                    <p className="mt-1 text-sm text-muted">
+                      Currently featured on the phone marquee
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={openPortfolioEditor}
+                    className="rounded-full border border-forest/30 bg-forest px-3 py-1.5 text-sm font-medium text-paper transition hover:bg-forest-deep"
+                  >
+                    Manage videos
+                  </button>
+                </div>
+
+                {!portfolioVideosLoaded ? (
+                  <p className="text-sm text-muted">Loading uploaded videos…</p>
+                ) : portfolioVideos.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-brown/20 bg-white/60 px-4 py-6 text-center">
+                    <p className="text-sm text-muted">
+                      No videos uploaded yet.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={openPortfolioEditor}
+                      className="mt-3 text-sm font-medium text-forest underline-offset-2 hover:underline"
+                    >
+                      Upload your first video
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
+                      {marqueeVideos.map((video) => (
+                        <li
+                          key={video.id}
+                          className="overflow-hidden rounded-xl border border-brown/15 bg-white"
+                        >
+                          <div className="relative aspect-[9/16] bg-brown/10">
+                            <VideoThumbnail
+                              src={video.thumbnailPath}
+                              alt={video.title}
+                              videoSrc={video.videoPath}
+                            />
+                            {video.featured && (
+                              <span className="absolute bottom-1.5 left-1.5 rounded-full bg-forest px-1.5 py-0.5 text-[10px] font-semibold text-paper">
+                                Featured
+                              </span>
+                            )}
+                          </div>
+                          <p className="truncate px-2 py-1.5 text-xs font-medium text-brown">
+                            {video.title || "Untitled"}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {featuredPortfolioVideos.length > 0 ? (
+                        <p className="inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">
+                          <span aria-hidden>🌸</span>
+                          {featuredPortfolioVideos.length} live on your site
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted">
+                          No videos are featured yet — showing all{" "}
+                          {portfolioVideos.length} as a fallback on the marquee.
+                        </p>
+                      )}
+                      {featuredPortfolioVideos.length === 0 && (
+                        <button
+                          type="button"
+                          onClick={openPortfolioEditor}
+                          className="text-xs font-medium text-forest underline-offset-2 hover:underline"
+                        >
+                          Choose featured clips
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <label className="block max-w-2xl text-sm">
+                <span className="text-muted">Section title (cursive)</span>
+                <input
+                  value={form.work.heading}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      work: { ...current.work, heading: event.target.value },
+                    }))
+                  }
+                  className={inputClass}
+                />
+              </label>
+
+              <label className="block max-w-2xl text-sm">
+                <span className="text-muted">
+                  How many content types to show ({form.work.categories.length}{" "}
+                  defined)
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  max={form.work.categories.length}
+                  value={form.work.categoriesShown}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      work: {
+                        ...current.work,
+                        categoriesShown: Math.max(
+                          0,
+                          Math.min(
+                            Number(event.target.value) || 0,
+                            current.work.categories.length,
+                          ),
+                        ),
+                      },
+                    }))
+                  }
+                  className={inputClass}
+                />
+              </label>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {form.work.categories.map((category, index) => (
+                  <div key={category.id} className={cardClass}>
+                    <RowControls
+                      label="Content type"
+                      index={index}
+                      count={form.work.categories.length}
+                      onMove={(delta) =>
+                        setForm((current) => ({
+                          ...current,
+                          work: {
+                            ...current.work,
+                            categories: moveItem(
+                              current.work.categories,
+                              index,
+                              delta,
+                            ),
+                          },
+                        }))
+                      }
+                      onRemove={() =>
+                        setForm((current) => {
+                          const categories = current.work.categories.filter(
+                            (_, i) => i !== index,
+                          );
+                          return {
+                            ...current,
+                            work: {
+                              ...current.work,
+                              categories,
+                              categoriesShown: Math.min(
+                                current.work.categoriesShown,
+                                categories.length,
+                              ),
+                            },
+                          };
+                        })
+                      }
+                    />
+                    <label className="block text-sm">
+                      <span className="text-muted">Label</span>
+                      <input
+                        value={category.label}
+                        onChange={(event) =>
+                          setForm((current) => {
+                            const categories = [...current.work.categories];
+                            categories[index] = {
+                              ...categories[index],
+                              label: event.target.value,
+                            };
+                            return {
+                              ...current,
+                              work: { ...current.work, categories },
+                            };
+                          })
+                        }
+                        className={inputClass}
+                      />
+                    </label>
+                  </div>
+                ))}
+              </div>
+
+              <AddRowButton
+                label="Add content type"
+                onClick={() =>
+                  setForm((current) => {
+                    const categories = [
+                      ...current.work.categories,
+                      { id: uniqueId("category"), label: "New category" },
+                    ];
+                    return {
+                      ...current,
+                      work: {
+                        ...current.work,
+                        categories,
+                        categoriesShown: categories.length,
+                      },
+                    };
+                  })
+                }
+              />
+            </section>
+          )}
+
+          {activeSection === "photography" && (
             <section className="space-y-4">
               <div>
                 <h3 className="font-display text-lg text-brown">
-                  Home photo grid
+                  Photography collage
                 </h3>
                 <p className="mt-1 text-sm text-muted">
-                  Eight clean square images shown under the home page phone
-                  slider.
+                  The scrapbook grid with the frosted label in the middle. Shape
+                  controls how much room each tile takes.
                 </p>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                {form.homePhotoGrid.photos.map((photo, index) => (
-                  <div
-                    key={photo.id}
-                    className="space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4"
-                  >
-                    <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
-                      Grid photo {index + 1}
-                    </p>
+
+              <label className="block max-w-2xl text-sm">
+                <span className="text-muted">Centre label (cursive)</span>
+                <input
+                  value={form.photography.label}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      photography: {
+                        ...current.photography,
+                        label: event.target.value,
+                      },
+                    }))
+                  }
+                  className={inputClass}
+                />
+              </label>
+
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {form.photography.photos.map((photo, index) => (
+                  <div key={photo.id} className={cardClass}>
+                    <RowControls
+                      label="Tile"
+                      index={index}
+                      count={form.photography.photos.length}
+                      onMove={(delta) =>
+                        setForm((current) => ({
+                          ...current,
+                          photography: {
+                            ...current.photography,
+                            photos: moveItem(
+                              current.photography.photos,
+                              index,
+                              delta,
+                            ),
+                          },
+                        }))
+                      }
+                      onRemove={() =>
+                        setForm((current) => ({
+                          ...current,
+                          photography: {
+                            ...current.photography,
+                            photos: current.photography.photos.filter(
+                              (_, i) => i !== index,
+                            ),
+                          },
+                        }))
+                      }
+                    />
                     <label className="block text-sm">
                       <span className="text-muted">Alt text</span>
                       <input
                         value={photo.alt}
                         onChange={(event) =>
                           setForm((current) => {
-                            const photos = [...current.homePhotoGrid.photos];
+                            const photos = [...current.photography.photos];
                             photos[index] = {
                               ...photos[index],
                               alt: event.target.value,
                             };
                             return {
                               ...current,
-                              homePhotoGrid: {
-                                ...current.homePhotoGrid,
-                                photos,
-                              },
+                              photography: { ...current.photography, photos },
+                            };
+                          })
+                        }
+                        className={inputClass}
+                      />
+                    </label>
+                    <label className="block text-sm">
+                      <span className="text-muted">Shape</span>
+                      <select
+                        value={photo.shape}
+                        onChange={(event) =>
+                          setForm((current) => {
+                            const photos = [...current.photography.photos];
+                            photos[index] = {
+                              ...photos[index],
+                              shape: event.target.value as CollagePhotoShape,
+                            };
+                            return {
+                              ...current,
+                              photography: { ...current.photography, photos },
+                            };
+                          })
+                        }
+                        className={inputClass}
+                      >
+                        <option value="square">Square</option>
+                        <option value="tall">Tall</option>
+                        <option value="wide">Wide</option>
+                      </select>
+                    </label>
+                    <div className="block text-sm">
+                      <span className="text-muted">Photo</span>
+                      {savedCollageIds.has(photo.id) ? (
+                        <>
+                          <FileUploadButton
+                            className="mt-1"
+                            kind="photo"
+                            accept="image/*"
+                            selectedName={photo.imagePath}
+                            previewUrl={photo.imagePath}
+                            buttonLabel={
+                              photo.imagePath ? "Swap photo" : "Add a photo"
+                            }
+                            onChange={(file) => {
+                              if (file) void uploadPhoto(photo.id, file, "collage");
+                            }}
+                          />
+                          {photo.imagePath && (
+                            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">
+                              <span aria-hidden>🌸</span>
+                              Live on your site
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="mt-1 rounded-xl bg-honey/25 px-3 py-2 text-xs text-brown">
+                          Save the site content first, then upload a photo here.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <AddRowButton
+                label="Add tile"
+                onClick={() =>
+                  setForm((current) => ({
+                    ...current,
+                    photography: {
+                      ...current.photography,
+                      photos: [
+                        ...current.photography.photos,
+                        {
+                          id: uniqueId("collage"),
+                          alt: "Photography collage image",
+                          shape: "square" as CollagePhotoShape,
+                        },
+                      ],
+                    },
+                  }))
+                }
+              />
+            </section>
+          )}
+
+          {activeSection === "brands" && (
+            <section className="space-y-4">
+              <div>
+                <h3 className="font-display text-lg text-brown">
+                  Brands banner
+                </h3>
+                <p className="mt-1 text-sm text-muted">
+                  The scalloped band above Services. Upload a logo, or leave it
+                  empty to show the brand name as text.
+                </p>
+              </div>
+
+              <label className="flex max-w-2xl items-center justify-between gap-4 rounded-2xl border border-brown/15 bg-cream/55 p-4 text-sm">
+                <span>
+                  <span className="block font-semibold text-brown">
+                    Show the brands banner
+                  </span>
+                  <span className="mt-1 block text-muted">
+                    Admin view still previews it while hidden.
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={form.brands.visible}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      brands: { ...current.brands, visible: event.target.checked },
+                    }))
+                  }
+                  className="h-5 w-5 accent-forest"
+                />
+              </label>
+
+              <label className="block max-w-2xl text-sm">
+                <span className="text-muted">Banner heading (cursive)</span>
+                <input
+                  value={form.brands.heading}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      brands: { ...current.brands, heading: event.target.value },
+                    }))
+                  }
+                  className={inputClass}
+                />
+              </label>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                {form.brands.items.map((brand, index) => (
+                  <div key={brand.id} className={cardClass}>
+                    <RowControls
+                      label="Brand"
+                      index={index}
+                      count={form.brands.items.length}
+                      onMove={(delta) =>
+                        setForm((current) => ({
+                          ...current,
+                          brands: {
+                            ...current.brands,
+                            items: moveItem(current.brands.items, index, delta),
+                          },
+                        }))
+                      }
+                      onRemove={() =>
+                        setForm((current) => ({
+                          ...current,
+                          brands: {
+                            ...current.brands,
+                            items: current.brands.items.filter(
+                              (_, i) => i !== index,
+                            ),
+                          },
+                        }))
+                      }
+                    />
+                    <label className="block text-sm">
+                      <span className="text-muted">Brand name</span>
+                      <input
+                        value={brand.name}
+                        onChange={(event) =>
+                          setForm((current) => {
+                            const items = [...current.brands.items];
+                            items[index] = {
+                              ...items[index],
+                              name: event.target.value,
+                            };
+                            return {
+                              ...current,
+                              brands: { ...current.brands, items },
+                            };
+                          })
+                        }
+                        className={inputClass}
+                      />
+                    </label>
+                    <label className="block text-sm">
+                      <span className="text-muted">Link (optional)</span>
+                      <input
+                        value={brand.url ?? ""}
+                        placeholder="https://"
+                        onChange={(event) =>
+                          setForm((current) => {
+                            const items = [...current.brands.items];
+                            items[index] = {
+                              ...items[index],
+                              url: event.target.value,
+                            };
+                            return {
+                              ...current,
+                              brands: { ...current.brands, items },
                             };
                           })
                         }
@@ -637,37 +1385,64 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
                       />
                     </label>
                     <div className="block text-sm">
-                      <span className="text-muted">Photo</span>
-                      <FileUploadButton
-                        className="mt-1"
-                        kind="photo"
-                        accept="image/*"
-                        selectedName={photo.imagePath}
-                        previewUrl={photo.imagePath}
-                        buttonLabel={photo.imagePath ? "Swap photo" : "Add a photo"}
-                        onChange={(file) => {
-                          if (file) void uploadPhoto(photo.id, file, "homeGrid");
-                        }}
-                      />
-                      {photo.imagePath && (
-                        <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-indigo">
-                          <span aria-hidden>🌸</span>
-                          Live on your site
+                      <span className="text-muted">Logo (optional)</span>
+                      {savedBrandIds.has(brand.id) ? (
+                        <>
+                          <FileUploadButton
+                            className="mt-1"
+                            kind="photo"
+                            accept="image/*"
+                            selectedName={brand.logoPath}
+                            previewUrl={brand.logoPath}
+                            buttonLabel={brand.logoPath ? "Swap logo" : "Add a logo"}
+                            onChange={(file) => {
+                              if (file) {
+                                void uploadPhoto(brand.id, file, "brandLogo");
+                              }
+                            }}
+                          />
+                          {brand.logoPath && (
+                            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">
+                              <span aria-hidden>🌸</span>
+                              Live on your site
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="mt-1 rounded-xl bg-honey/25 px-3 py-2 text-xs text-brown">
+                          Save the site content first, then upload a logo here.
                         </p>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
+
+              <AddRowButton
+                label="Add brand"
+                onClick={() =>
+                  setForm((current) => ({
+                    ...current,
+                    brands: {
+                      ...current.brands,
+                      items: [
+                        ...current.brands.items,
+                        { id: uniqueId("brand"), name: "New brand" },
+                      ],
+                    },
+                  }))
+                }
+              />
             </section>
           )}
 
           {activeSection === "ugc" && (
             <section className="space-y-4">
               <div>
-                <h3 className="font-display text-lg text-brown">What is UGC</h3>
+                <h3 className="font-display text-lg text-brown">Why UGC</h3>
                 <p className="mt-1 text-sm text-muted">
-                  Definition copy and supporting cards for the UGC explainer.
+                  The merged explainer section: definition copy, proof stats, the
+                  big callout, and the benefits checklist.
                 </p>
               </div>
               <label className="block max-w-2xl text-sm">
@@ -703,64 +1478,250 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
                   className={`${inputClass} min-h-36 resize-y`}
                 />
               </label>
-              <div className="grid gap-4 lg:grid-cols-3">
-                {form.whatIsUgc.highlights.map((highlight, index) => (
-                  <div
-                    key={highlight.id}
-                    className="space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4"
-                  >
-                    <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
-                      UGC card {index + 1}
-                    </p>
-                    <label className="block text-sm">
-                      <span className="text-muted">Title</span>
+              <label className="block max-w-2xl text-sm">
+                <span className="text-muted">Eyebrow</span>
+                <input
+                  value={form.ugcBenefits.eyebrow}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      ugcBenefits: {
+                        ...current.ugcBenefits,
+                        eyebrow: event.target.value,
+                      },
+                    }))
+                  }
+                  className={inputClass}
+                />
+              </label>
+
+              <div>
+                <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+                  Proof stats (circles)
+                </p>
+                <div className="mt-3 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {form.ugcBenefits.stats.map((stat, index) => (
+                    <div key={stat.id} className={cardClass}>
+                      <RowControls
+                        label="Stat"
+                        index={index}
+                        count={form.ugcBenefits.stats.length}
+                        onMove={(delta) =>
+                          setForm((current) => ({
+                            ...current,
+                            ugcBenefits: {
+                              ...current.ugcBenefits,
+                              stats: moveItem(
+                                current.ugcBenefits.stats,
+                                index,
+                                delta,
+                              ),
+                            },
+                          }))
+                        }
+                        onRemove={() =>
+                          setForm((current) => ({
+                            ...current,
+                            ugcBenefits: {
+                              ...current.ugcBenefits,
+                              stats: current.ugcBenefits.stats.filter(
+                                (_, i) => i !== index,
+                              ),
+                            },
+                          }))
+                        }
+                      />
+                      <label className="block text-sm">
+                        <span className="text-muted">Figure</span>
+                        <input
+                          value={stat.value}
+                          onChange={(event) =>
+                            setForm((current) => {
+                              const stats = [...current.ugcBenefits.stats];
+                              stats[index] = {
+                                ...stats[index],
+                                value: event.target.value,
+                              };
+                              return {
+                                ...current,
+                                ugcBenefits: { ...current.ugcBenefits, stats },
+                              };
+                            })
+                          }
+                          className={inputClass}
+                        />
+                      </label>
+                      <label className="block text-sm">
+                        <span className="text-muted">Label</span>
+                        <textarea
+                          value={stat.label}
+                          onChange={(event) =>
+                            setForm((current) => {
+                              const stats = [...current.ugcBenefits.stats];
+                              stats[index] = {
+                                ...stats[index],
+                                label: event.target.value,
+                              };
+                              return {
+                                ...current,
+                                ugcBenefits: { ...current.ugcBenefits, stats },
+                              };
+                            })
+                          }
+                          rows={3}
+                          className={inputClass}
+                        />
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3">
+                  <AddRowButton
+                    label="Add proof stat"
+                    onClick={() =>
+                      setForm((current) => ({
+                        ...current,
+                        ugcBenefits: {
+                          ...current.ugcBenefits,
+                          stats: [
+                            ...current.ugcBenefits.stats,
+                            { id: uniqueId("ugc-stat"), value: "", label: "" },
+                          ],
+                        },
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className={`${cardClass} max-w-2xl`}>
+                <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+                  Big callout
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="block text-sm">
+                    <span className="text-muted">Label</span>
+                    <input
+                      value={form.ugcBenefits.calloutLabel}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          ugcBenefits: {
+                            ...current.ugcBenefits,
+                            calloutLabel: event.target.value,
+                          },
+                        }))
+                      }
+                      className={inputClass}
+                    />
+                  </label>
+                  <label className="block text-sm">
+                    <span className="text-muted">Figure</span>
+                    <input
+                      value={form.ugcBenefits.calloutValue}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          ugcBenefits: {
+                            ...current.ugcBenefits,
+                            calloutValue: event.target.value,
+                          },
+                        }))
+                      }
+                      className={inputClass}
+                    />
+                  </label>
+                </div>
+                <label className="block text-sm">
+                  <span className="text-muted">Supporting copy</span>
+                  <textarea
+                    value={form.ugcBenefits.calloutBody}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        ugcBenefits: {
+                          ...current.ugcBenefits,
+                          calloutBody: event.target.value,
+                        },
+                      }))
+                    }
+                    rows={3}
+                    className={inputClass}
+                  />
+                </label>
+              </div>
+
+              <div className={`${cardClass} max-w-2xl`}>
+                <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+                  Benefits checklist
+                </p>
+                <label className="block text-sm">
+                  <span className="text-muted">Card heading</span>
+                  <input
+                    value={form.ugcBenefits.benefitsHeading}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        ugcBenefits: {
+                          ...current.ugcBenefits,
+                          benefitsHeading: event.target.value,
+                        },
+                      }))
+                    }
+                    className={inputClass}
+                  />
+                </label>
+                {form.ugcBenefits.benefits.map((benefit, index) => (
+                  <div key={`benefit-${index}`} className="flex items-end gap-2">
+                    <label className="block flex-1 text-sm">
+                      <span className="text-muted">Benefit {index + 1}</span>
                       <input
-                        value={highlight.title}
+                        value={benefit}
                         onChange={(event) =>
                           setForm((current) => {
-                            const highlights = [...current.whatIsUgc.highlights];
-                            highlights[index] = {
-                              ...highlights[index],
-                              title: event.target.value,
-                            };
+                            const benefits = [...current.ugcBenefits.benefits];
+                            benefits[index] = event.target.value;
                             return {
                               ...current,
-                              whatIsUgc: {
-                                ...current.whatIsUgc,
-                                highlights,
-                              },
+                              ugcBenefits: { ...current.ugcBenefits, benefits },
                             };
                           })
                         }
                         className={inputClass}
                       />
                     </label>
-                    <label className="block text-sm">
-                      <span className="text-muted">Description</span>
-                      <textarea
-                        value={highlight.description}
-                        onChange={(event) =>
-                          setForm((current) => {
-                            const highlights = [...current.whatIsUgc.highlights];
-                            highlights[index] = {
-                              ...highlights[index],
-                              description: event.target.value,
-                            };
-                            return {
-                              ...current,
-                              whatIsUgc: {
-                                ...current.whatIsUgc,
-                                highlights,
-                              },
-                            };
-                          })
-                        }
-                        rows={4}
-                        className={inputClass}
-                      />
-                    </label>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setForm((current) => ({
+                          ...current,
+                          ugcBenefits: {
+                            ...current.ugcBenefits,
+                            benefits: current.ugcBenefits.benefits.filter(
+                              (_, i) => i !== index,
+                            ),
+                          },
+                        }))
+                      }
+                      aria-label={`Remove benefit ${index + 1}`}
+                      className={`${smallButtonClass} mb-2 hover:border-blush-deep/60 hover:text-blush-deep`}
+                    >
+                      Remove
+                    </button>
                   </div>
                 ))}
+                <AddRowButton
+                  label="Add benefit"
+                  onClick={() =>
+                    setForm((current) => ({
+                      ...current,
+                      ugcBenefits: {
+                        ...current.ugcBenefits,
+                        benefits: [...current.ugcBenefits.benefits, ""],
+                      },
+                    }))
+                  }
+                />
               </div>
             </section>
           )}
@@ -853,7 +1814,7 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
                       },
                     }))
                   }
-                  className="h-5 w-5 accent-burgundy"
+                  className="h-5 w-5 accent-forest"
                 />
               </label>
               <label className="block max-w-2xl text-sm">
@@ -974,24 +1935,24 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
             </section>
           )}
 
-          {activeSection === "contact" && (
+          {activeSection === "cta" && (
             <section className="space-y-4">
               <div>
-                <h3 className="font-display text-lg text-brown">Contact</h3>
+                <h3 className="font-display text-lg text-brown">Closing CTA</h3>
                 <p className="mt-1 text-sm text-muted">
-                  The &ldquo;Let&apos;s Create Together&rdquo; section — headline,
-                  message, and social links.
+                  The &ldquo;Let&apos;s work together&rdquo; section at the bottom
+                  of the home page — headline, message, video, and links.
                 </p>
               </div>
               <label className="block max-w-2xl text-sm">
-                <span className="text-muted">Section headline</span>
+                <span className="text-muted">Headline (cursive)</span>
                 <input
-                  value={form.contact.headline}
+                  value={form.closingCta.headline}
                   onChange={(event) =>
                     setForm((current) => ({
                       ...current,
-                      contact: {
-                        ...current.contact,
+                      closingCta: {
+                        ...current.closingCta,
                         headline: event.target.value,
                       },
                     }))
@@ -1002,18 +1963,51 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
               <label className="block max-w-2xl text-sm">
                 <span className="text-muted">Message</span>
                 <textarea
-                  value={form.contact.body}
+                  value={form.closingCta.body}
                   onChange={(event) =>
                     setForm((current) => ({
                       ...current,
-                      contact: { ...current.contact, body: event.target.value },
+                      closingCta: {
+                        ...current.closingCta,
+                        body: event.target.value,
+                      },
                     }))
                   }
-                  rows={8}
-                  className={`${inputClass} min-h-40 resize-y`}
+                  rows={6}
+                  className={`${inputClass} min-h-32 resize-y`}
                 />
               </label>
+
+              <div className="max-w-2xl space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4">
+                <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+                  CTA video
+                </p>
+                <p className="text-sm text-muted">
+                  Plays muted on a loop next to the headline. Visitors can unmute
+                  it. Uploads as soon as you pick a file.
+                </p>
+                {renderVideoUpload("cta", form.closingCta.videoPath)}
+              </div>
+
               <div className="grid max-w-2xl gap-4">
+                <label className="block text-sm">
+                  <span className="text-muted">
+                    Email button text (what visitors see on the pill)
+                  </span>
+                  <input
+                    value={form.closingCta.emailLabel}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        closingCta: {
+                          ...current.closingCta,
+                          emailLabel: event.target.value,
+                        },
+                      }))
+                    }
+                    className={inputClass}
+                  />
+                </label>
                 <label className="block text-sm">
                   <span className="text-muted">Instagram URL</span>
                   <input
@@ -1050,20 +2044,20 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
 
         <div className="shrink-0 border-t border-brown/10 bg-paper px-4 py-3 sm:px-6">
           {error && (
-            <p className="mb-2 rounded-xl bg-pink/15 px-4 py-2 text-sm text-brown">
+            <p className="mb-2 rounded-xl bg-blush/15 px-4 py-2 text-sm text-brown">
               {error}
             </p>
           )}
           {message && (
-            <p className="mb-2 rounded-xl bg-lavender/25 px-4 py-2 text-sm text-indigo">
+            <p className="mb-2 rounded-xl bg-lavender/25 px-4 py-2 text-sm text-ink">
               {message}
             </p>
           )}
 
           <AnimatedButton
             onClick={() => void save()}
-            disabled={loading || heroUploadBusy}
-            className="w-full shadow-md shadow-burgundy/15 sm:max-w-xs"
+            disabled={loading || uploadBusy}
+            className="w-full shadow-md shadow-forest/15 sm:max-w-xs"
           >
             {loading ? "Saving…" : "Save site content"}
           </AnimatedButton>

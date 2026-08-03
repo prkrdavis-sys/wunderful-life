@@ -28,10 +28,10 @@ export function UploadProgressBar({
         aria-label={label}
       >
         {indeterminate ? (
-          <div className="h-full w-1/3 animate-[upload-indeterminate_1.4s_ease-in-out_infinite] rounded-full bg-burgundy/85" />
+          <div className="h-full w-1/3 animate-[upload-indeterminate_1.4s_ease-in-out_infinite] rounded-full bg-forest/85" />
         ) : (
           <div
-            className="h-full rounded-full bg-burgundy transition-[width] duration-200 ease-out"
+            className="h-full rounded-full bg-forest transition-[width] duration-200 ease-out"
             style={{ width: `${clamped}%` }}
           />
         )}

@@ -1,62 +1,48 @@
 "use client";
 
+import { AdminEditButton } from "@/components/admin/AdminEditButton";
+import { BrandsBanner } from "@/components/sections/BrandsBanner";
+import { SectionSurface } from "@/components/ui/SectionSurface";
 import { SectionReveal, StaggerChildren, StaggerItem } from "@/components/ui/motion";
-import { ScallopedBanner } from "@/components/ui/ScallopedBanner";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
-import { plantWallpapers, sectionWallpapers } from "@/lib/plants";
 import { sectionText } from "@/lib/sectionText";
 
 export function ServicesSection() {
   const site = useSiteContent();
-  const { wallpaper } = sectionWallpapers.services;
-  const wallpaperAsset = plantWallpapers[wallpaper];
   const text = sectionText.services;
 
   return (
     <section id="services" className="scroll-section-anchor relative">
-      <ScallopedBanner>
-        <SectionReveal className="text-center">
-          <h2 className="font-display text-3xl text-paper sm:text-4xl">
-            Services
-          </h2>
-          <ul className="mx-auto mt-6 flex max-w-4xl flex-wrap items-center justify-center gap-x-8 gap-y-3 sm:mt-8 sm:justify-between sm:gap-x-4">
-            {site.services.map((service) => (
-              <li
-                key={service.id}
-                className="font-label text-sm font-medium tracking-[0.04em] text-paper/88 sm:text-base"
-              >
-                {service.title}
-              </li>
-            ))}
-          </ul>
-        </SectionReveal>
-      </ScallopedBanner>
+      <BrandsBanner />
 
-      <div
-        className="bg-cover bg-center bg-no-repeat px-4 pt-14 pb-20 sm:px-6 sm:pt-16 sm:pb-24"
-        style={{ backgroundImage: `url(${wallpaperAsset.src})` }}
-      >
-        <div className="mx-auto max-w-6xl">
+      <div className="relative overflow-hidden px-4 pt-16 pb-20 sm:px-6 sm:pt-20 sm:pb-24">
+        <SectionSurface tone="ivory" motifs="left" />
+        <AdminEditButton section="services" label="Edit services" />
+
+        <div className="relative z-10 mx-auto max-w-6xl">
           <SectionReveal className="text-center">
-            <p className={`mx-auto max-w-2xl leading-relaxed ${text.body}`}>
+            <p className="font-label text-xs font-semibold tracking-[0.22em] text-sage-deep uppercase">
+              What I offer
+            </p>
+            <h2 className={`mt-3 font-serif text-3xl sm:text-5xl ${text.heading}`}>
+              Services
+            </h2>
+            <p className={`mx-auto mt-4 max-w-2xl leading-relaxed ${text.body}`}>
               What {site.name} delivers — plus the creative, airy, nature-driven
               personality your audience will remember.
             </p>
           </SectionReveal>
 
-          <StaggerChildren className="mt-10 grid gap-8 sm:grid-cols-2 sm:gap-10">
+          <StaggerChildren className="mt-12 grid gap-6 sm:grid-cols-2 sm:gap-8">
             {site.services.map((service) => (
               <StaggerItem key={service.id}>
-                <article className="service-glass-card relative h-full rounded-3xl border border-white/40 ring-1 ring-white/25 transition-[border-color,box-shadow] hover:border-white/55 hover:ring-white/35">
-                  <div className="service-glass-layer rounded-[inherit]" aria-hidden />
-                  <div className="relative p-6">
-                    <h3 className="font-display text-xl text-indigo drop-shadow-[0_1px_8px_rgba(255,253,249,0.65)]">
-                      {service.title}
-                    </h3>
-                    <p className="mt-3 text-sm leading-relaxed text-indigo/90 drop-shadow-[0_1px_8px_rgba(255,253,249,0.55)] sm:text-base">
-                      {service.description}
-                    </p>
-                  </div>
+                <article className="service-glass-card h-full rounded-3xl border border-white/70 bg-paper/70 p-6 backdrop-blur-sm transition hover:border-sage/60 hover:shadow-lg sm:p-7">
+                  <h3 className="font-serif text-xl text-forest sm:text-2xl">
+                    {service.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-ink/80 sm:text-base">
+                    {service.description}
+                  </p>
                 </article>
               </StaggerItem>
             ))}

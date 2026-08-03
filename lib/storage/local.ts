@@ -28,7 +28,11 @@ const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 function normalizeVideo(video: PortfolioVideo): PortfolioVideo {
   return {
     ...video,
-    tags: [],
+    tags: Array.isArray(video.tags)
+      ? video.tags.filter(
+          (tag): tag is string => typeof tag === "string" && tag.trim().length > 0,
+        )
+      : [],
   };
 }
 

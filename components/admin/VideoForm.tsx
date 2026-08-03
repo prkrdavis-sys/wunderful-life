@@ -17,6 +17,7 @@ import { needsWebTranscode, prepareVideoForWebUpload } from "@/lib/videos/transc
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { FileUploadButton } from "@/components/ui/FileUploadButton";
 import { UploadProgressBar } from "@/components/ui/UploadProgressBar";
+import { useSiteContent } from "@/components/admin/AdminViewProvider";
 
 type VideoFormProps = {
   initial?: PortfolioVideo | null;
@@ -28,7 +29,7 @@ type VideoFormProps = {
 };
 
 const inputClass =
-  "mt-1 w-full rounded-xl border border-brown/20 bg-white px-3 py-2 text-brown outline-none focus:border-burgundy/50";
+  "mt-1 w-full rounded-xl border border-brown/20 bg-white px-3 py-2 text-brown outline-none focus:border-forest/50";
 
 type UploadConfig = {
   clientUpload: boolean;
@@ -162,6 +163,7 @@ const emptyForm = {
   durationSec: 0,
   slug: "",
   featured: false,
+  tags: [] as string[],
 };
 
 export function VideoForm({
@@ -172,6 +174,7 @@ export function VideoForm({
   onCancel,
   onUploadBusyChange,
 }: VideoFormProps) {
+  const categories = useSiteContent().work.categories;
   const [form, setForm] = useState(() =>
     initial
       ? {
@@ -183,6 +186,7 @@ export function VideoForm({
           durationSec: initial.durationSec,
           slug: initial.slug,
           featured: initial.featured,
+          tags: initial.tags ?? [],
         }
       : emptyForm,
   );
@@ -459,6 +463,11 @@ export function VideoForm({
     payload.set("durationSec", String(form.durationSec));
     payload.set("slug", form.slug || slugify(form.title));
     payload.set("featured", String(form.featured));
+    // Sent even when empty so a PATCH can clear every category.
+    payload.set("tagsPresent", "1");
+    for (const tag of form.tags) {
+      payload.append("tags", tag);
+    }
 
     try {
       if (videoFile) {
@@ -499,6 +508,7 @@ export function VideoForm({
           durationSec: saved.durationSec,
           slug: saved.slug,
           featured: saved.featured,
+          tags: saved.tags ?? [],
         });
         setVideoFile(null);
         setThumbnailFile(null);
@@ -608,7 +618,7 @@ export function VideoForm({
         />
       </label>
 
-      <div className="block text-sm sm:col-span-2">
+      <div className="block space-y-2 text-sm sm:col-span-2">
         <span className="text-muted">
           Video file {initial ? "(leave empty to keep current)" : ""}
         </span>
@@ -622,6 +632,7 @@ export function VideoForm({
           previewUrl={videoPreviewUrl}
           previewType="video"
           required={!initial}
+          buttonLabel={initial?.videoPath ? "Swap video" : "Add a video"}
           disabled={isMediaUploadBusy(videoUpload)}
           onChange={(file) => {
             if (file && !isAcceptedVideoFile(file)) {
@@ -642,9 +653,15 @@ export function VideoForm({
             }
           }}
         />
+        {initial?.videoPath && !videoFile && !isMediaUploadBusy(videoUpload) && (
+          <p className="inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">
+            <span aria-hidden>🌸</span>
+            Live on your site
+          </p>
+        )}
       </div>
 
-      <div className="block text-sm sm:col-span-2">
+      <div className="block space-y-2 text-sm sm:col-span-2">
         <span className="text-muted">
           Thumbnail {initial ? "(leave empty to keep current)" : ""}
         </span>
@@ -656,6 +673,7 @@ export function VideoForm({
           previewUrl={thumbnailPreviewUrl}
           previewType="image"
           required={!initial}
+          buttonLabel={initial?.thumbnailPath ? "Swap thumbnail" : "Add a thumbnail"}
           disabled={isMediaUploadBusy(thumbnailUpload)}
           onChange={(file) => {
             setThumbnailFile(file);
@@ -667,9 +685,61 @@ export function VideoForm({
             }
           }}
         />
+        {initial?.thumbnailPath &&
+          !thumbnailFile &&
+          !isMediaUploadBusy(thumbnailUpload) && (
+            <p className="inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">
+              <span aria-hidden>🌸</span>
+              Live on your site
+            </p>
+          )}
       </div>
 
       {mediaProgress}
+
+      <fieldset className="sm:col-span-2">
+        <legend className="text-sm font-medium text-brown">Content types</legend>
+        <p className="mt-1 text-xs text-muted">
+          Drives the filter chips on the home page. Manage the list in the site
+          editor under Videos.
+        </p>
+        {categories.length === 0 ? (
+          <p className="mt-2 text-xs text-muted">
+            No categories defined yet.
+          </p>
+        ) : (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {categories.map((category) => {
+              const checked = form.tags.includes(category.id);
+              return (
+                <label
+                  key={category.id}
+                  className={`inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition ${
+                    checked
+                      ? "border-forest/50 bg-forest/10 text-forest"
+                      : "border-brown/25 bg-white text-muted hover:border-forest/35"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        tags: event.target.checked
+                          ? [...current.tags, category.id]
+                          : current.tags.filter((tag) => tag !== category.id),
+                      }))
+                    }
+                    className="h-3.5 w-3.5 rounded border-brown/30"
+                  />
+                  {category.label}
+                </label>
+              );
+            })}
+          </div>
+        )}
+      </fieldset>
 
       <label className="flex items-center gap-2 text-sm sm:col-span-2">
         <input
@@ -688,12 +758,12 @@ export function VideoForm({
   const saveFooter = (
     <>
       {error && (
-        <p className="mb-2 rounded-xl bg-pink/15 px-4 py-2 text-sm text-brown">
+        <p className="mb-2 rounded-xl bg-blush/15 px-4 py-2 text-sm text-brown">
           {error}
         </p>
       )}
       {message && (
-        <p className="mb-2 rounded-xl bg-lavender/25 px-4 py-2 text-sm text-indigo">
+        <p className="mb-2 rounded-xl bg-lavender/25 px-4 py-2 text-sm text-ink">
           {message}
         </p>
       )}
@@ -701,7 +771,7 @@ export function VideoForm({
       <AnimatedButton
         onClick={() => void save()}
         disabled={uploadBusy || saveBlocked}
-        className="w-full shadow-md shadow-burgundy/15 sm:max-w-xs"
+        className="w-full shadow-md shadow-forest/15 sm:max-w-xs"
       >
         {saving
           ? saveMessage
@@ -776,7 +846,7 @@ export function VideoForm({
       <div className="mt-6">{fields}</div>
 
       {error && (
-        <p className="mt-4 rounded-xl bg-pink/20 px-4 py-2 text-sm text-brown">
+        <p className="mt-4 rounded-xl bg-blush/20 px-4 py-2 text-sm text-brown">
           {error}
         </p>
       )}

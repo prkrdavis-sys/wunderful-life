@@ -1,15 +1,14 @@
 "use client";
 
+import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { SectionReveal, StaggerChildren, StaggerItem } from "@/components/ui/motion";
 import { EmilyPhoto } from "@/components/ui/EmilyPhoto";
-import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
+import { SectionSurface } from "@/components/ui/SectionSurface";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
-import { sectionWallpapers } from "@/lib/plants";
 import { sectionText } from "@/lib/sectionText";
 
 export function AboutSection() {
   const site = useSiteContent();
-  const { wallpaper, overlay } = sectionWallpapers.about;
   const text = sectionText.about;
   const photos = site.about.photos;
   const mainPhoto = photos[0];
@@ -26,12 +25,13 @@ export function AboutSection() {
   return (
     <section
       id="about"
-      className="scroll-section-anchor relative overflow-hidden px-4 py-14 sm:px-6 sm:py-20"
+      className="scroll-section-anchor relative overflow-hidden px-4 pt-20 pb-14 sm:px-6 sm:pt-24 sm:pb-20"
     >
-      <PlantSectionBackground wallpaper={wallpaper} overlay={overlay} />
+      <SectionSurface tone="ivory" motifs="right" />
+      <AdminEditButton section="about" label="Edit about" />
       <div className="relative z-10 mx-auto max-w-5xl">
         <SectionReveal className="mb-8 text-center md:mb-9 md:text-left">
-          <h2 className={`font-display text-3xl sm:text-4xl ${text.heading}`}>
+          <h2 className={`font-serif text-3xl sm:text-5xl ${text.heading}`}>
             {site.about.headline}
           </h2>
           <p className={`mt-2 max-w-xl text-base sm:text-lg ${text.subheading}`}>
@@ -77,7 +77,7 @@ export function AboutSection() {
 
         {galleryPhotos.length > 0 && (
           <SectionReveal className="mt-12 md:mt-14">
-            <h3 className={`font-display text-xl sm:text-2xl ${text.heading}`}>
+            <h3 className={`font-serif text-xl sm:text-3xl ${text.heading}`}>
               A little more {site.name}
             </h3>
             <StaggerChildren className="mx-auto mt-6 grid max-w-4xl grid-cols-2 justify-items-center gap-x-5 gap-y-8 sm:gap-x-8 lg:grid-cols-4">

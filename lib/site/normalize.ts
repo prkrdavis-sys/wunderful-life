@@ -1,33 +1,113 @@
-import type { AboutPhoto, GridPhoto, SiteContent } from "@/lib/site/types";
+import type {
+  AboutPhoto,
+  BrandItem,
+  CategoryTag,
+  CollagePhoto,
+  CollagePhotoShape,
+  GridPhoto,
+  SiteContent,
+  StatItem,
+} from "@/lib/site/types";
 
-const DEFAULT_CONTACT_HEADLINE = "Let's Create Together";
+const DEFAULT_CTA_HEADLINE = "Let's work together";
+const DEFAULT_CTA_EMAIL_LABEL = "email@email.com";
 
 function defaultHeroSubtitle(name: string): string {
   return `I'm ${name} — the face behind the frame. Brands hire me for deliverables; they remember me for the personality.`;
 }
 
+const DEFAULT_STATS_BANNER: SiteContent["statsBanner"] = {
+  visible: true,
+  items: [
+    { id: "instagram", value: "10k", label: "Instagram" },
+    { id: "tiktok", value: "9k", label: "Tiktok" },
+    { id: "reach", value: "300k", label: "Avg. Reach" },
+    { id: "engagement", value: "9.5%", label: "Avg. Engagement" },
+  ],
+};
+
+const DEFAULT_WORK: SiteContent["work"] = {
+  heading: "My most recent videos",
+  categories: [
+    { id: "fashion", label: "Fashion" },
+    { id: "travel", label: "Travel" },
+    { id: "skincare", label: "Skincare" },
+    { id: "food", label: "Food" },
+  ],
+  categoriesShown: 4,
+};
+
+const DEFAULT_PHOTOGRAPHY_LABEL = "photography";
+
+/** Repeating rhythm applied to collage tiles that have no shape saved yet. */
+const COLLAGE_SHAPE_CYCLE: CollagePhotoShape[] = [
+  "tall",
+  "square",
+  "square",
+  "wide",
+  "square",
+  "tall",
+  "wide",
+  "square",
+  "square",
+  "tall",
+];
+
+const DEFAULT_COLLAGE_PHOTOS: CollagePhoto[] = COLLAGE_SHAPE_CYCLE.map(
+  (shape, index) => ({
+    id: `collage-${index + 1}`,
+    alt: `Photography collage image ${index + 1}`,
+    shape,
+  }),
+);
+
+const DEFAULT_BRANDS: SiteContent["brands"] = {
+  visible: true,
+  heading: "Brands I've worked with",
+  items: [
+    { id: "brand-1", name: "Brand 1" },
+    { id: "brand-2", name: "Brand 2" },
+    { id: "brand-3", name: "Brand 3" },
+    { id: "brand-4", name: "Brand 4" },
+  ],
+};
+
 const DEFAULT_WHAT_IS_UGC: SiteContent["whatIsUgc"] = {
   heading: "What Is UGC?",
   body: "UGC, or user-generated content, is brand content made to feel like it came from a real customer, creator, or everyday experience. It blends strategy with natural storytelling, helping people understand how a product fits into real life without feeling like a traditional ad.",
-  highlights: [
+};
+
+const DEFAULT_UGC_BENEFITS: SiteContent["ugcBenefits"] = {
+  eyebrow: "The power of real stories",
+  stats: [
     {
-      id: "authenticity",
-      title: "Authentic by design",
-      description:
-        "It sounds human, feels relaxed, and lets the product live inside a believable moment.",
+      id: "authentic",
+      value: "2.4×",
+      label: "more likely to be viewed as authentic",
     },
     {
-      id: "conversion",
-      title: "Built for trust",
-      description:
-        "Strong UGC gives shoppers social proof, clear benefits, and an easy reason to keep watching.",
+      id: "trustworthy",
+      value: "73%",
+      label: "of shoppers say UGC makes a brand feel more trustworthy",
     },
     {
-      id: "versatility",
-      title: "Ready for every channel",
-      description:
-        "Use it across organic social, paid ads, product pages, emails, and launch campaigns.",
+      id: "influences",
+      value: "79%",
+      label: "of people say UGC strongly influences what they buy",
     },
+  ],
+  calloutLabel: "Did you know?",
+  calloutValue: "93%",
+  calloutBody:
+    "of marketers say authentic content performs better than traditional brand-made content.",
+  benefitsHeading: "Content that feels like a recommendation.",
+  benefits: [
+    "Builds trust with real stories",
+    "Creates natural engagement",
+    "Boosts conversions across channels",
+    "Makes your brand feel human",
+    "Authentic by design — the product lives in a believable moment",
+    "Ready for organic social, paid ads, product pages, and launches",
   ],
 };
 
@@ -60,32 +140,55 @@ const DEFAULT_FOURTH_GALLERY_PHOTO: AboutPhoto = {
   rotate: 3,
 };
 
-const DEFAULT_UGC_BENEFITS_LINK: SiteContent["heroLinks"][number] = {
-  label: "UGC Benefits",
-  href: "/#ugc-benefits",
+const UGC_LINK: SiteContent["heroLinks"][number] = {
+  label: "Why UGC",
+  href: "/#ugc",
 };
 
-const DEFAULT_HOME_GRID_PHOTOS: GridPhoto[] = Array.from(
-  { length: 8 },
-  (_, index) => ({
-    id: `home-grid-${index + 1}`,
-    alt: `Home photo grid image ${index + 1}`,
-  }),
-);
+/** Older anchors that the merged UGC section now owns. */
+const LEGACY_UGC_HREFS = new Set(["/#ugc-benefits", "/#what-is-ugc"]);
 
 type SiteContentInput = Omit<
   SiteContent,
-  "contact" | "homePhotoGrid" | "whatIsUgc" | "testimonials" | "hero"
+  | "statsBanner"
+  | "work"
+  | "photography"
+  | "brands"
+  | "whatIsUgc"
+  | "ugcBenefits"
+  | "closingCta"
+  | "testimonials"
+  | "hero"
 > & {
-  contact?: Partial<SiteContent["contact"]>;
-  homePhotoGrid?: Partial<SiteContent["homePhotoGrid"]>;
+  statsBanner?: Partial<SiteContent["statsBanner"]>;
+  work?: Partial<SiteContent["work"]>;
+  photography?: Partial<SiteContent["photography"]>;
+  brands?: Partial<SiteContent["brands"]>;
   whatIsUgc?: Partial<SiteContent["whatIsUgc"]>;
+  ugcBenefits?: Partial<SiteContent["ugcBenefits"]>;
+  closingCta?: Partial<SiteContent["closingCta"]>;
   testimonials?: Partial<SiteContent["testimonials"]>;
   hero?: Partial<SiteContent["hero"]>;
+  /** Superseded by `photography`; still read so old saves migrate. */
+  homePhotoGrid?: { photos?: GridPhoto[] };
+  /** Superseded by `closingCta`. */
+  contact?: { headline?: string; body?: string };
 };
 
-function defaultContactBody(name: string): string {
+function defaultCtaBody(name: string): string {
   return `Want content that converts and a creator brands actually want to work with again? Hi — I'm ${name}. Let's chat.`;
+}
+
+function text(value: unknown, fallback: string): string {
+  return typeof value === "string" && value.trim() ? value : fallback;
+}
+
+function slugId(value: string, fallback: string): string {
+  const slug = value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || fallback;
 }
 
 function normalizeAboutPhotos(photos: AboutPhoto[]): AboutPhoto[] {
@@ -106,45 +209,160 @@ function normalizeAboutPhotos(photos: AboutPhoto[]): AboutPhoto[] {
   return normalized;
 }
 
-function normalizeHeroLinks(links: SiteContent["heroLinks"]): SiteContent["heroLinks"] {
-  const normalizedLinks = links.map((link) => {
+function normalizeHeroLinks(
+  links: SiteContent["heroLinks"],
+): SiteContent["heroLinks"] {
+  const seen = new Set<string>();
+  const normalized: SiteContent["heroLinks"] = [];
+
+  for (const link of links) {
+    let next = link;
+
     if (link.activePathPrefix === "/work" || link.href === "/#work") {
-      return {
-        ...link,
-        href: "/work",
-      };
+      next = { ...link, href: "/work" };
+    } else if (LEGACY_UGC_HREFS.has(link.href)) {
+      next = { ...link, label: UGC_LINK.label, href: UGC_LINK.href };
+    } else if (link.href === "/#contact") {
+      next = { ...link, href: "/#contact" };
     }
 
-    return link;
-  });
-
-  if (!normalizedLinks.some((link) => link.href === DEFAULT_UGC_BENEFITS_LINK.href)) {
-    return [...normalizedLinks, DEFAULT_UGC_BENEFITS_LINK];
+    if (seen.has(next.href)) continue;
+    seen.add(next.href);
+    normalized.push(next);
   }
 
-  return normalizedLinks;
+  if (!seen.has(UGC_LINK.href)) {
+    normalized.push(UGC_LINK);
+  }
+
+  return normalized;
 }
 
-function normalizeHomeGridPhotos(
-  photos: GridPhoto[] | undefined,
-): GridPhoto[] {
-  const byId = new Map((photos ?? []).map((photo) => [photo.id, photo]));
+/**
+ * An explicitly empty array is respected so the admin can clear a list; only a
+ * missing or malformed value falls back to the seeded defaults.
+ */
+function normalizeStats(
+  items: unknown,
+  fallback: StatItem[],
+  idPrefix: string,
+): StatItem[] {
+  if (!Array.isArray(items)) return fallback;
 
-  return DEFAULT_HOME_GRID_PHOTOS.map((fallback) => {
-    const photo = byId.get(fallback.id);
-    if (!photo) return fallback;
+  return items
+    .map((item, index): StatItem | null => {
+      if (!item || typeof item !== "object") return null;
+      const stat = item as Partial<StatItem>;
+      const label = text(stat.label, "");
+      const value = text(stat.value, "");
+      if (!label && !value) return null;
 
-    return {
-      id: fallback.id,
-      alt: typeof photo.alt === "string" ? photo.alt : fallback.alt,
+      return {
+        id: text(stat.id, `${idPrefix}-${index + 1}`),
+        value,
+        label,
+      };
+    })
+    .filter((item): item is StatItem => item !== null);
+}
+
+function normalizeCategories(items: unknown): CategoryTag[] | null {
+  if (!Array.isArray(items)) return null;
+
+  const seen = new Set<string>();
+  const normalized: CategoryTag[] = [];
+
+  for (const [index, item] of items.entries()) {
+    if (!item || typeof item !== "object") continue;
+    const category = item as Partial<CategoryTag>;
+    const label = text(category.label, "");
+    if (!label) continue;
+
+    const id = text(category.id, slugId(label, `category-${index + 1}`));
+    if (seen.has(id)) continue;
+    seen.add(id);
+    normalized.push({ id, label });
+  }
+
+  return normalized;
+}
+
+function normalizeCollagePhotos(
+  photos: unknown,
+  legacyGrid: GridPhoto[] | undefined,
+): CollagePhoto[] {
+  if (Array.isArray(photos) && photos.length > 0) {
+    return photos
+      .map((item, index): CollagePhoto | null => {
+        if (!item || typeof item !== "object") return null;
+        const photo = item as Partial<CollagePhoto>;
+        const shape: CollagePhotoShape =
+          photo.shape === "tall" || photo.shape === "wide" || photo.shape === "square"
+            ? photo.shape
+            : COLLAGE_SHAPE_CYCLE[index % COLLAGE_SHAPE_CYCLE.length];
+
+        return {
+          id: text(photo.id, `collage-${index + 1}`),
+          alt: text(photo.alt, `Photography collage image ${index + 1}`),
+          shape,
+          ...(photo.imagePath ? { imagePath: photo.imagePath } : {}),
+        };
+      })
+      .filter((photo): photo is CollagePhoto => photo !== null);
+  }
+
+  // Migration: carry the old 8-slot home grid (and any uploads) into the collage.
+  if (Array.isArray(legacyGrid) && legacyGrid.length > 0) {
+    return legacyGrid.map((photo, index) => ({
+      id: text(photo.id, `collage-${index + 1}`),
+      alt: text(photo.alt, `Photography collage image ${index + 1}`),
+      shape: COLLAGE_SHAPE_CYCLE[index % COLLAGE_SHAPE_CYCLE.length],
       ...(photo.imagePath ? { imagePath: photo.imagePath } : {}),
-    };
-  });
+    }));
+  }
+
+  return DEFAULT_COLLAGE_PHOTOS;
+}
+
+function normalizeBrands(items: unknown): BrandItem[] {
+  if (!Array.isArray(items)) return DEFAULT_BRANDS.items;
+
+  return items
+    .map((item, index): BrandItem | null => {
+      if (!item || typeof item !== "object") return null;
+      const brand = item as Partial<BrandItem>;
+      const name = text(brand.name, "");
+      if (!name) return null;
+
+      return {
+        id: text(brand.id, slugId(name, `brand-${index + 1}`)),
+        name,
+        ...(brand.logoPath ? { logoPath: brand.logoPath } : {}),
+        ...(brand.url ? { url: brand.url } : {}),
+      };
+    })
+    .filter((brand): brand is BrandItem => brand !== null);
+}
+
+function normalizeStringList(value: unknown, fallback: string[]): string[] {
+  if (!Array.isArray(value)) return fallback;
+  const normalized = value.filter(
+    (item): item is string => typeof item === "string" && item.trim().length > 0,
+  );
+  return normalized.length > 0 ? normalized : fallback;
 }
 
 export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
-  const whatIsUgc = raw.whatIsUgc ?? DEFAULT_WHAT_IS_UGC;
+  const statsBanner = raw.statsBanner ?? {};
+  const work = raw.work ?? {};
+  const photography = raw.photography ?? {};
+  const brands = raw.brands ?? {};
+  const whatIsUgc = raw.whatIsUgc ?? {};
+  const ugcBenefits = raw.ugcBenefits ?? {};
+  const closingCta = raw.closingCta ?? {};
   const testimonials = raw.testimonials ?? DEFAULT_TESTIMONIALS;
+
+  const categories = normalizeCategories(work.categories) ?? DEFAULT_WORK.categories;
 
   return {
     fullName: raw.fullName,
@@ -152,56 +370,89 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
     brand: raw.brand,
     tagline: raw.tagline,
     hero: {
-      subtitle:
-        typeof raw.hero?.subtitle === "string" && raw.hero.subtitle.trim()
-          ? raw.hero.subtitle
-          : defaultHeroSubtitle(raw.name),
+      subtitle: text(raw.hero?.subtitle, defaultHeroSubtitle(raw.name)),
       ...(raw.hero?.videoPath ? { videoPath: raw.hero.videoPath } : {}),
+    },
+    statsBanner: {
+      visible:
+        typeof statsBanner.visible === "boolean"
+          ? statsBanner.visible
+          : DEFAULT_STATS_BANNER.visible,
+      items: normalizeStats(
+        statsBanner.items,
+        DEFAULT_STATS_BANNER.items,
+        "stat",
+      ),
     },
     about: {
       headline: raw.about.headline,
       paragraphs: raw.about.paragraphs,
       photos: normalizeAboutPhotos(raw.about.photos),
     },
-    homePhotoGrid: {
-      photos: normalizeHomeGridPhotos(raw.homePhotoGrid?.photos),
+    work: {
+      heading: text(work.heading, DEFAULT_WORK.heading),
+      categories,
+      categoriesShown:
+        typeof work.categoriesShown === "number" && work.categoriesShown >= 0
+          ? Math.min(work.categoriesShown, categories.length)
+          : categories.length,
+    },
+    photography: {
+      label: text(photography.label, DEFAULT_PHOTOGRAPHY_LABEL),
+      photos: normalizeCollagePhotos(
+        photography.photos,
+        raw.homePhotoGrid?.photos,
+      ),
+    },
+    brands: {
+      visible:
+        typeof brands.visible === "boolean"
+          ? brands.visible
+          : DEFAULT_BRANDS.visible,
+      heading: text(brands.heading, DEFAULT_BRANDS.heading),
+      items: normalizeBrands(brands.items),
     },
     whatIsUgc: {
-      heading:
-        typeof whatIsUgc.heading === "string"
-          ? whatIsUgc.heading
-          : DEFAULT_WHAT_IS_UGC.heading,
-      body:
-        typeof whatIsUgc.body === "string"
-          ? whatIsUgc.body
-          : DEFAULT_WHAT_IS_UGC.body,
-      highlights: Array.isArray(whatIsUgc.highlights)
-        ? whatIsUgc.highlights.map((highlight, index) => ({
-            id:
-              typeof highlight.id === "string"
-                ? highlight.id
-                : `highlight-${index + 1}`,
-            title:
-              typeof highlight.title === "string"
-                ? highlight.title
-                : DEFAULT_WHAT_IS_UGC.highlights[index]?.title ?? "",
-            description:
-              typeof highlight.description === "string"
-                ? highlight.description
-                : DEFAULT_WHAT_IS_UGC.highlights[index]?.description ?? "",
-          }))
-        : DEFAULT_WHAT_IS_UGC.highlights,
+      heading: text(whatIsUgc.heading, DEFAULT_WHAT_IS_UGC.heading),
+      body: text(whatIsUgc.body, DEFAULT_WHAT_IS_UGC.body),
+    },
+    ugcBenefits: {
+      eyebrow: text(ugcBenefits.eyebrow, DEFAULT_UGC_BENEFITS.eyebrow),
+      stats: normalizeStats(
+        ugcBenefits.stats,
+        DEFAULT_UGC_BENEFITS.stats,
+        "ugc-stat",
+      ),
+      calloutLabel: text(
+        ugcBenefits.calloutLabel,
+        DEFAULT_UGC_BENEFITS.calloutLabel,
+      ),
+      calloutValue: text(
+        ugcBenefits.calloutValue,
+        DEFAULT_UGC_BENEFITS.calloutValue,
+      ),
+      calloutBody: text(
+        ugcBenefits.calloutBody,
+        DEFAULT_UGC_BENEFITS.calloutBody,
+      ),
+      benefitsHeading: text(
+        ugcBenefits.benefitsHeading,
+        DEFAULT_UGC_BENEFITS.benefitsHeading,
+      ),
+      benefits: normalizeStringList(
+        ugcBenefits.benefits,
+        DEFAULT_UGC_BENEFITS.benefits,
+      ),
     },
     heroLinks: normalizeHeroLinks(raw.heroLinks),
-    contact: {
-      headline:
-        typeof raw.contact?.headline === "string" && raw.contact.headline.trim()
-          ? raw.contact.headline
-          : DEFAULT_CONTACT_HEADLINE,
-      body:
-        typeof raw.contact?.body === "string" && raw.contact.body.trim()
-          ? raw.contact.body
-          : defaultContactBody(raw.name),
+    closingCta: {
+      headline: text(closingCta.headline, DEFAULT_CTA_HEADLINE),
+      body: text(
+        closingCta.body ?? raw.contact?.body,
+        defaultCtaBody(raw.name),
+      ),
+      emailLabel: text(closingCta.emailLabel, DEFAULT_CTA_EMAIL_LABEL),
+      ...(closingCta.videoPath ? { videoPath: closingCta.videoPath } : {}),
     },
     social: raw.social,
     services: raw.services.map((service) => ({
@@ -214,32 +465,23 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
         typeof testimonials.visible === "boolean"
           ? testimonials.visible
           : DEFAULT_TESTIMONIALS.visible,
-      heading:
-        typeof testimonials.heading === "string"
-          ? testimonials.heading
-          : DEFAULT_TESTIMONIALS.heading,
-      intro:
-        typeof testimonials.intro === "string"
-          ? testimonials.intro
-          : DEFAULT_TESTIMONIALS.intro,
+      heading: text(testimonials.heading, DEFAULT_TESTIMONIALS.heading),
+      intro: text(testimonials.intro, DEFAULT_TESTIMONIALS.intro),
       items: Array.isArray(testimonials.items)
         ? testimonials.items.map((testimonial, index) => ({
-            id:
-              typeof testimonial.id === "string"
-                ? testimonial.id
-                : `testimonial-${index + 1}`,
-            quote:
-              typeof testimonial.quote === "string"
-                ? testimonial.quote
-                : DEFAULT_TESTIMONIALS.items[index]?.quote ?? "",
-            name:
-              typeof testimonial.name === "string"
-                ? testimonial.name
-                : DEFAULT_TESTIMONIALS.items[index]?.name ?? "",
-            role:
-              typeof testimonial.role === "string"
-                ? testimonial.role
-                : DEFAULT_TESTIMONIALS.items[index]?.role ?? "",
+            id: text(testimonial.id, `testimonial-${index + 1}`),
+            quote: text(
+              testimonial.quote,
+              DEFAULT_TESTIMONIALS.items[index]?.quote ?? "",
+            ),
+            name: text(
+              testimonial.name,
+              DEFAULT_TESTIMONIALS.items[index]?.name ?? "",
+            ),
+            role: text(
+              testimonial.role,
+              DEFAULT_TESTIMONIALS.items[index]?.role ?? "",
+            ),
           }))
         : DEFAULT_TESTIMONIALS.items,
     },

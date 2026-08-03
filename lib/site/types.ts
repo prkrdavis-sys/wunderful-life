@@ -12,16 +12,21 @@ export type AboutPhoto = {
   imagePath?: string;
 };
 
+/** Tile in the photography collage. `shape` drives its span in the masonry. */
+export type CollagePhotoShape = "square" | "tall" | "wide";
+
+export type CollagePhoto = {
+  id: string;
+  alt: string;
+  shape: CollagePhotoShape;
+  imagePath?: string;
+};
+
+/** Legacy 8-slot home grid, kept only so old saved content can be migrated. */
 export type GridPhoto = {
   id: string;
   alt: string;
   imagePath?: string;
-};
-
-export type WhatIsUgcHighlight = {
-  id: string;
-  title: string;
-  description: string;
 };
 
 export type Testimonial = {
@@ -36,29 +41,75 @@ export type HeroContent = {
   subtitle: string;
 };
 
+/** A single figure in the hero stats banner or the UGC proof stats. */
+export type StatItem = {
+  id: string;
+  value: string;
+  label: string;
+};
+
+/** Content category a portfolio video can be filed under. */
+export type CategoryTag = {
+  id: string;
+  label: string;
+};
+
+export type BrandItem = {
+  id: string;
+  name: string;
+  logoPath?: string;
+  url?: string;
+};
+
 export type SiteContent = {
   fullName: string;
   name: string;
   brand: string;
   tagline: string;
   hero: HeroContent;
+  statsBanner: {
+    visible: boolean;
+    items: StatItem[];
+  };
   about: {
     headline: string;
     paragraphs: string[];
     photos: AboutPhoto[];
   };
-  homePhotoGrid: {
-    photos: GridPhoto[];
+  work: {
+    heading: string;
+    categories: CategoryTag[];
+    /** How many category chips to show, newest-first. */
+    categoriesShown: number;
+  };
+  photography: {
+    label: string;
+    photos: CollagePhoto[];
+  };
+  brands: {
+    visible: boolean;
+    heading: string;
+    items: BrandItem[];
   };
   whatIsUgc: {
     heading: string;
     body: string;
-    highlights: WhatIsUgcHighlight[];
+  };
+  ugcBenefits: {
+    eyebrow: string;
+    stats: StatItem[];
+    calloutLabel: string;
+    calloutValue: string;
+    calloutBody: string;
+    benefitsHeading: string;
+    benefits: string[];
   };
   heroLinks: HeroLink[];
-  contact: {
+  closingCta: {
     headline: string;
     body: string;
+    emailLabel: string;
+    videoPath?: string;
   };
   social: {
     instagram: string;

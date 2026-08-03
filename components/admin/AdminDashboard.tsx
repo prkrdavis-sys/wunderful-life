@@ -116,8 +116,8 @@ export function AdminDashboard({
               onClick={() => trySetView(item.id)}
               className={`shrink-0 rounded-xl px-3 py-2 text-left transition md:w-full md:px-3 md:py-2.5 ${
                 view === item.id
-                  ? "bg-burgundy text-paper"
-                  : "text-indigo hover:bg-white/80"
+                  ? "bg-forest text-paper"
+                  : "text-ink hover:bg-white/80"
               }`}
             >
               <span className="block text-sm font-medium">{item.label}</span>

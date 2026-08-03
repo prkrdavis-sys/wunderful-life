@@ -41,7 +41,7 @@ export function AdminLoginInline() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 p-4">
-      <p className="text-xs leading-relaxed text-indigo/70">
+      <p className="text-xs leading-relaxed text-ink/70">
         Sign in to edit portfolio content on this page.
       </p>
       <input
@@ -49,12 +49,12 @@ export function AdminLoginInline() {
         value={password}
         onChange={(event) => setPassword(event.target.value)}
         placeholder="Admin password"
-        className="w-full rounded-xl border border-lavender/40 bg-paper px-3 py-2 text-sm text-indigo outline-none focus:border-burgundy/50"
+        className="w-full rounded-xl border border-lavender/40 bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-forest/50"
         required
         autoComplete="current-password"
       />
       {error && (
-        <p className="rounded-lg bg-pink/15 px-3 py-2 text-xs text-burgundy">{error}</p>
+        <p className="rounded-lg bg-blush/15 px-3 py-2 text-xs text-forest">{error}</p>
       )}
       <AnimatedButton type="submit" disabled={loading} className="w-full justify-center">
         {loading ? "Signing in…" : "Sign in"}
