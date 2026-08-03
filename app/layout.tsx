@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import {
   Bricolage_Grotesque,
   DM_Sans,
@@ -14,6 +14,14 @@ import { SiteHeaderHeightSync } from "@/components/layout/SiteHeaderHeightSync";
 import { AppProviders } from "@/components/layout/AppProviders";
 import { getSiteContent } from "@/lib/site";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  themeColor: "#f7f3ec",
+  colorScheme: "light",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 const bricolage = Bricolage_Grotesque({
   variable: "--font-bricolage",
@@ -56,10 +64,17 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: site.tagline,
     applicationName: site.brand,
+    manifest: "/manifest.webmanifest",
     appleWebApp: {
       capable: true,
       title: site.brand,
       statusBarStyle: "default",
+    },
+    formatDetection: {
+      telephone: false,
+    },
+    other: {
+      "mobile-web-app-capable": "yes",
     },
     openGraph: {
       title,
