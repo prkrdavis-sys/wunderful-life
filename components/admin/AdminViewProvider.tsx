@@ -26,6 +26,11 @@ export type SiteEditorSection =
   | "testimonials"
   | "cta";
 
+export type SiteEditorFocus = {
+  kind: "photography-photo";
+  photoId: string;
+};
+
 export type AdminPanelTab = "content" | "portfolio";
 
 type AdminViewContextValue = {
@@ -37,9 +42,14 @@ type AdminViewContextValue = {
   setPanelOpen: (open: boolean) => void;
   editorSection: SiteEditorSection | null;
   setEditorSection: (section: SiteEditorSection | null) => void;
+  editorFocus: SiteEditorFocus | null;
+  clearEditorFocus: () => void;
   preferredTab: AdminPanelTab | null;
   clearPreferredTab: () => void;
-  openSiteEditor: (section?: SiteEditorSection) => void;
+  openSiteEditor: (
+    section?: SiteEditorSection,
+    focus?: SiteEditorFocus,
+  ) => void;
   openPortfolioEditor: () => void;
   refreshSession: () => Promise<void>;
   site: SiteContent;
@@ -68,6 +78,7 @@ export function AdminViewProvider({
   const [authRequired, setAuthRequired] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const [editorSection, setEditorSection] = useState<SiteEditorSection | null>(null);
+  const [editorFocus, setEditorFocus] = useState<SiteEditorFocus | null>(null);
   const [preferredTab, setPreferredTab] = useState<AdminPanelTab | null>(null);
   const [site, setSite] = useState(initialSite);
 
@@ -105,14 +116,23 @@ export function AdminViewProvider({
     setPreferredTab(null);
   }, []);
 
-  const openSiteEditor = useCallback((section?: SiteEditorSection) => {
-    setEditorSection(section ?? null);
-    setPreferredTab("content");
-    setPanelOpen(true);
+  const clearEditorFocus = useCallback(() => {
+    setEditorFocus(null);
   }, []);
+
+  const openSiteEditor = useCallback(
+    (section?: SiteEditorSection, focus?: SiteEditorFocus) => {
+      setEditorSection(section ?? null);
+      setEditorFocus(focus ?? null);
+      setPreferredTab("content");
+      setPanelOpen(true);
+    },
+    [],
+  );
 
   const openPortfolioEditor = useCallback(() => {
     setEditorSection(null);
+    setEditorFocus(null);
     setPreferredTab("portfolio");
     setPanelOpen(true);
   }, []);
@@ -127,6 +147,8 @@ export function AdminViewProvider({
       setPanelOpen,
       editorSection,
       setEditorSection,
+      editorFocus,
+      clearEditorFocus,
       preferredTab,
       clearPreferredTab,
       openSiteEditor,
@@ -142,6 +164,8 @@ export function AdminViewProvider({
       authRequired,
       panelOpen,
       editorSection,
+      editorFocus,
+      clearEditorFocus,
       preferredTab,
       clearPreferredTab,
       openSiteEditor,

@@ -50,6 +50,7 @@ export function AdminModePanel() {
     setPanelOpen,
     editorSection,
     setEditorSection,
+    clearEditorFocus,
     preferredTab,
     clearPreferredTab,
   } = useAdminView();
@@ -70,6 +71,7 @@ export function AdminModePanel() {
   const trySetTab = (next: AdminPanelTab) => {
     if (!confirmLeaveDuringUpload(portfolioUploadBusy)) return;
     setEditorSection(null);
+    clearEditorFocus();
     clearPreferredTab();
     setTab(next);
   };

@@ -206,6 +206,25 @@ export async function uploadAboutPhoto(photoId: string, file: File) {
   return site;
 }
 
+export async function clearAboutPhoto(photoId: string) {
+  const site = await readSiteContent();
+  const photoIndex = site.about.photos.findIndex((photo) => photo.id === photoId);
+
+  if (photoIndex === -1) {
+    throw new StorageError("Photo not found.", 404);
+  }
+
+  const current = site.about.photos[photoIndex];
+  if (current.imagePath) {
+    await deleteStoredPhoto(current.imagePath);
+  }
+
+  const { imagePath: _removed, ...rest } = current;
+  site.about.photos[photoIndex] = rest;
+  await writeSiteContent(site);
+  return site;
+}
+
 type VideoSlot = "hero" | "cta";
 
 const VIDEO_DIRS: Record<VideoSlot, string> = {
@@ -255,6 +274,28 @@ async function replaceVideoPath(
   return site;
 }
 
+async function clearVideoPath(slot: VideoSlot): Promise<SiteContent> {
+  const site = await readSiteContent();
+  const previous =
+    slot === "hero" ? site.hero.videoPath : site.closingCta.videoPath;
+
+  if (slot === "hero") {
+    const { videoPath: _removed, ...hero } = site.hero;
+    site.hero = hero;
+  } else {
+    const { videoPath: _removed, ...closingCta } = site.closingCta;
+    site.closingCta = closingCta;
+  }
+
+  await writeSiteContent(site);
+
+  if (previous) {
+    await deleteStoredPhoto(previous);
+  }
+
+  return site;
+}
+
 /** Local/dev path: the video file arrives in the request body. */
 export async function uploadHeroVideo(file: File): Promise<SiteContent> {
   return replaceVideoPath("hero", await saveVideoFile("hero", file));
@@ -265,12 +306,20 @@ export async function setHeroVideoUrl(url: string): Promise<SiteContent> {
   return replaceVideoPath("hero", url);
 }
 
+export async function clearHeroVideo(): Promise<SiteContent> {
+  return clearVideoPath("hero");
+}
+
 export async function uploadCtaVideo(file: File): Promise<SiteContent> {
   return replaceVideoPath("cta", await saveVideoFile("cta", file));
 }
 
 export async function setCtaVideoUrl(url: string): Promise<SiteContent> {
   return replaceVideoPath("cta", url);
+}
+
+export async function clearCtaVideo(): Promise<SiteContent> {
+  return clearVideoPath("cta");
 }
 
 export async function uploadCollagePhoto(photoId: string, file: File) {
@@ -295,6 +344,27 @@ export async function uploadCollagePhoto(photoId: string, file: File) {
   return site;
 }
 
+export async function clearCollagePhoto(photoId: string) {
+  const site = await readSiteContent();
+  const photoIndex = site.photography.photos.findIndex(
+    (photo) => photo.id === photoId,
+  );
+
+  if (photoIndex === -1) {
+    throw new StorageError("Photo not found.", 404);
+  }
+
+  const current = site.photography.photos[photoIndex];
+  if (current.imagePath) {
+    await deleteStoredPhoto(current.imagePath);
+  }
+
+  const { imagePath: _removed, ...rest } = current;
+  site.photography.photos[photoIndex] = rest;
+  await writeSiteContent(site);
+  return site;
+}
+
 export async function uploadBrandLogo(brandId: string, file: File) {
   const site = await readSiteContent();
   const brandIndex = site.brands.items.findIndex((brand) => brand.id === brandId);
@@ -311,6 +381,25 @@ export async function uploadBrandLogo(brandId: string, file: File) {
   }
 
   site.brands.items[brandIndex] = { ...current, logoPath };
+  await writeSiteContent(site);
+  return site;
+}
+
+export async function clearBrandLogo(brandId: string) {
+  const site = await readSiteContent();
+  const brandIndex = site.brands.items.findIndex((brand) => brand.id === brandId);
+
+  if (brandIndex === -1) {
+    throw new StorageError("Brand not found.", 404);
+  }
+
+  const current = site.brands.items[brandIndex];
+  if (current.logoPath) {
+    await deleteStoredPhoto(current.logoPath);
+  }
+
+  const { logoPath: _removed, ...rest } = current;
+  site.brands.items[brandIndex] = rest;
   await writeSiteContent(site);
   return site;
 }

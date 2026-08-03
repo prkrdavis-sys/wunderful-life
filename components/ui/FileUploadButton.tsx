@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useId, useRef, type Ref } from "react";
+import { useId, useRef, type Ref, type RefObject } from "react";
 
 type FileUploadKind = "photo" | "video" | "thumbnail" | "file";
 
@@ -14,6 +14,8 @@ type FileUploadButtonProps = {
   previewUrl?: string | null;
   previewType?: "image" | "video";
   onChange: (file: File | null) => void;
+  /** Shown when a file or preview is present. Clears the native input before firing. */
+  onRemove?: () => void;
   required?: boolean;
   disabled?: boolean;
   className?: string;
@@ -56,6 +58,13 @@ function friendlyFileName(name: string): string {
   return `${base.slice(0, 12)}…${base.slice(-10)}`;
 }
 
+function clearFileInput(ref: RefObject<HTMLInputElement | null> | Ref<HTMLInputElement>) {
+  if (typeof ref === "function") return;
+  if (ref && "current" in ref && ref.current) {
+    ref.current.value = "";
+  }
+}
+
 export function FileUploadButton({
   accept,
   kind = "file",
@@ -65,6 +74,7 @@ export function FileUploadButton({
   previewUrl,
   previewType = "image",
   onChange,
+  onRemove,
   required,
   disabled,
   className = "",
@@ -78,9 +88,11 @@ export function FileUploadButton({
   const displayHint = hint ?? defaults.hint;
   const hasSelection = Boolean(selectedName);
   const hasPreview = Boolean(previewUrl);
+  // Keep remove available during busy uploads so a selection can be cancelled.
+  const showRemove = Boolean(onRemove) && (hasSelection || hasPreview);
 
   return (
-    <div className={className}>
+    <div className={`relative ${className}`}>
       <input
         ref={inputRef}
         id={id}
@@ -105,13 +117,19 @@ export function FileUploadButton({
           hasSelection || hasPreview
             ? "border-blush/50 bg-gradient-to-br from-blush/20 via-lavender/25 to-paper shadow-md shadow-blush/10"
             : "border-dashed border-blush/35 bg-gradient-to-br from-blush/10 via-lavender/15 to-cream/60 shadow-sm hover:border-blush-deep/45 hover:shadow-md hover:shadow-blush/15"
-        } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+        } ${disabled ? "cursor-not-allowed opacity-50" : ""} ${showRemove ? "pr-12" : ""}`}
       >
         {hasPreview ? (
           <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-brown/10 shadow-inner ring-2 ring-blush/25">
             {previewType === "video" ? (
               <video
-                src={previewUrl ?? undefined}
+                src={
+                  previewUrl
+                    ? previewUrl.includes("#")
+                      ? previewUrl
+                      : `${previewUrl}#t=0.001`
+                    : undefined
+                }
                 muted
                 playsInline
                 preload="metadata"
@@ -159,6 +177,20 @@ export function FileUploadButton({
           {hasSelection || hasPreview ? "Swap" : "Browse"}
         </span>
       </motion.label>
+
+      {showRemove && (
+        <button
+          type="button"
+          onClick={() => {
+            clearFileInput(inputRef);
+            onRemove?.();
+          }}
+          aria-label="Remove upload"
+          className="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-brown/20 bg-white/95 text-lg leading-none text-brown shadow-sm transition hover:border-blush-deep/50 hover:bg-blush/20 hover:text-blush-deep"
+        >
+          <span aria-hidden>×</span>
+        </button>
+      )}
     </div>
   );
 }

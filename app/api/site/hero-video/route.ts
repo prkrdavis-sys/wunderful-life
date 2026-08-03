@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { setHeroVideoUrl, uploadHeroVideo } from "@/lib/storage/site";
+import {
+  clearHeroVideo,
+  setHeroVideoUrl,
+  uploadHeroVideo,
+} from "@/lib/storage/site";
 import { StorageError } from "@/lib/storage";
 import { isAcceptedVideoFile, videoUploadErrorMessage } from "@/lib/videos/upload";
 
@@ -37,6 +41,23 @@ export async function POST(request: Request) {
     console.error(error);
     return NextResponse.json(
       { error: "Failed to upload hero video." },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE() {
+  try {
+    const site = await clearHeroVideo();
+    revalidatePath("/", "layout");
+    return NextResponse.json(site);
+  } catch (error) {
+    if (error instanceof StorageError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    console.error(error);
+    return NextResponse.json(
+      { error: "Failed to remove hero video." },
       { status: 500 },
     );
   }

@@ -50,6 +50,8 @@ const cardClass = "space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4"
 const smallButtonClass =
   "rounded-lg border border-brown/25 bg-white px-2 py-1 text-xs font-medium text-brown transition hover:border-forest/45 hover:text-forest disabled:cursor-not-allowed disabled:opacity-40";
 
+const MAX_COLLAGE_TILES = 10;
+
 /** Move an item within a list, returning a new array. */
 function moveItem<T>(items: T[], index: number, delta: number): T[] {
   const target = index + delta;
@@ -117,15 +119,18 @@ function RowControls({
 function AddRowButton({
   label,
   onClick,
+  disabled = false,
 }: {
   label: string;
   onClick: () => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="rounded-xl border border-dashed border-forest/40 px-4 py-2 text-sm font-medium text-forest transition hover:bg-forest/5"
+      disabled={disabled}
+      className="rounded-xl border border-dashed border-forest/40 px-4 py-2 text-sm font-medium text-forest transition hover:bg-forest/5 disabled:cursor-not-allowed disabled:border-brown/20 disabled:bg-cream/40 disabled:text-muted disabled:hover:bg-cream/40"
     >
       + {label}
     </button>
@@ -173,11 +178,17 @@ export function SiteEditorForm({
     setSite,
     editorSection,
     setEditorSection,
+    editorFocus,
+    clearEditorFocus,
     openPortfolioEditor,
   } = useAdminView();
   const [form, setForm] = useState(site);
   const [section, setSection] = useState<SiteEditorSection>("profile");
   const activeSection = editorSection ?? section;
+  const sectionNavRefs = useRef<
+    Partial<Record<SiteEditorSection, HTMLButtonElement | null>>
+  >({});
+  const photoCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -194,6 +205,8 @@ export function SiteEditorForm({
   const videoUploadGenRef = useRef<Record<VideoSlot, number>>({ hero: 0, cta: 0 });
   const heroVideoInputRef = useRef<HTMLInputElement>(null);
   const ctaVideoInputRef = useRef<HTMLInputElement>(null);
+  const focusedPhotoId =
+    editorFocus?.kind === "photography-photo" ? editorFocus.photoId : null;
 
   const isBusy = (state: VideoUploadState) =>
     state.status === "preparing" || state.status === "uploading";
@@ -234,6 +247,34 @@ export function SiteEditorForm({
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [uploadBusy]);
+
+  useEffect(() => {
+    const navItem = sectionNavRefs.current[activeSection];
+    navItem?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
+  }, [activeSection]);
+
+  useEffect(() => {
+    if (activeSection !== "photography" || !focusedPhotoId) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      sectionNavRefs.current.photography?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
+      photoCardRefs.current[focusedPhotoId]?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "nearest",
+      });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeSection, focusedPhotoId]);
 
   const setSlotUpload = (slot: VideoSlot, state: VideoUploadState) =>
     setVideoUploads((current) => ({ ...current, [slot]: state }));
@@ -419,6 +460,82 @@ export function SiteEditorForm({
     }
   };
 
+  const removePhoto = async (
+    photoId: string,
+    kind: keyof typeof PHOTO_ENDPOINTS = "about",
+  ) => {
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const endpoint = `${PHOTO_ENDPOINTS[kind]}/${photoId}`;
+      const response = await fetch(endpoint, { method: "DELETE" });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to remove photo.");
+      }
+
+      setForm(data);
+      setSite(data);
+      setMessage(kind === "brandLogo" ? "Logo removed." : "Photo removed.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to remove photo.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const removeVideo = async (slot: VideoSlot) => {
+    const { noun, endpoint } = SLOT_COPY[slot];
+    const hadPending = Boolean(videoFiles[slot]);
+
+    videoUploadGenRef.current[slot] += 1;
+    setVideoFiles((current) => ({ ...current, [slot]: null }));
+    setSlotUpload(slot, idleVideoUpload());
+    const inputRef = slot === "hero" ? heroVideoInputRef : ctaVideoInputRef;
+    if (inputRef.current) inputRef.current.value = "";
+
+    // Cancelling a pending swap keeps the live video in place.
+    if (hadPending) {
+      setError(null);
+      setMessage(null);
+      return;
+    }
+
+    const livePath =
+      slot === "hero" ? form.hero.videoPath : form.closingCta.videoPath;
+    if (!livePath) {
+      setError(null);
+      setMessage(null);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const response = await fetch(endpoint, { method: "DELETE" });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error ?? `Failed to remove ${noun}.`);
+      }
+
+      setForm(data);
+      setSite(data);
+      setMessage(`${noun[0].toUpperCase()}${noun.slice(1)} removed.`);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : `Failed to remove ${noun}.`,
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   /** Ids present in the saved content; uploads need a persisted row to target. */
   const savedCollageIds = new Set(site.photography.photos.map((photo) => photo.id));
   const savedBrandIds = new Set(site.brands.items.map((brand) => brand.id));
@@ -447,7 +564,7 @@ export function SiteEditorForm({
           }
           previewUrl={videoPreviewUrls[slot] ?? videoPath ?? null}
           previewType="video"
-          disabled={busy}
+          disabled={busy || loading}
           buttonLabel={videoPath ? "Swap video" : "Add a video"}
           onChange={(file) => {
             if (!file) return;
@@ -461,6 +578,9 @@ export function SiteEditorForm({
             setError(null);
             setVideoFiles((current) => ({ ...current, [slot]: file }));
             void startVideoUpload(slot, file);
+          }}
+          onRemove={() => {
+            void removeVideo(slot);
           }}
         />
         {state.status !== "idle" && (
@@ -494,7 +614,11 @@ export function SiteEditorForm({
               type="button"
               onClick={() => {
                 setEditorSection(null);
+                clearEditorFocus();
                 setSection(item.id);
+              }}
+              ref={(element) => {
+                sectionNavRefs.current[item.id] = element;
               }}
               className={`shrink-0 rounded-xl px-3 py-2 text-left text-sm font-medium transition md:w-full md:px-3 md:py-2.5 ${
                 activeSection === item.id
@@ -864,9 +988,17 @@ export function SiteEditorForm({
                         accept="image/*"
                         selectedName={photo.imagePath}
                         previewUrl={photo.imagePath}
+                        disabled={loading}
                         onChange={(file) => {
                           if (file) void uploadPhoto(photo.id, file);
                         }}
+                        onRemove={
+                          photo.imagePath
+                            ? () => {
+                                void removePhoto(photo.id);
+                              }
+                            : undefined
+                        }
                       />
                       {photo.imagePath && (
                         <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">
@@ -1137,7 +1269,18 @@ export function SiteEditorForm({
 
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {form.photography.photos.map((photo, index) => (
-                  <div key={photo.id} className={cardClass}>
+                  <div
+                    key={photo.id}
+                    ref={(element) => {
+                      photoCardRefs.current[photo.id] = element;
+                    }}
+                    data-editor-focused={focusedPhotoId === photo.id || undefined}
+                    className={`${cardClass} ${
+                      focusedPhotoId === photo.id
+                        ? "border-forest/70 bg-lavender/20 ring-2 ring-forest/35 ring-offset-2 ring-offset-paper"
+                        : ""
+                    }`}
+                  >
                     <RowControls
                       label="Tile"
                       index={index}
@@ -1167,6 +1310,11 @@ export function SiteEditorForm({
                         }))
                       }
                     />
+                    {focusedPhotoId === photo.id && (
+                      <p className="rounded-lg bg-forest px-2.5 py-1.5 text-xs font-semibold text-paper">
+                        Selected from the photo grid
+                      </p>
+                    )}
                     <label className="block text-sm">
                       <span className="text-muted">Alt text</span>
                       <input
@@ -1224,9 +1372,17 @@ export function SiteEditorForm({
                             buttonLabel={
                               photo.imagePath ? "Swap photo" : "Add a photo"
                             }
+                            disabled={loading}
                             onChange={(file) => {
                               if (file) void uploadPhoto(photo.id, file, "collage");
                             }}
+                            onRemove={
+                              photo.imagePath
+                                ? () => {
+                                    void removePhoto(photo.id, "collage");
+                                  }
+                                : undefined
+                            }
                           />
                           {photo.imagePath && (
                             <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">
@@ -1247,21 +1403,27 @@ export function SiteEditorForm({
 
               <AddRowButton
                 label="Add tile"
+                disabled={form.photography.photos.length >= MAX_COLLAGE_TILES}
                 onClick={() =>
-                  setForm((current) => ({
-                    ...current,
-                    photography: {
-                      ...current.photography,
-                      photos: [
-                        ...current.photography.photos,
-                        {
-                          id: uniqueId("collage"),
-                          alt: "Photography collage image",
-                          shape: "square" as CollagePhotoShape,
-                        },
-                      ],
-                    },
-                  }))
+                  setForm((current) => {
+                    if (current.photography.photos.length >= MAX_COLLAGE_TILES) {
+                      return current;
+                    }
+                    return {
+                      ...current,
+                      photography: {
+                        ...current.photography,
+                        photos: [
+                          ...current.photography.photos,
+                          {
+                            id: uniqueId("collage"),
+                            alt: "Photography collage image",
+                            shape: "square" as CollagePhotoShape,
+                          },
+                        ],
+                      },
+                    };
+                  })
                 }
               />
             </section>
@@ -1395,11 +1557,19 @@ export function SiteEditorForm({
                             selectedName={brand.logoPath}
                             previewUrl={brand.logoPath}
                             buttonLabel={brand.logoPath ? "Swap logo" : "Add a logo"}
+                            disabled={loading}
                             onChange={(file) => {
                               if (file) {
                                 void uploadPhoto(brand.id, file, "brandLogo");
                               }
                             }}
+                            onRemove={
+                              brand.logoPath
+                                ? () => {
+                                    void removePhoto(brand.id, "brandLogo");
+                                  }
+                                : undefined
+                            }
                           />
                           {brand.logoPath && (
                             <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">

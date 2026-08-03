@@ -13,6 +13,7 @@ import {
   videoContentTypeFromFilename,
   videoUploadErrorMessage,
 } from "@/lib/videos/upload";
+import { extractVideoFrame } from "@/lib/videos/extractThumbnail";
 import { needsWebTranscode, prepareVideoForWebUpload } from "@/lib/videos/transcode";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { FileUploadButton } from "@/components/ui/FileUploadButton";
@@ -203,9 +204,15 @@ export function VideoForm({
   const uploadConfigRef = useRef<UploadConfig | null>(null);
   const videoUploadGenRef = useRef(0);
   const thumbnailUploadGenRef = useRef(0);
+  const thumbnailExtractGenRef = useRef(0);
 
   const videoPreviewUrl = useMediaPreview(videoFile, initial?.videoPath);
   const thumbnailPreviewUrl = useMediaPreview(thumbnailFile, initial?.thumbnailPath);
+  /** Prefer a captured still for the video picker preview. */
+  const videoUploadPreviewUrl = thumbnailPreviewUrl ?? videoPreviewUrl;
+  const videoUploadPreviewType = thumbnailPreviewUrl
+    ? ("image" as const)
+    : ("video" as const);
 
   const videoDisplayName =
     videoFile?.name ??
@@ -225,6 +232,7 @@ export function VideoForm({
     return () => {
       videoUploadGenRef.current += 1;
       thumbnailUploadGenRef.current += 1;
+      thumbnailExtractGenRef.current += 1;
       onUploadBusyChange?.(false);
     };
   }, [onUploadBusyChange]);
@@ -266,100 +274,6 @@ export function VideoForm({
       }));
     };
   }, []);
-
-  const startVideoUpload = useCallback(
-    async (file: File) => {
-      const generation = ++videoUploadGenRef.current;
-
-      setVideoUpload({
-        status: "preparing",
-        progress: 0,
-        message: needsWebTranscode(file)
-          ? "Converting iPhone video for web playback… (can take a minute)"
-          : "Preparing video…",
-        url: null,
-        error: null,
-        useClientUpload: true,
-      });
-
-      try {
-        const config = await getUploadConfig();
-        if (generation !== videoUploadGenRef.current) return;
-
-        const prepared = await prepareVideoForWebUpload(file, (progressMessage) => {
-          if (generation !== videoUploadGenRef.current) return;
-          setVideoUpload((current) => ({
-            ...current,
-            status: "preparing",
-            message: progressMessage,
-          }));
-        });
-
-        if (generation !== videoUploadGenRef.current) return;
-
-        if (!config.clientUpload) {
-          setVideoUpload({
-            status: "ready",
-            progress: 100,
-            message: "Video ready — will upload when you save",
-            url: null,
-            error: null,
-            useClientUpload: false,
-          });
-          return;
-        }
-
-        setVideoUpload({
-          status: "uploading",
-          progress: 0,
-          message: "Uploading video… 0%",
-          url: null,
-          error: null,
-          useClientUpload: true,
-        });
-
-        const url = await uploadAsset(
-          prepared,
-          "videos",
-          config.handleUploadUrl,
-          (percentage) => {
-            if (generation !== videoUploadGenRef.current) return;
-            const rounded = Math.round(percentage);
-            setVideoUpload((current) => ({
-              ...current,
-              status: "uploading",
-              progress: rounded,
-              message: `Uploading video… ${rounded}%`,
-            }));
-          },
-        );
-
-        if (generation !== videoUploadGenRef.current) return;
-
-        setVideoUpload({
-          status: "ready",
-          progress: 100,
-          message: "Video ready — fill in details and save",
-          url,
-          error: null,
-          useClientUpload: true,
-        });
-      } catch (err) {
-        if (generation !== videoUploadGenRef.current) return;
-        const uploadError = toErrorMessage(err, "Video upload failed.");
-        setVideoUpload({
-          status: "error",
-          progress: 0,
-          message: uploadError,
-          url: null,
-          error: uploadError,
-          useClientUpload: true,
-        });
-        setError(uploadError);
-      }
-    },
-    [getUploadConfig],
-  );
 
   const startThumbnailUpload = useCallback(
     async (file: File) => {
@@ -440,6 +354,124 @@ export function VideoForm({
       }
     },
     [getUploadConfig],
+  );
+
+  const captureThumbnailFromVideo = useCallback(
+    async (file: File) => {
+      const generation = ++thumbnailExtractGenRef.current;
+
+      try {
+        const frame = await extractVideoFrame(file);
+        if (generation !== thumbnailExtractGenRef.current) return;
+
+        setThumbnailFile(frame);
+        void startThumbnailUpload(frame);
+      } catch (err) {
+        if (generation !== thumbnailExtractGenRef.current) return;
+        // Non-fatal: user can still upload a cover image manually.
+        console.warn(
+          toErrorMessage(err, "Could not capture a thumbnail from the video."),
+        );
+      }
+    },
+    [startThumbnailUpload],
+  );
+
+  const startVideoUpload = useCallback(
+    async (file: File) => {
+      const generation = ++videoUploadGenRef.current;
+
+      setVideoUpload({
+        status: "preparing",
+        progress: 0,
+        message: needsWebTranscode(file)
+          ? "Converting iPhone video for web playback… (can take a minute)"
+          : "Preparing video…",
+        url: null,
+        error: null,
+        useClientUpload: true,
+      });
+
+      try {
+        const config = await getUploadConfig();
+        if (generation !== videoUploadGenRef.current) return;
+
+        const prepared = await prepareVideoForWebUpload(file, (progressMessage) => {
+          if (generation !== videoUploadGenRef.current) return;
+          setVideoUpload((current) => ({
+            ...current,
+            status: "preparing",
+            message: progressMessage,
+          }));
+        });
+
+        if (generation !== videoUploadGenRef.current) return;
+
+        // Prefer the web-ready file so iPhone MOV captures decode in-browser.
+        void captureThumbnailFromVideo(prepared);
+
+        if (!config.clientUpload) {
+          setVideoUpload({
+            status: "ready",
+            progress: 100,
+            message: "Video ready — will upload when you save",
+            url: null,
+            error: null,
+            useClientUpload: false,
+          });
+          return;
+        }
+
+        setVideoUpload({
+          status: "uploading",
+          progress: 0,
+          message: "Uploading video… 0%",
+          url: null,
+          error: null,
+          useClientUpload: true,
+        });
+
+        const url = await uploadAsset(
+          prepared,
+          "videos",
+          config.handleUploadUrl,
+          (percentage) => {
+            if (generation !== videoUploadGenRef.current) return;
+            const rounded = Math.round(percentage);
+            setVideoUpload((current) => ({
+              ...current,
+              status: "uploading",
+              progress: rounded,
+              message: `Uploading video… ${rounded}%`,
+            }));
+          },
+        );
+
+        if (generation !== videoUploadGenRef.current) return;
+
+        setVideoUpload({
+          status: "ready",
+          progress: 100,
+          message: "Video ready — fill in details and save",
+          url,
+          error: null,
+          useClientUpload: true,
+        });
+      } catch (err) {
+        if (generation !== videoUploadGenRef.current) return;
+        const uploadError = toErrorMessage(err, "Video upload failed.");
+        setVideoUpload({
+          status: "error",
+          progress: 0,
+          message: uploadError,
+          url: null,
+          error: uploadError,
+          useClientUpload: true,
+        });
+        setError(uploadError);
+      }
+    },
+    [captureThumbnailFromVideo, getUploadConfig],
   );
 
   const saveBlocked =
@@ -629,9 +661,9 @@ export function VideoForm({
           accept={VIDEO_FILE_ACCEPT}
           hint={VIDEO_UPLOAD_HELP}
           selectedName={videoDisplayName}
-          previewUrl={videoPreviewUrl}
-          previewType="video"
-          required={!initial}
+          previewUrl={videoUploadPreviewUrl}
+          previewType={videoUploadPreviewType}
+          required={!initial && !videoFile}
           buttonLabel={initial?.videoPath ? "Swap video" : "Add a video"}
           disabled={isMediaUploadBusy(videoUpload)}
           onChange={(file) => {
@@ -649,9 +681,25 @@ export function VideoForm({
               void startVideoUpload(file);
             } else {
               videoUploadGenRef.current += 1;
+              thumbnailExtractGenRef.current += 1;
               setVideoUpload(idleMediaUpload());
             }
           }}
+          onRemove={
+            videoFile
+              ? () => {
+                  videoUploadGenRef.current += 1;
+                  thumbnailExtractGenRef.current += 1;
+                  thumbnailUploadGenRef.current += 1;
+                  setVideoFile(null);
+                  setVideoUpload(idleMediaUpload());
+                  setThumbnailFile(null);
+                  setThumbnailUpload(idleMediaUpload());
+                  setError(null);
+                  if (videoInputRef.current) videoInputRef.current.value = "";
+                }
+              : undefined
+          }
         />
         {initial?.videoPath && !videoFile && !isMediaUploadBusy(videoUpload) && (
           <p className="inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">
@@ -672,10 +720,12 @@ export function VideoForm({
           selectedName={thumbnailDisplayName}
           previewUrl={thumbnailPreviewUrl}
           previewType="image"
-          required={!initial}
+          required={!initial && !thumbnailFile}
           buttonLabel={initial?.thumbnailPath ? "Swap thumbnail" : "Add a thumbnail"}
+          hint="Auto-captured from your video — or upload your own PNG, JPEG, or WebP"
           disabled={isMediaUploadBusy(thumbnailUpload)}
           onChange={(file) => {
+            thumbnailExtractGenRef.current += 1;
             setThumbnailFile(file);
             if (file) {
               void startThumbnailUpload(file);
@@ -684,6 +734,17 @@ export function VideoForm({
               setThumbnailUpload(idleMediaUpload());
             }
           }}
+          onRemove={
+            thumbnailFile
+              ? () => {
+                  thumbnailExtractGenRef.current += 1;
+                  thumbnailUploadGenRef.current += 1;
+                  setThumbnailFile(null);
+                  setThumbnailUpload(idleMediaUpload());
+                  setError(null);
+                }
+              : undefined
+          }
         />
         {initial?.thumbnailPath &&
           !thumbnailFile &&

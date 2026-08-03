@@ -10,6 +10,9 @@
   --sage-deep: #6f8262;
   --forest: #33513d;
   --forest-deep: #23392a;
+  --forest-band-gradient:
+    radial-gradient(circle at 12% 0%, rgba(255, 253, 249, 0.09), transparent 20rem),
+    linear-gradient(180deg, #35543f 0%, #2c4735 58%, #23392a 100%);
   --brown: #6b5344;
   --brown-light: #a08060;
   --blush: #e0b6bc;
@@ -147,26 +150,46 @@ body {
   }
 }
 
-.scalloped-banner-edge {
+.scalloped-banner-surface {
   --scallop-diameter: 72px;
+  --scallop-height: calc(var(--scallop-diameter) / 2);
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: calc(var(--scallop-diameter) / 2);
-  translate: 0 100%;
-  background: radial-gradient(
-    circle calc(var(--scallop-diameter) / 2) at 50% 0,
-    var(--scallop-color, var(--forest)) 99%,
-    transparent 100%
-  );
-  background-size: var(--scallop-diameter) calc(var(--scallop-diameter) / 2);
-  background-repeat: repeat-x;
+  inset: 0 0 calc(var(--scallop-height) * -1);
+  z-index: 0;
+  background: inherit;
+  -webkit-mask-image:
+    linear-gradient(
+      #000 0 calc(100% - var(--scallop-height)),
+      transparent calc(100% - var(--scallop-height)) 100%
+    ),
+    radial-gradient(
+      circle calc(var(--scallop-diameter) / 2) at 50% 0,
+      #000 99%,
+      transparent 100%
+    );
+  mask-image:
+    linear-gradient(
+      #000 0 calc(100% - var(--scallop-height)),
+      transparent calc(100% - var(--scallop-height)) 100%
+    ),
+    radial-gradient(
+      circle calc(var(--scallop-diameter) / 2) at 50% 0,
+      #000 99%,
+      transparent 100%
+    );
+  -webkit-mask-position: 0 0, 0 100%;
+  mask-position: 0 0, 0 100%;
+  -webkit-mask-size: 100% 100%, var(--scallop-diameter) var(--scallop-height);
+  mask-size: 100% 100%, var(--scallop-diameter) var(--scallop-height);
+  -webkit-mask-repeat: no-repeat, repeat-x;
+  mask-repeat: no-repeat, repeat-x;
+  -webkit-mask-composite: source-over;
+  mask-composite: add;
   pointer-events: none;
 }
 
 @media (min-width: 640px) {
-  .scalloped-banner-edge {
+  .scalloped-banner-surface {
     --scallop-diameter: 84px;
   }
 }
@@ -380,10 +403,7 @@ body {
 
 /* Full-bleed accent band that punctuates the page between light sections. */
 .band-forest {
-  /* Vertical so the bottom edge matches --forest-deep and the scallops blend. */
-  background:
-    radial-gradient(circle at 12% 0%, rgba(255, 253, 249, 0.09), transparent 20rem),
-    linear-gradient(180deg, #35543f 0%, #2c4735 58%, #23392a 100%);
+  background: var(--forest-band-gradient);
 }
 
 /* Decorative butterfly / moon / star silhouettes. */

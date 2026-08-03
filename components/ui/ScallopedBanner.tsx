@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { DecorMotifs, type MotifPreset } from "@/components/ui/DecorMotifs";
 
 type BannerTone = "forest" | "brown";
@@ -19,11 +19,6 @@ const TONE_SURFACE: Record<BannerTone, string> = {
   brown: "bg-brown",
 };
 
-const TONE_SCALLOP: Record<BannerTone, string> = {
-  forest: "var(--forest-deep)",
-  brown: "var(--brown)",
-};
-
 /**
  * Full-bleed accent strip, optionally with a repeating scalloped bottom edge.
  * Place between lighter sections so the band reads as punctuation.
@@ -37,20 +32,21 @@ export function ScallopedBanner({
   motifs = "corners",
 }: ScallopedBannerProps) {
   return (
-    <div className={`relative z-10 ${TONE_SURFACE[tone]} text-paper ${className}`}>
+    <div
+      className={`relative z-10 ${scalloped ? "" : TONE_SURFACE[tone]} text-paper ${className}`}
+    >
+      {scalloped && (
+        <div
+          className={`scalloped-banner-surface ${TONE_SURFACE[tone]}`}
+          aria-hidden
+        />
+      )}
       <DecorMotifs preset={motifs} tone="paper" />
       <div
         className={`relative mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 ${contentClassName}`}
       >
         {children}
       </div>
-      {scalloped && (
-        <div
-          className="scalloped-banner-edge"
-          style={{ "--scallop-color": TONE_SCALLOP[tone] } as CSSProperties}
-          aria-hidden
-        />
-      )}
     </div>
   );
 }

@@ -67,7 +67,12 @@ export function PhotographyCollage() {
                   {isAdminView ? (
                     <button
                       type="button"
-                      onClick={() => openSiteEditor("photography")}
+                      onClick={() =>
+                        openSiteEditor("photography", {
+                          kind: "photography-photo",
+                          photoId: photo.id,
+                        })
+                      }
                       aria-label={`Edit ${photo.alt}`}
                       className="group relative h-full w-full overflow-hidden rounded-2xl border border-white/60 bg-paper/40 shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
                     >

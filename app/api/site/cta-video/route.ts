@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { setCtaVideoUrl, uploadCtaVideo } from "@/lib/storage/site";
+import {
+  clearCtaVideo,
+  setCtaVideoUrl,
+  uploadCtaVideo,
+} from "@/lib/storage/site";
 import { StorageError } from "@/lib/storage";
 import { isAcceptedVideoFile, videoUploadErrorMessage } from "@/lib/videos/upload";
 
@@ -37,6 +41,23 @@ export async function POST(request: Request) {
     console.error(error);
     return NextResponse.json(
       { error: "Failed to upload CTA video." },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE() {
+  try {
+    const site = await clearCtaVideo();
+    revalidatePath("/", "layout");
+    return NextResponse.json(site);
+  } catch (error) {
+    if (error instanceof StorageError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    console.error(error);
+    return NextResponse.json(
+      { error: "Failed to remove CTA video." },
       { status: 500 },
     );
   }
