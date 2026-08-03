@@ -1,15 +1,17 @@
 [
   {
     "id": "f77327aa-a53a-4be0-b833-1085a3a1e220",
-    "slug": "hoodlum",
-    "title": "Hoodlum",
-    "brand": "Cmfrt",
+    "slug": "m-ass-age",
+    "title": "Massage",
+    "brand": "Spa town",
     "platform": "instagram",
-    "hook": "",
-    "cta": "",
+    "hook": "So happy and clean",
+    "cta": "wowee go there",
     "durationSec": 21,
-    "tags": [],
-    "thumbnailPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/thumbnails/90d57741-ca1a-461a-a240-2b0c0ab74acc.png",
+    "tags": [
+      "nice dude"
+    ],
+    "thumbnailPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/thumbnails/73d8d7ea-b4c0-4937-a4c1-784ada2e7691.jpeg",
     "videoPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/videos/c1b97c11-86cb-411d-8af2-7b4392a90f54.mov",
     "featured": true,
     "sortOrder": 0,
@@ -21,14 +23,72 @@
     "title": "Bath Time",
     "brand": "Sopay",
     "platform": "instagram",
-    "hook": "",
-    "cta": "",
+    "hook": "Rub a dub",
+    "cta": "dont be dirty",
     "durationSec": 6,
-    "tags": [],
-    "thumbnailPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/thumbnails/1343c4dc-3274-4ff2-a332-1fecf2a81b9c.png",
+    "tags": [
+      "clean af"
+    ],
+    "thumbnailPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/thumbnails/98393d40-fe89-46f4-9897-42eafb5a53bb.jpeg",
     "videoPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/videos/77fb96df-eda5-433e-84cb-83712e43b443.mov",
     "featured": true,
     "sortOrder": 1,
     "createdAt": "2026-06-18T03:05:36.283Z"
+  },
+  {
+    "id": "6af08f79-b16c-4821-a8e3-6908c5607437",
+    "slug": "slug-2",
+    "title": "Book in da Tub",
+    "brand": "Bubblez",
+    "platform": "instagram",
+    "hook": "Look how dry my book is",
+    "cta": "pop the bubble",
+    "durationSec": 14,
+    "tags": [
+      "bubbly",
+      "fancy",
+      "cooler than you"
+    ],
+    "thumbnailPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/thumbnails/28ba2832-6feb-4482-aac4-5760fafe2811.jpeg",
+    "videoPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/videos/5adb1f65-88df-449e-b1c9-9e7e26b357bb.mov",
+    "featured": true,
+    "sortOrder": 999,
+    "createdAt": "2026-06-19T02:02:12.378Z"
+  },
+  {
+    "id": "6e0d01d4-71cd-4157-9ce4-6396495e92eb",
+    "slug": "slug",
+    "title": "Hoodlum",
+    "brand": "CMFRT",
+    "platform": "instagram",
+    "hook": "I'll rob you in this",
+    "cta": "buy this shirt",
+    "durationSec": 24,
+    "tags": [
+      "yah mon"
+    ],
+    "thumbnailPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/thumbnails/9916b8cd-d6f7-4e17-a469-aa338f7b4652.jpeg",
+    "videoPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/videos/498207fe-ba74-486b-a4c7-6aa4e9555bd8.mov",
+    "featured": true,
+    "sortOrder": 999,
+    "createdAt": "2026-06-19T02:08:28.372Z"
+  },
+  {
+    "id": "d4e2d65b-aaec-4862-a94a-46c106749de8",
+    "slug": "slug-3",
+    "title": "Disco BALLS",
+    "brand": "Shiny Balls",
+    "platform": "instagram",
+    "hook": "Balls to the walls ",
+    "cta": "dont you wanna",
+    "durationSec": 2,
+    "tags": [
+      "ball"
+    ],
+    "thumbnailPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/thumbnails/72ef6cf3-ded2-4799-ba27-409e5cc59755.jpeg",
+    "videoPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/videos/b621e810-ac3b-4a29-8bbd-5f730c6ca059.mov",
+    "featured": true,
+    "sortOrder": 999,
+    "createdAt": "2026-06-19T02:20:22.495Z"
   }
 ]

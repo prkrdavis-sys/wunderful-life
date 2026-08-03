@@ -18,12 +18,22 @@ export function reorderVideos(
   orderedIds: string[],
 ): PortfolioVideo[] {
   const byId = new Map(videos.map((video) => [video.id, video]));
+  const seen = new Set<string>();
 
-  return orderedIds
-    .map((id, index) => {
-      const video = byId.get(id);
-      if (!video) return null;
-      return { ...video, sortOrder: index };
-    })
-    .filter((video): video is PortfolioVideo => video !== null);
+  const ordered = orderedIds.flatMap((id) => {
+    const video = byId.get(id);
+    if (!video || seen.has(id)) return [];
+    seen.add(id);
+    return [video];
+  });
+
+  // Keep any videos missing from the payload instead of dropping them.
+  for (const video of videos) {
+    if (!seen.has(video.id)) {
+      ordered.push(video);
+      seen.add(video.id);
+    }
+  }
+
+  return ordered.map((video, index) => ({ ...video, sortOrder: index }));
 }
