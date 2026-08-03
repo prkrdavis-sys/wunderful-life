@@ -28,7 +28,7 @@ const revealStates: Record<
     visible: { opacity: 1 },
   },
   fadeUp: {
-    hidden: { opacity: 0, y: 32 },
+    hidden: { opacity: 0, y: 48 },
     visible: { opacity: 1, y: 0 },
   },
   fadeDown: {
@@ -53,7 +53,7 @@ const revealStates: Record<
   },
 };
 
-function useRevealTransition(delay = 0, duration = 0.6): Transition {
+function useRevealTransition(delay = 0, duration = 0.72): Transition {
   const reduceMotion = useReducedMotion();
 
   if (reduceMotion) {
@@ -148,7 +148,7 @@ export function SectionReveal({
     <motion.div
       initial={initial}
       whileInView={animate}
-      viewport={{ once: true, margin: "-80px" }}
+      viewport={{ once: true, margin: "-96px" }}
       transition={useRevealTransition(delay, duration)}
       className={className}
     >
@@ -168,7 +168,7 @@ export function StaggerChildren({
     <motion.div
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: "-60px" }}
+      viewport={{ once: true, margin: "-72px" }}
       variants={{
         hidden: {},
         visible: {
@@ -205,7 +205,7 @@ export function StaggerItem({
         hidden: states.hidden,
         visible: {
           ...states.visible,
-          transition: { duration: 0.5, ease: EASE },
+          transition: { duration: 0.62, ease: EASE },
         },
       };
 

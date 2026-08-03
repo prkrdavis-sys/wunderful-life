@@ -14,6 +14,7 @@ import type { SiteContent } from "@/lib/site/types";
 export type ViewMode = "regular" | "admin";
 export type SiteEditorSection =
   | "profile"
+  | "hero"
   | "about"
   | "photos"
   | "homeGrid"

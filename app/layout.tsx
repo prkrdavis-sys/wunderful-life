@@ -3,6 +3,7 @@ import {
   Bricolage_Grotesque,
   DM_Sans,
   Fraunces,
+  Great_Vibes,
   Instrument_Sans,
 } from "next/font/google";
 import { AdminModeBanner } from "@/components/admin/AdminModePanel";
@@ -38,14 +39,33 @@ const instrumentSans = Instrument_Sans({
   display: "swap",
 });
 
+const greatVibes = Great_Vibes({
+  variable: "--font-great-vibes",
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+});
+
 export async function generateMetadata(): Promise<Metadata> {
   const site = await getSiteContent();
+  const title = `${site.fullName} · ${site.brand}`;
   return {
     title: {
-      default: `${site.fullName} · ${site.brand}`,
+      default: title,
       template: `%s · ${site.brand}`,
     },
     description: site.tagline,
+    openGraph: {
+      title,
+      description: site.tagline,
+      siteName: site.brand,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: site.tagline,
+    },
   };
 }
 
@@ -59,7 +79,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bricolage.variable} ${dmSans.variable} ${fraunces.variable} ${instrumentSans.variable} h-full scroll-smooth`}
+      className={`${bricolage.variable} ${dmSans.variable} ${fraunces.variable} ${instrumentSans.variable} ${greatVibes.variable} h-full scroll-smooth`}
     >
       <body className="relative min-h-full flex flex-col bg-cream font-body antialiased">
         <AppProviders initialSite={site}>

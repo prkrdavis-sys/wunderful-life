@@ -65,7 +65,7 @@ export function ContactSection() {
           </p>
         </SectionReveal>
 
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+        <SectionReveal delay={0.12} className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <motion.a
             href={site.social.instagram}
             aria-label="Open Instagram"
@@ -84,7 +84,7 @@ export function ContactSection() {
           >
             <EmailIcon />
           </motion.a>
-        </div>
+        </SectionReveal>
       </div>
     </section>
   );

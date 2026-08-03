@@ -1,6 +1,6 @@
 "use client";
 
-import { SectionReveal } from "@/components/ui/motion";
+import { SectionReveal, StaggerChildren, StaggerItem } from "@/components/ui/motion";
 import { EmilyPhoto } from "@/components/ui/EmilyPhoto";
 import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
@@ -46,19 +46,19 @@ export function AboutSection() {
             </SectionReveal>
           )}
 
-          <div className="min-w-0 space-y-4">
+          <StaggerChildren className="min-w-0 space-y-4">
             {leadParagraphs.map((paragraph, index) => (
-              <p key={`about-lead-${index}`} className={paragraphClass}>
-                {paragraph}
-              </p>
+              <StaggerItem key={`about-lead-${index}`}>
+                <p className={paragraphClass}>{paragraph}</p>
+              </StaggerItem>
             ))}
 
             {(closingParagraph || accentPhoto) && (
               <div className="flex flex-col gap-5 pt-1 md:flex-row md:items-start md:justify-between md:gap-6 lg:gap-8">
                 {closingParagraph && (
-                  <p className={`min-w-0 flex-1 md:max-w-[72%] lg:max-w-[68%] ${paragraphClass}`}>
-                    {closingParagraph}
-                  </p>
+                  <SectionReveal className="min-w-0 flex-1 md:max-w-[72%] lg:max-w-[68%]">
+                    <p className={paragraphClass}>{closingParagraph}</p>
+                  </SectionReveal>
                 )}
 
                 {accentPhoto && (
@@ -72,7 +72,7 @@ export function AboutSection() {
                 )}
               </div>
             )}
-          </div>
+          </StaggerChildren>
         </div>
 
         {galleryPhotos.length > 0 && (
@@ -80,11 +80,13 @@ export function AboutSection() {
             <h3 className={`font-display text-xl sm:text-2xl ${text.heading}`}>
               A little more {site.name}
             </h3>
-            <div className="mx-auto mt-6 grid max-w-4xl grid-cols-2 justify-items-center gap-x-5 gap-y-8 sm:gap-x-8 lg:grid-cols-4">
+            <StaggerChildren className="mx-auto mt-6 grid max-w-4xl grid-cols-2 justify-items-center gap-x-5 gap-y-8 sm:gap-x-8 lg:grid-cols-4">
               {galleryPhotos.map((photo) => (
-                <EmilyPhoto key={photo.id} photo={photo} size="md" />
+                <StaggerItem key={photo.id}>
+                  <EmilyPhoto photo={photo} size="md" />
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerChildren>
           </SectionReveal>
         )}
       </div>

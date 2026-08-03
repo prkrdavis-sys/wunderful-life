@@ -1,54 +1,71 @@
 "use client";
 
-import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
+import { HeroEntrance } from "@/components/ui/motion";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
 import { sectionWallpapers } from "@/lib/plants";
-import { sectionText } from "@/lib/sectionText";
+import { lightOnDarkShadow, sectionText } from "@/lib/sectionText";
 
 export function HeroSection() {
   const site = useSiteContent();
   const { wallpaper, overlay } = sectionWallpapers.hero;
   const text = sectionText.hero;
+  const videoPath = site.hero.videoPath;
+  const hasVideo = Boolean(videoPath);
 
   return (
-    <section className="relative overflow-hidden px-4 py-24 sm:px-6 sm:py-32">
-      <PlantSectionBackground
-        wallpaper={wallpaper}
-        overlay={overlay}
-        priority
-      />
+    <section className="relative flex min-h-[85svh] flex-col overflow-hidden px-4 py-16 sm:px-6 sm:py-20">
+      {hasVideo ? (
+        <>
+          <video
+            src={videoPath}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/20 to-black/55"
+          />
+        </>
+      ) : (
+        <PlantSectionBackground wallpaper={wallpaper} overlay={overlay} priority />
+      )}
 
-      <div className="relative z-10 mx-auto max-w-4xl text-center">
-        <p className={`mb-3 text-sm font-medium tracking-[0.28em] uppercase ${text.eyebrow}`}>
-          {site.brand}
-        </p>
-        <h1 className={`font-display text-5xl leading-[1.05] sm:text-6xl md:text-7xl lg:text-8xl ${text.heading}`}>
-          {site.fullName}
-        </h1>
-        <p className={`mt-4 font-display text-xl sm:text-2xl ${text.subheading}`}>
-          UGC Creator · Creative · Nature-driven
-        </p>
-        <p className={`mx-auto mt-6 max-w-2xl text-lg leading-relaxed sm:text-xl ${text.body}`}>
-          {site.tagline}
-        </p>
-
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-          {site.heroLinks.map((link) => (
-            <AnimatedButton
-              key={link.href}
-              href={link.href}
-              variant={link.emphasis === "primary" ? "burgundy" : "soft"}
+      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col items-center text-center">
+        <div className="flex flex-1 flex-col items-center justify-center">
+          <HeroEntrance variant="fadeDown" delay={0.05}>
+            <p
+              className={`mb-3 text-sm font-medium tracking-[0.28em] uppercase ${
+                hasVideo ? `text-paper/85 ${lightOnDarkShadow}` : text.eyebrow
+              }`}
             >
-              {link.label}
-            </AnimatedButton>
-          ))}
+              {site.brand}
+            </p>
+          </HeroEntrance>
+          <HeroEntrance delay={0.14}>
+            <h1
+              className={`font-display text-5xl leading-[1.05] sm:text-6xl md:text-7xl lg:text-8xl ${
+                hasVideo ? `text-paper ${lightOnDarkShadow}` : text.heading
+              }`}
+            >
+              {site.fullName}
+            </h1>
+          </HeroEntrance>
         </div>
 
-        <p className={`mx-auto mt-8 max-w-xl text-sm leading-relaxed ${text.caption}`}>
-          I&apos;m {site.name} — the face behind the frame. Brands hire me for
-          deliverables; they remember me for the personality.
-        </p>
+        <HeroEntrance delay={0.24}>
+          <p
+            className={`font-script mx-auto max-w-2xl pb-2 text-3xl leading-snug sm:text-4xl ${
+              hasVideo ? `text-paper ${lightOnDarkShadow}` : text.caption
+            }`}
+          >
+            {site.hero.subtitle}
+          </p>
+        </HeroEntrance>
       </div>
     </section>
   );

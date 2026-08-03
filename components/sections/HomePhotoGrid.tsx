@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
+import { StaggerChildren, StaggerItem } from "@/components/ui/motion";
 
 export function HomePhotoGrid() {
   const { site, viewMode, openSiteEditor } = useAdminView();
@@ -15,7 +16,7 @@ export function HomePhotoGrid() {
 
   return (
     <div className="relative z-10 mx-auto mt-10 max-w-5xl px-4 sm:px-6">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+      <StaggerChildren className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
         {photos.map((photo) => {
           const tileContent = (
             <>
@@ -42,30 +43,28 @@ export function HomePhotoGrid() {
             </>
           );
 
-          if (isAdminView) {
-            return (
-              <button
-                key={photo.id}
-                type="button"
-                onClick={() => openSiteEditor("homeGrid")}
-                aria-label={`Edit ${photo.alt}`}
-                className="group relative aspect-square overflow-hidden rounded-2xl border border-white/45 bg-paper/24 text-left shadow-lg shadow-indigo/10 ring-1 ring-white/25 backdrop-blur-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-pink/55 focus-visible:ring-offset-2 focus-visible:ring-offset-indigo/20"
-              >
-                {tileContent}
-              </button>
-            );
-          }
-
           return (
-            <div
-              key={photo.id}
-              className="relative aspect-square overflow-hidden rounded-2xl border border-white/45 bg-paper/24 shadow-lg shadow-indigo/10 ring-1 ring-white/25 backdrop-blur-sm"
-            >
-              {tileContent}
-            </div>
+            <StaggerItem key={photo.id} className="w-full">
+              {isAdminView ? (
+                <button
+                  type="button"
+                  onClick={() => openSiteEditor("homeGrid")}
+                  aria-label={`Edit ${photo.alt}`}
+                  className="group relative aspect-square w-full overflow-hidden rounded-2xl border border-white/45 bg-paper/24 text-left shadow-lg shadow-indigo/10 ring-1 ring-white/25 backdrop-blur-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-pink/55 focus-visible:ring-offset-2 focus-visible:ring-offset-indigo/20"
+                >
+                  {tileContent}
+                </button>
+              ) : (
+                <div
+                  className="relative aspect-square w-full overflow-hidden rounded-2xl border border-white/45 bg-paper/24 shadow-lg shadow-indigo/10 ring-1 ring-white/25 backdrop-blur-sm"
+                >
+                  {tileContent}
+                </div>
+              )}
+            </StaggerItem>
           );
         })}
-      </div>
+      </StaggerChildren>
     </div>
   );
 }

@@ -1,9 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { upload } from "@vercel/blob/client";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { SiteContent } from "@/lib/site/types";
+import {
+  isAcceptedVideoFile,
+  VIDEO_FILE_ACCEPT,
+  VIDEO_UPLOAD_HELP,
+  videoContentTypeFromFilename,
+  videoUploadErrorMessage,
+} from "@/lib/videos/upload";
+import { needsWebTranscode, prepareVideoForWebUpload } from "@/lib/videos/transcode";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { FileUploadButton } from "@/components/ui/FileUploadButton";
+import { UploadProgressBar } from "@/components/ui/UploadProgressBar";
 import {
   useAdminView,
   type SiteEditorSection,
@@ -15,6 +25,7 @@ type SiteEditorFormProps = {
 
 const SECTIONS: { id: SiteEditorSection; label: string; hint: string }[] = [
   { id: "profile", label: "Profile", hint: "Name & tagline" },
+  { id: "hero", label: "Hero", hint: "Background video & subtitle" },
   { id: "about", label: "About", hint: "Headline & copy" },
   { id: "photos", label: "Photos", hint: "Images & captions" },
   { id: "homeGrid", label: "Home grid", hint: "8 photo slots" },
@@ -27,6 +38,30 @@ const SECTIONS: { id: SiteEditorSection; label: string; hint: string }[] = [
 const inputClass =
   "mt-1 w-full rounded-xl border border-brown/20 bg-white px-3 py-2 text-brown";
 
+type HeroUploadState = {
+  status: "idle" | "preparing" | "uploading" | "ready" | "error";
+  progress: number;
+  message: string;
+};
+
+const idleHeroUpload = (): HeroUploadState => ({
+  status: "idle",
+  progress: 0,
+  message: "",
+});
+
+function heroVideoDisplayName(path: string): string {
+  try {
+    if (path.startsWith("http://") || path.startsWith("https://")) {
+      const segment = new URL(path).pathname.split("/").pop();
+      return segment || path;
+    }
+  } catch {
+    // fall through
+  }
+  return path.split("/").pop() || path;
+}
+
 export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
   const { site, setSite, editorSection, setEditorSection } = useAdminView();
   const [form, setForm] = useState(site);
@@ -35,6 +70,145 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [heroVideoFile, setHeroVideoFile] = useState<File | null>(null);
+  const [heroUpload, setHeroUpload] = useState<HeroUploadState>(idleHeroUpload);
+  const heroUploadGenRef = useRef(0);
+  const heroVideoInputRef = useRef<HTMLInputElement>(null);
+
+  const heroUploadBusy =
+    heroUpload.status === "preparing" || heroUpload.status === "uploading";
+
+  const heroVideoPreviewUrl = useMemo(
+    () => (heroVideoFile ? URL.createObjectURL(heroVideoFile) : null),
+    [heroVideoFile],
+  );
+
+  useEffect(() => {
+    if (heroVideoPreviewUrl) {
+      return () => URL.revokeObjectURL(heroVideoPreviewUrl);
+    }
+  }, [heroVideoPreviewUrl]);
+
+  useEffect(() => {
+    return () => {
+      heroUploadGenRef.current += 1;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!heroUploadBusy) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [heroUploadBusy]);
+
+  const startHeroVideoUpload = async (file: File) => {
+    const generation = ++heroUploadGenRef.current;
+    setError(null);
+    setMessage(null);
+    setHeroUpload({
+      status: "preparing",
+      progress: 0,
+      message: needsWebTranscode(file)
+        ? "Converting iPhone video for web playback… (can take a minute)"
+        : "Preparing video…",
+    });
+
+    try {
+      const configResponse = await fetch("/api/videos/config");
+      const config = (await configResponse.json()) as {
+        clientUpload: boolean;
+        handleUploadUrl: string;
+      };
+      if (!configResponse.ok) {
+        throw new Error("Could not load upload settings.");
+      }
+      if (generation !== heroUploadGenRef.current) return;
+
+      const prepared = await prepareVideoForWebUpload(file, (progressMessage) => {
+        if (generation !== heroUploadGenRef.current) return;
+        setHeroUpload((current) => ({
+          ...current,
+          status: "preparing",
+          message: progressMessage,
+        }));
+      });
+      if (generation !== heroUploadGenRef.current) return;
+
+      const payload = new FormData();
+
+      if (config.clientUpload) {
+        setHeroUpload({
+          status: "uploading",
+          progress: 0,
+          message: "Uploading hero video… 0%",
+        });
+
+        const ext = prepared.name.slice(prepared.name.lastIndexOf(".")) || ".mp4";
+        const contentType =
+          prepared.type || videoContentTypeFromFilename(prepared.name);
+        const blob = await upload(`hero/hero-${crypto.randomUUID()}${ext}`, prepared, {
+          access: "public",
+          handleUploadUrl: config.handleUploadUrl,
+          multipart: true,
+          ...(contentType ? { contentType } : {}),
+          onUploadProgress: (event) => {
+            if (generation !== heroUploadGenRef.current) return;
+            const rounded = Math.round(event.percentage);
+            setHeroUpload((current) => ({
+              ...current,
+              status: "uploading",
+              progress: rounded,
+              message: `Uploading hero video… ${rounded}%`,
+            }));
+          },
+        });
+        if (generation !== heroUploadGenRef.current) return;
+        payload.set("videoUrl", blob.url);
+      } else {
+        setHeroUpload({
+          status: "uploading",
+          progress: 0,
+          message: "Uploading hero video…",
+        });
+        payload.set("video", prepared);
+      }
+
+      const response = await fetch("/api/site/hero-video", {
+        method: "POST",
+        body: payload,
+      });
+      const data = await response.json();
+      if (generation !== heroUploadGenRef.current) return;
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to upload hero video.");
+      }
+
+      setForm(data);
+      setSite(data);
+      setHeroVideoFile(null);
+      if (heroVideoInputRef.current) heroVideoInputRef.current.value = "";
+      setHeroUpload({
+        status: "ready",
+        progress: 100,
+        message: "Hero video is live on your site.",
+      });
+      setMessage("Hero video uploaded.");
+    } catch (err) {
+      if (generation !== heroUploadGenRef.current) return;
+      const uploadError =
+        err instanceof Error && err.message
+          ? err.message
+          : "Hero video upload failed.";
+      setHeroUpload({ status: "error", progress: 0, message: uploadError });
+      setError(uploadError);
+    }
+  };
 
   const save = async () => {
     setLoading(true);
@@ -185,7 +359,10 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
                   />
                 </label>
                 <label className="block text-sm sm:col-span-2">
-                  <span className="text-muted">Tagline</span>
+                  <span className="text-muted">
+                    Tagline (used for search/social previews — the hero shows the
+                    Hero subtitle instead)
+                  </span>
                   <textarea
                     value={form.tagline}
                     onChange={(event) =>
@@ -198,6 +375,91 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
                     className={inputClass}
                   />
                 </label>
+              </div>
+            </section>
+          )}
+
+          {activeSection === "hero" && (
+            <section className="space-y-4">
+              <div>
+                <h3 className="font-display text-lg text-brown">Hero</h3>
+                <p className="mt-1 text-sm text-muted">
+                  The full-width background video at the top of the home page,
+                  plus the cursive subtitle shown at the bottom of the hero.
+                </p>
+              </div>
+
+              <label className="block max-w-2xl text-sm">
+                <span className="text-muted">Subtitle (cursive line)</span>
+                <textarea
+                  value={form.hero.subtitle}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      hero: { ...current.hero, subtitle: event.target.value },
+                    }))
+                  }
+                  rows={3}
+                  className={inputClass}
+                />
+                <span className="mt-1 block text-xs text-muted">
+                  Remember to press &ldquo;Save site content&rdquo; after editing
+                  the subtitle.
+                </span>
+              </label>
+
+              <div className="max-w-2xl space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4">
+                <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+                  Background video
+                </p>
+                <p className="text-sm text-muted">
+                  Uploads as soon as you pick a file and replaces the current
+                  video. Without a video, the hero shows the plant wallpaper.
+                </p>
+                <FileUploadButton
+                  kind="video"
+                  inputRef={heroVideoInputRef}
+                  accept={VIDEO_FILE_ACCEPT}
+                  hint={VIDEO_UPLOAD_HELP}
+                  selectedName={
+                    heroVideoFile?.name ??
+                    (form.hero.videoPath
+                      ? heroVideoDisplayName(form.hero.videoPath)
+                      : null)
+                  }
+                  previewUrl={heroVideoPreviewUrl ?? form.hero.videoPath ?? null}
+                  previewType="video"
+                  disabled={heroUploadBusy}
+                  onChange={(file) => {
+                    if (!file) return;
+                    if (!isAcceptedVideoFile(file)) {
+                      setHeroVideoFile(null);
+                      setHeroUpload(idleHeroUpload());
+                      setError(videoUploadErrorMessage());
+                      if (heroVideoInputRef.current) {
+                        heroVideoInputRef.current.value = "";
+                      }
+                      return;
+                    }
+                    setError(null);
+                    setHeroVideoFile(file);
+                    void startHeroVideoUpload(file);
+                  }}
+                />
+                {heroUpload.status !== "idle" && (
+                  <UploadProgressBar
+                    label="Hero video"
+                    message={heroUpload.message}
+                    progress={heroUpload.progress}
+                    indeterminate={heroUpload.status === "preparing"}
+                  />
+                )}
+                {form.hero.videoPath && !heroUploadBusy && (
+                  <p className="inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-indigo">
+                    <span aria-hidden>🌸</span>
+                    Live on your site
+                  </p>
+                )}
               </div>
             </section>
           )}
@@ -800,7 +1062,7 @@ export function SiteEditorForm({ onSaved }: SiteEditorFormProps) {
 
           <AnimatedButton
             onClick={() => void save()}
-            disabled={loading}
+            disabled={loading || heroUploadBusy}
             className="w-full shadow-md shadow-burgundy/15 sm:max-w-xs"
           >
             {loading ? "Saving…" : "Save site content"}

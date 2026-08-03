@@ -3,6 +3,10 @@
   "name": "Emily",
   "brand": "Wunderful Life",
   "tagline": "Creative, nature-loving UGC — airy visuals, real personality, content that feels like you already know me.",
+  "hero": {
+    "subtitle": "I'm Emily — the face behind the frame. Brands hire me for deliverables; they remember me for the personality.",
+    "videoPath": "/uploads/hero/hero-0ada399a-9d56-4f56-81cb-c5afb7008c6a.mp4"
+  },
   "about": {
     "headline": "About Me",
     "paragraphs": [
@@ -119,6 +123,10 @@
     {
       "label": "Services",
       "href": "/#services"
+    },
+    {
+      "label": "UGC Benefits",
+      "href": "/#ugc-benefits"
     },
     {
       "label": "Contact",

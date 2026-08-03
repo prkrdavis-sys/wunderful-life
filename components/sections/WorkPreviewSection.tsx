@@ -41,21 +41,23 @@ export async function WorkPreviewSection({ videos }: WorkPreviewSectionProps) {
         </SectionReveal>
       </div>
 
-      <div className="relative z-10 mt-10">
+      <SectionReveal delay={0.12} className="relative z-10 mt-10">
         <PhoneMarquee
           videos={marqueeVideos}
           emptyClassName={text.empty}
           captionClasses={text.caption}
         />
-      </div>
+      </SectionReveal>
 
-      <HomePhotoGrid />
+      <SectionReveal delay={0.18}>
+        <HomePhotoGrid />
+      </SectionReveal>
 
-      <div className="relative z-10 mt-10 flex justify-center">
+      <SectionReveal delay={0.24} className="relative z-10 mt-10 flex justify-center">
         <AnimatedButton href="/work" variant="soft">
           See All of {site.name}&apos;s Work
         </AnimatedButton>
-      </div>
+      </SectionReveal>
     </section>
   );
 }

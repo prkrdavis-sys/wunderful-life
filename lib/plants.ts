@@ -101,9 +101,12 @@ export type SectionWallpaperConfig = {
   overlay?: WallpaperOverlay;
 };
 
+/** Site share / app thumbnail — same cloud photo used as About Me default wallpaper. */
+export const siteThumbnailWallpaper: PlantWallpaperId = "hero-sky";
+
 export const sectionWallpapers: Record<string, SectionWallpaperConfig> = {
-  hero: { wallpaper: "hero-sky", overlay: "minimal" },
-  about: { wallpaper: "about-sky", overlay: "minimal" },
+  hero: { wallpaper: "about-sky", overlay: "minimal" },
+  about: { wallpaper: siteThumbnailWallpaper, overlay: "minimal" },
   services: { wallpaper: "services-pexels", overlay: "none" },
   work: { wallpaper: "work-pexels", overlay: "minimal" },
   contact: { wallpaper: "contact-pexels", overlay: "minimal" },

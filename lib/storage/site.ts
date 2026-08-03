@@ -13,6 +13,7 @@ import { StorageError } from "./types";
 const SITE_PATH = path.join(process.cwd(), "data", "site.json");
 const ABOUT_PHOTO_DIR = path.join(process.cwd(), "public", "about-photos");
 const HOME_GRID_PHOTO_DIR = path.join(process.cwd(), "public", "home-grid-photos");
+const HERO_VIDEO_DIR = path.join(process.cwd(), "public", "uploads", "hero");
 
 function isCompleteSiteContent(value: unknown): value is SiteContent {
   if (!value || typeof value !== "object") return false;
@@ -132,7 +133,8 @@ async function deleteStoredPhoto(imagePath: string) {
   if (
     imagePath.startsWith("/about-photos/") ||
     imagePath.startsWith("/home-grid-photos/") ||
-    imagePath.startsWith("/uploads/photos/")
+    imagePath.startsWith("/uploads/photos/") ||
+    imagePath.startsWith("/uploads/hero/")
   ) {
     const absolute = path.join(process.cwd(), "public", imagePath);
     try {
@@ -184,6 +186,50 @@ export async function uploadAboutPhoto(photoId: string, file: File) {
   site.about.photos[photoIndex] = { ...current, imagePath };
   await writeSiteContent(site);
   return site;
+}
+
+async function saveHeroVideoFile(file: File): Promise<string> {
+  const ext = path.extname(file.name) || ".mp4";
+  const filename = `hero-${randomUUID()}${ext}`;
+
+  if (getUseBlobStorage()) {
+    const blob = await put(`hero/${filename}`, file, {
+      access: "public",
+      addRandomSuffix: false,
+      ...(file.type ? { contentType: file.type } : {}),
+    });
+    return blob.url;
+  }
+
+  await ensurePhotoDir(HERO_VIDEO_DIR);
+  const buffer = Buffer.from(await file.arrayBuffer());
+  await fs.writeFile(path.join(HERO_VIDEO_DIR, filename), buffer);
+  return `/uploads/hero/${filename}`;
+}
+
+async function replaceHeroVideoPath(videoPath: string): Promise<SiteContent> {
+  const site = await readSiteContent();
+  const previous = site.hero.videoPath;
+
+  site.hero = { ...site.hero, videoPath };
+  await writeSiteContent(site);
+
+  if (previous && previous !== videoPath) {
+    await deleteStoredPhoto(previous);
+  }
+
+  return site;
+}
+
+/** Local/dev path: the video file arrives in the request body. */
+export async function uploadHeroVideo(file: File): Promise<SiteContent> {
+  const videoPath = await saveHeroVideoFile(file);
+  return replaceHeroVideoPath(videoPath);
+}
+
+/** Production path: the file was client-uploaded to Blob; persist its URL. */
+export async function setHeroVideoUrl(url: string): Promise<SiteContent> {
+  return replaceHeroVideoPath(url);
 }
 
 export async function uploadHomeGridPhoto(photoId: string, file: File) {

@@ -31,11 +31,17 @@ export type Testimonial = {
   role: string;
 };
 
+export type HeroContent = {
+  videoPath?: string;
+  subtitle: string;
+};
+
 export type SiteContent = {
   fullName: string;
   name: string;
   brand: string;
   tagline: string;
+  hero: HeroContent;
   about: {
     headline: string;
     paragraphs: string[];

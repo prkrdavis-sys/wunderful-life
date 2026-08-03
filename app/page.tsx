@@ -4,6 +4,7 @@ import { HeroSection } from "@/components/sections/HeroSection";
 import { ServicesSection } from "@/components/sections/ServicesSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { WhatIsUgcSection } from "@/components/sections/WhatIsUgcSection";
+import { UgcBenefitsSection } from "@/components/sections/UgcBenefitsSection";
 import { WorkPreviewSection } from "@/components/sections/WorkPreviewSection";
 import { SectionSeparator } from "@/components/ui/SectionSeparator";
 import { listVideos } from "@/lib/storage";
@@ -22,6 +23,8 @@ export default async function HomePage() {
       <WorkPreviewSection videos={videos} />
       <SectionSeparator />
       <ServicesSection />
+      <SectionSeparator />
+      <UgcBenefitsSection />
       <SectionSeparator />
       <TestimonialsSection />
       <SectionSeparator />

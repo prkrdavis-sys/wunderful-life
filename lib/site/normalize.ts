@@ -2,6 +2,10 @@ import type { AboutPhoto, GridPhoto, SiteContent } from "@/lib/site/types";
 
 const DEFAULT_CONTACT_HEADLINE = "Let's Create Together";
 
+function defaultHeroSubtitle(name: string): string {
+  return `I'm ${name} — the face behind the frame. Brands hire me for deliverables; they remember me for the personality.`;
+}
+
 const DEFAULT_WHAT_IS_UGC: SiteContent["whatIsUgc"] = {
   heading: "What Is UGC?",
   body: "UGC, or user-generated content, is brand content made to feel like it came from a real customer, creator, or everyday experience. It blends strategy with natural storytelling, helping people understand how a product fits into real life without feeling like a traditional ad.",
@@ -56,6 +60,11 @@ const DEFAULT_FOURTH_GALLERY_PHOTO: AboutPhoto = {
   rotate: 3,
 };
 
+const DEFAULT_UGC_BENEFITS_LINK: SiteContent["heroLinks"][number] = {
+  label: "UGC Benefits",
+  href: "/#ugc-benefits",
+};
+
 const DEFAULT_HOME_GRID_PHOTOS: GridPhoto[] = Array.from(
   { length: 8 },
   (_, index) => ({
@@ -66,12 +75,13 @@ const DEFAULT_HOME_GRID_PHOTOS: GridPhoto[] = Array.from(
 
 type SiteContentInput = Omit<
   SiteContent,
-  "contact" | "homePhotoGrid" | "whatIsUgc" | "testimonials"
+  "contact" | "homePhotoGrid" | "whatIsUgc" | "testimonials" | "hero"
 > & {
   contact?: Partial<SiteContent["contact"]>;
   homePhotoGrid?: Partial<SiteContent["homePhotoGrid"]>;
   whatIsUgc?: Partial<SiteContent["whatIsUgc"]>;
   testimonials?: Partial<SiteContent["testimonials"]>;
+  hero?: Partial<SiteContent["hero"]>;
 };
 
 function defaultContactBody(name: string): string {
@@ -97,7 +107,7 @@ function normalizeAboutPhotos(photos: AboutPhoto[]): AboutPhoto[] {
 }
 
 function normalizeHeroLinks(links: SiteContent["heroLinks"]): SiteContent["heroLinks"] {
-  return links.map((link) => {
+  const normalizedLinks = links.map((link) => {
     if (link.activePathPrefix === "/work" || link.href === "/#work") {
       return {
         ...link,
@@ -107,6 +117,12 @@ function normalizeHeroLinks(links: SiteContent["heroLinks"]): SiteContent["heroL
 
     return link;
   });
+
+  if (!normalizedLinks.some((link) => link.href === DEFAULT_UGC_BENEFITS_LINK.href)) {
+    return [...normalizedLinks, DEFAULT_UGC_BENEFITS_LINK];
+  }
+
+  return normalizedLinks;
 }
 
 function normalizeHomeGridPhotos(
@@ -135,6 +151,13 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
     name: raw.name,
     brand: raw.brand,
     tagline: raw.tagline,
+    hero: {
+      subtitle:
+        typeof raw.hero?.subtitle === "string" && raw.hero.subtitle.trim()
+          ? raw.hero.subtitle
+          : defaultHeroSubtitle(raw.name),
+      ...(raw.hero?.videoPath ? { videoPath: raw.hero.videoPath } : {}),
+    },
     about: {
       headline: raw.about.headline,
       paragraphs: raw.about.paragraphs,
