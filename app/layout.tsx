@@ -55,6 +55,12 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s · ${site.brand}`,
     },
     description: site.tagline,
+    applicationName: site.brand,
+    appleWebApp: {
+      capable: true,
+      title: site.brand,
+      statusBarStyle: "default",
+    },
     openGraph: {
       title,
       description: site.tagline,
