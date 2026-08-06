@@ -109,11 +109,11 @@ export const butterflyFlights: Record<ButterflyFlightId, ButterflyFlightPreset> 
     colorClassName: "text-forest-deep",
     opacity: 0.78,
   },
-  // A tight loop in the top corner, beside rather than across the section heading.
-  // Clearance 63px.
+  // A tight loop beside the cards. Sits below the scalloped banner that laps over
+  // the top of this section, where a silhouette would be lost. Clearance 53px.
   servicesHigh: {
     path: "M 96 70 C 160 40 240 66 258 118 C 276 170 216 214 156 200 C 100 188 66 140 84 104 C 90 92 92 78 96 70",
-    className: "top-[2%] left-3",
+    className: "top-[22%] left-3",
     duration: 31,
     areaWidth: 200,
     maxViewportWidth: 31,
