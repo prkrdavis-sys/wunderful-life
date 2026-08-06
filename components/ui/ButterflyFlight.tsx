@@ -45,8 +45,9 @@ const MAX_TILT_DEGREES = 26;
  * by a mask. A mask selects a region of the canvas, so wherever a route passed near
  * or across itself the mask over the tail also uncovered the stretch of line running
  * the other way, printing dashes ahead of the butterfly. Addressing each dash by its
- * distance along the route removes that whole class of fault: a dash can only ever
- * be placed behind the butterfly, whatever shape the route is.
+ * distance along the route removes the mask fault. A directional guard below also
+ * stops the tail when a curved route folds an older dash into the butterfly's
+ * forward half-plane, so mirroring the sprite can never make a dash appear in front.
  */
 const DASH_LENGTH = 3;
 const DASH_GAP = 7;
@@ -54,6 +55,8 @@ const DASH_PERIOD = DASH_LENGTH + DASH_GAP;
 
 /** Spacing of the sampled geometry the dashes are built from, in path units. */
 const SAMPLE_STEP = 1.5;
+/** No dash is allowed to project into the butterfly's current direction of travel. */
+const TRAIL_FORWARD_TOLERANCE = 0;
 
 /**
  * Drops a preset butterfly into a section, layered between the section's
@@ -172,6 +175,11 @@ export function ButterflyFlight({
       const behind = pointAt(head - HEADING_STEP * total);
       const dx = ahead.x - behind.x;
       const dy = ahead.y - behind.y;
+      const headingLength = Math.hypot(dx, dy);
+      const forwardDistance = (point: { x: number; y: number }) =>
+        headingLength === 0
+          ? 0
+          : ((point.x - here.x) * dx + (point.y - here.y) * dy) / headingLength;
 
       // The sprite is drawn facing right, so travelling left is a horizontal mirror.
       // Mirroring also flips the sense of rotation, hence the tilt is scaled by the
@@ -185,8 +193,11 @@ export function ButterflyFlight({
       butterfly.style.transform = transformFor(here.x, here.y, tilt, facing);
 
       // Dashes sit on a fixed grid measured from the start of the route, so they
-      // stay pinned to the route instead of sliding along with the butterfly.
+      // stay pinned to the route instead of sliding along with the butterfly. Once
+      // a curved route folds into the forward half-plane, stop the older tail too:
+      // otherwise a later dash could reappear past the offending one.
       const newest = Math.floor(head / DASH_PERIOD);
+      let trailBlocked = false;
 
       for (let index = 0; index < dashCount; index += 1) {
         const dash = dashRefs.current[index];
@@ -198,7 +209,7 @@ export function ButterflyFlight({
         const end = Math.min(start + DASH_LENGTH, head);
         const age = (head - end) / trailLength;
 
-        if (end <= start || age >= 1) {
+        if (end <= start || age >= 1 || trailBlocked) {
           dash.style.opacity = "0";
           continue;
         }
@@ -206,6 +217,18 @@ export function ButterflyFlight({
         const middle = pointAt((start + end) / 2);
         const from = pointAt(start);
         const to = pointAt(end);
+        const furthestForward = Math.max(
+          forwardDistance(from),
+          forwardDistance(middle),
+          forwardDistance(to),
+        );
+
+        if (furthestForward > TRAIL_FORWARD_TOLERANCE) {
+          dash.style.opacity = "0";
+          trailBlocked = true;
+          continue;
+        }
+
         dash.setAttribute(
           "d",
           `M ${from.x.toFixed(1)} ${from.y.toFixed(1)}` +
