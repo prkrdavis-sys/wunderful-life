@@ -127,9 +127,9 @@ export function ButterflyFlight({
   /**
    * Positions the sprite entirely in percentages of its own box, which keeps the
    * transform resolution-independent: no pixel conversion, and therefore nothing to
-   * recompute when the container is resized. Read right to left, the sprite is
-   * shifted so its body sits on the origin, mirrored, pitched, then carried out to
-   * its place on the path.
+   * recompute when the container is resized. The inline transform origin is fixed at
+   * the element's top-left so, read right to left, the sprite's body is shifted to
+   * the origin, mirrored, pitched, then carried out to the path.
    */
   const transformFor = useCallback(
     (x: number, y: number, tilt: number, facing: number) =>
@@ -365,6 +365,7 @@ export function ButterflyFlight({
           ...flapStyle,
           width: `${(spriteUnits.width / AREA.width) * 100}%`,
           height: `${(spriteUnits.height / AREA.height) * 100}%`,
+          transformOrigin: "0 0",
           transform: startTransform,
         }}
       />
