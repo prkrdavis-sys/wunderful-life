@@ -10,7 +10,6 @@ import {
 import {
   useCallback,
   useEffect,
-  useId,
   useMemo,
   useRef,
   type CSSProperties,
@@ -40,20 +39,19 @@ const TILT_DAMPING = 0.7;
 const MAX_TILT_DEGREES = 26;
 
 /**
- * The trail fades out behind the butterfly rather than persisting, so it never
- * accumulates into a drawing of the whole route. A stroke cannot fade along its own
- * length, so the reveal mask is built from this many stacked slices, each a short
- * piece of the path at a progressively lower opacity.
+ * The trail is drawn as one element per dash rather than as a dashed line revealed
+ * by a mask. A mask selects a region of the canvas, so wherever a route passed near
+ * or across itself the mask over the tail also uncovered the stretch of line running
+ * the other way, printing dashes ahead of the butterfly. Addressing each dash by its
+ * distance along the route removes that whole class of fault: a dash can only ever
+ * be placed behind the butterfly, whatever shape the route is.
  */
-const TRAIL_SLICES = 14;
-/**
- * Slices are stretched backwards past their own start so neighbours overlap, which
- * hides the antialiased seams between them. They are drawn tail first, so the
- * brighter slice always paints over the dimmer one it overlaps. The stretch must go
- * backwards: extending forwards would push the leading slice past the butterfly and
- * draw trail ahead of it.
- */
-const SLICE_OVERLAP = 1.3;
+const DASH_LENGTH = 3;
+const DASH_GAP = 7;
+const DASH_PERIOD = DASH_LENGTH + DASH_GAP;
+
+/** Spacing of the sampled geometry the dashes are built from, in path units. */
+const SAMPLE_STEP = 1.5;
 
 /**
  * Drops a preset butterfly into a section, layered between the section's
@@ -102,16 +100,21 @@ export function ButterflyFlight({
   trailOpacity = 0.6,
 }: ButterflyFlightProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const trailRef = useRef<SVGPathElement>(null);
-  const sliceRefs = useRef<(SVGPathElement | null)[]>([]);
+  const geometryRef = useRef<SVGPathElement>(null);
+  const dashRefs = useRef<(SVGPathElement | null)[]>([]);
   const butterflyRef = useRef<HTMLDivElement>(null);
+  const curveRef = useRef<{ points: { x: number; y: number }[]; total: number } | null>(
+    null,
+  );
 
   const reduceMotion = useReducedMotion();
   const inView = useInView(containerRef, { amount: 0.15 });
   const isFlying = inView && !reduceMotion;
 
   const progress = useMotionValue(0);
-  const maskId = `butterfly-trail-${useId()}`;
+
+  // One element per dash, sized to cover the longest trail this route will show.
+  const dashCount = Math.ceil(trailLength / DASH_PERIOD) + 1;
 
   // The sprite is sized as a fraction of the box so it scales with the container.
   const spriteUnits = { width: size, height: (size * SPRITE.height) / SPRITE.width };
@@ -139,19 +142,32 @@ export function ButterflyFlight({
   // motion's style bindings.
   const applyProgress = useCallback(
     (value: number) => {
-      const trail = trailRef.current;
+      const curve = curveRef.current;
       const butterfly = butterflyRef.current;
-      if (!trail || !butterfly) return;
+      if (!curve || !butterfly) return;
 
-      const total = trail.getTotalLength();
-      if (total === 0) return;
+      const { points, total } = curve;
+      const last = points.length - 1;
 
-      const pointAt = (fraction: number) =>
-        trail.getPointAtLength(Math.min(Math.max(fraction, 0), 1) * total);
+      // Distances wrap, so the tail crossing the start of a closed route simply
+      // continues from its end.
+      const pointAt = (distance: number) => {
+        const wrapped = ((distance % total) + total) % total;
+        const scaled = (wrapped / total) * last;
+        const index = Math.floor(scaled);
+        const fraction = scaled - index;
+        const from = points[index];
+        const to = points[index + 1] ?? points[0];
+        return {
+          x: from.x + (to.x - from.x) * fraction,
+          y: from.y + (to.y - from.y) * fraction,
+        };
+      };
 
-      const here = pointAt(value);
-      const ahead = pointAt(value + HEADING_STEP);
-      const behind = pointAt(value - HEADING_STEP);
+      const head = value * total;
+      const here = pointAt(head);
+      const ahead = pointAt(head + HEADING_STEP * total);
+      const behind = pointAt(head - HEADING_STEP * total);
       const dx = ahead.x - behind.x;
       const dy = ahead.y - behind.y;
 
@@ -166,42 +182,64 @@ export function ButterflyFlight({
 
       butterfly.style.transform = transformFor(here.x, here.y, tilt, facing);
 
-      // Expressing the trail in path units keeps it the same visual length whatever
-      // a given route's total length happens to be.
-      const sliceLength = Math.min(trailLength / total, 0.9) / TRAIL_SLICES;
+      // Dashes sit on a fixed grid measured from the start of the route, so they
+      // stay pinned to the route instead of sliding along with the butterfly.
+      const newest = Math.floor(head / DASH_PERIOD);
 
-      const length = sliceLength * SLICE_OVERLAP;
+      for (let index = 0; index < dashCount; index += 1) {
+        const dash = dashRefs.current[index];
+        if (!dash) continue;
 
-      sliceRefs.current.forEach((slice, index) => {
-        if (!slice) return;
+        const start = (newest - index) * DASH_PERIOD;
+        // Clipping the leading dash at the butterfly is what keeps the trail behind
+        // it: the dash currently emerging is only drawn as far as it has emerged.
+        const end = Math.min(start + DASH_LENGTH, head);
+        const age = (head - end) / trailLength;
 
-        // Slice 0 is the far tail; the last one ends exactly at the butterfly.
-        const stepsBack = TRAIL_SLICES - 1 - index;
-        // The routes are closed loops, so a slice running off the start of the path
-        // continues from its end and the trail stays unbroken across the seam.
-        let end = value - stepsBack * sliceLength;
-        if (end < 0) end += 1;
-        const start = end - length;
+        if (end <= start || age >= 1) {
+          dash.style.opacity = "0";
+          continue;
+        }
 
-        // Dash values are normalised by pathLength=1. Where a slice does not cross
-        // the seam this is simply: skip to `start`, draw, stop. Where it does, it
-        // becomes two dashes, one at each end of the path.
-        slice.setAttribute(
-          "stroke-dasharray",
-          start >= 0
-            ? `0 ${start} ${length} 1`
-            : `${end} ${1 + start - end} ${-start} 1`,
+        const middle = pointAt((start + end) / 2);
+        const from = pointAt(start);
+        const to = pointAt(end);
+        dash.setAttribute(
+          "d",
+          `M ${from.x.toFixed(1)} ${from.y.toFixed(1)}` +
+            ` L ${middle.x.toFixed(1)} ${middle.y.toFixed(1)}` +
+            ` L ${to.x.toFixed(1)} ${to.y.toFixed(1)}`,
         );
-      });
+        dash.style.opacity = (1 - age).toFixed(3);
+      }
     },
-    [transformFor, trailLength],
+    [transformFor, trailLength, dashCount],
   );
 
-  useMotionValueEvent(progress, "change", applyProgress);
-
+  /**
+   * The route is sampled once into a lookup table, so placing dashes each frame is
+   * arithmetic rather than repeated getPointAtLength calls across every butterfly.
+   */
   useEffect(() => {
+    const geometry = geometryRef.current;
+    if (!geometry) return;
+
+    const total = geometry.getTotalLength();
+    if (!total) return;
+
+    const steps = Math.max(2, Math.ceil(total / SAMPLE_STEP));
+    curveRef.current = {
+      total,
+      points: Array.from({ length: steps + 1 }, (_, index) => {
+        const { x, y } = geometry.getPointAtLength((index / steps) * total);
+        return { x, y };
+      }),
+    };
+
     applyProgress(progress.get());
-  }, [applyProgress, progress]);
+  }, [path, applyProgress, progress]);
+
+  useMotionValueEvent(progress, "change", applyProgress);
 
   // With motion reduced there is no flight: the butterfly simply rests somewhere on
   // its route with the short trail behind it.
@@ -273,44 +311,21 @@ export function ButterflyFlight({
         fill="none"
         className="absolute inset-0 h-full w-full overflow-visible"
       >
-        {/*
-          The visible line carries the dash pattern, so it cannot also use
-          stroke-dashoffset to reveal itself. These solid slices of the same path
-          mask it into existence instead, and their stepped opacities are what make
-          the trail fade out behind the butterfly.
-        */}
-        <mask
-          id={maskId}
-          maskUnits="userSpaceOnUse"
-          x={-AREA.width * 0.1}
-          y={-AREA.height * 0.1}
-          width={AREA.width * 1.2}
-          height={AREA.height * 1.2}
-        >
-          {Array.from({ length: TRAIL_SLICES }, (_, index) => (
+        {/* Never painted: this carries the route so its geometry can be measured. */}
+        <path ref={geometryRef} d={path} fill="none" stroke="none" />
+
+        <g opacity={trailOpacity}>
+          {Array.from({ length: dashCount }, (_, index) => (
             <path
               key={index}
               ref={(node) => {
-                sliceRefs.current[index] = node;
+                dashRefs.current[index] = node;
               }}
-              d={path}
-              fill="none"
-              stroke="white"
-              strokeWidth={5}
-              pathLength={1}
-              strokeDasharray="0 1"
-              opacity={(index + 1) / TRAIL_SLICES}
+              className="butterfly-trail"
+              opacity={0}
             />
           ))}
-        </mask>
-
-        <path
-          ref={trailRef}
-          d={path}
-          className="butterfly-trail"
-          mask={`url(#${maskId})`}
-          opacity={trailOpacity}
-        />
+        </g>
       </svg>
 
       {/*

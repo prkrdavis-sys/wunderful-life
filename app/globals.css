@@ -507,7 +507,6 @@ body {
   stroke: currentColor;
   stroke-width: 1.4;
   stroke-linecap: round;
-  stroke-dasharray: 3 7;
 }
 
 @keyframes upload-indeterminate {
