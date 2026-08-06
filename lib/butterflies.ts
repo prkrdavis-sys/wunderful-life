@@ -1,8 +1,13 @@
 /**
  * Flight paths for the drifting background butterflies. Every path is authored in
  * the 400 x 300 coordinate space that `ButterflyFlight` renders into, and each one
- * ends exactly on its own starting point: the trail wraps across that seam, so a
- * route that did not close would show a visible break once per circuit.
+ * ends exactly on its own starting point, arriving along the direction it leaves in:
+ * the trail wraps across that seam, so a route that did not close smoothly would show
+ * a break or a cusp once per circuit.
+ *
+ * A route must also not cross or graze its own track. The trail behind the butterfly
+ * is what is left of where it has been, so on a self-crossing route the butterfly
+ * flies back over its own older dashes and they read as a line drawn in front of it.
  *
  * The hero is deliberately left out. Its background is a full-bleed video behind a
  * dark scrim, which no silhouette reads against.
@@ -70,9 +75,9 @@ export const butterflyFlights: Record<ButterflyFlightId, ButterflyFlightPreset> 
     colorClassName: "text-forest",
     opacity: 0.7,
   },
-  // A tall wandering loop that doubles back on itself, over the collage's right edge.
+  // A tall, leaning circuit over the collage's right edge.
   photography: {
-    path: "M 178 44 C 268 58 318 132 268 182 C 220 230 122 224 96 174 C 72 128 132 92 190 116 C 246 138 272 216 216 254 C 168 286 96 264 78 210 C 60 156 110 60 178 44",
+    path: "M 196 44 C 264 44 316 88 318 142 C 320 196 286 244 226 258 C 166 272 106 244 84 196 C 62 148 78 66 140 48 C 158 43 178 43 196 44",
     className: "top-16 right-4",
     duration: 46,
     areaWidth: 330,
@@ -82,9 +87,9 @@ export const butterflyFlights: Record<ButterflyFlightId, ButterflyFlightPreset> 
     colorClassName: "text-ink",
     opacity: 0.78,
   },
-  // A wide, shallow weave along the bottom of the collage.
+  // A wide, shallow circuit along the bottom of the collage.
   photographyLow: {
-    path: "M 40 230 C 100 190 150 250 214 216 C 276 182 330 214 366 178 C 390 154 372 106 330 108 C 268 110 240 168 176 186 C 112 204 62 258 40 230",
+    path: "M 40 176 C 40 140 108 108 196 112 C 268 115 344 132 366 158 C 384 180 350 214 268 226 C 186 238 96 232 56 212 C 38 202 40 190 40 176",
     className: "bottom-4 left-8",
     duration: 50,
     areaWidth: 390,
