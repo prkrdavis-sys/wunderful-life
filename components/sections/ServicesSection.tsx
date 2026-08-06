@@ -19,6 +19,7 @@ export function ServicesSection() {
       <div className="relative overflow-hidden px-4 pt-16 pb-20 sm:px-6 sm:pt-20 sm:pb-24">
         <SectionSurface tone="ivory" motifs="left" />
         <SectionButterfly flight="services" />
+        <SectionButterfly flight="servicesHigh" />
         <AdminEditButton section="services" label="Edit services" />
 
         <div className="relative z-10 mx-auto max-w-6xl">

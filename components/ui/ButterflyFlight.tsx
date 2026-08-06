@@ -47,11 +47,13 @@ const MAX_TILT_DEGREES = 26;
  */
 const TRAIL_SLICES = 14;
 /**
- * Slices are stretched past their own end so neighbours overlap, which hides the
- * antialiased seams between them. They are drawn tail first, so the brighter slice
- * always paints over the dimmer one it overlaps.
+ * Slices are stretched backwards past their own start so neighbours overlap, which
+ * hides the antialiased seams between them. They are drawn tail first, so the
+ * brighter slice always paints over the dimmer one it overlaps. The stretch must go
+ * backwards: extending forwards would push the leading slice past the butterfly and
+ * draw trail ahead of it.
  */
-const SLICE_OVERLAP = 1.6;
+const SLICE_OVERLAP = 1.3;
 
 /**
  * Drops a preset butterfly into a section, layered between the section's
@@ -168,19 +170,28 @@ export function ButterflyFlight({
       // a given route's total length happens to be.
       const sliceLength = Math.min(trailLength / total, 0.9) / TRAIL_SLICES;
 
+      const length = sliceLength * SLICE_OVERLAP;
+
       sliceRefs.current.forEach((slice, index) => {
         if (!slice) return;
 
-        // Slice 0 is the far tail, the last is at the butterfly.
+        // Slice 0 is the far tail; the last one ends exactly at the butterfly.
         const stepsBack = TRAIL_SLICES - 1 - index;
-        let start = value - (stepsBack + 1) * sliceLength;
-        // The routes are closed loops, so a tail running off the start of the path
+        // The routes are closed loops, so a slice running off the start of the path
         // continues from its end and the trail stays unbroken across the seam.
-        if (start < 0) start += 1;
-        const length = Math.min(sliceLength * SLICE_OVERLAP, 1 - start);
+        let end = value - stepsBack * sliceLength;
+        if (end < 0) end += 1;
+        const start = end - length;
 
-        // With pathLength normalised to 1: skip to `start`, draw `length`, stop.
-        slice.setAttribute("stroke-dasharray", `0 ${start} ${length} 1`);
+        // Dash values are normalised by pathLength=1. Where a slice does not cross
+        // the seam this is simply: skip to `start`, draw, stop. Where it does, it
+        // becomes two dashes, one at each end of the path.
+        slice.setAttribute(
+          "stroke-dasharray",
+          start >= 0
+            ? `0 ${start} ${length} 1`
+            : `${end} ${1 + start - end} ${-start} 1`,
+        );
       });
     },
     [transformFor, trailLength],
