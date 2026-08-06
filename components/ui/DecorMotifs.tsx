@@ -1,6 +1,13 @@
 import type { CSSProperties } from "react";
 
-export type MotifKind = "butterfly" | "moon" | "star";
+export type FlowerKind =
+  | "daisy"
+  | "tulip"
+  | "poppy"
+  | "sunflower"
+  | "cosmos"
+  | "wildflower";
+export type MotifKind = "flower" | "moon" | "star";
 
 /** Named arrangements so sections can vary without repeating coordinates. */
 export type MotifPreset =
@@ -13,6 +20,7 @@ export type MotifPreset =
 
 type MotifSpec = {
   kind: MotifKind;
+  flower?: FlowerKind;
   /** Positioning + sizing utilities for the wrapper. */
   position: string;
   rotate?: number;
@@ -20,23 +28,21 @@ type MotifSpec = {
   duration?: number;
 };
 
-function Butterfly() {
-  return (
-    <svg viewBox="0 0 64 64" fill="none" className="h-full w-full">
-      <g fill="currentColor">
-        <path d="M32 18C28 6 14 2 8 8c-6 6-4 18 6 22-8 4-10 14-4 18 6 4 18-2 22-14Z" />
-        <path
-          d="M32 18C28 6 14 2 8 8c-6 6-4 18 6 22-8 4-10 14-4 18 6 4 18-2 22-14Z"
-          transform="matrix(-1 0 0 1 64 0)"
-        />
-        <ellipse cx="32" cy="31" rx="1.7" ry="12" />
-      </g>
-      <g stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none">
-        <path d="M32 20c-2-6-6-9-9-10" />
-        <path d="M32 20c2-6 6-9 9-10" />
-      </g>
-    </svg>
-  );
+const FLOWER_ASSETS: Record<FlowerKind, string> = {
+  daisy: "/flowers/daisy.png",
+  tulip: "/flowers/tulip.png",
+  poppy: "/flowers/poppy.png",
+  sunflower: "/flowers/sunflower.png",
+  cosmos: "/flowers/cosmos.png",
+  wildflower: "/flowers/wildflower.png",
+};
+
+function Flower({ variant = "daisy" }: { variant?: FlowerKind }) {
+  const style = {
+    "--flower-image": `url("${FLOWER_ASSETS[variant]}")`,
+  } as CSSProperties;
+
+  return <span aria-hidden className="flower-silhouette" style={style} />;
 }
 
 function Moon() {
@@ -61,35 +67,79 @@ function Star() {
   );
 }
 
-const MOTIF_SHAPES: Record<MotifKind, () => React.JSX.Element> = {
-  butterfly: Butterfly,
+type MotifShapeProps = {
+  variant?: FlowerKind;
+};
+
+const MOTIF_SHAPES: Record<
+  MotifKind,
+  (props: MotifShapeProps) => React.JSX.Element
+> = {
+  flower: ({ variant }) => <Flower variant={variant} />,
   moon: Moon,
   star: Star,
 };
 
 const PRESETS: Record<Exclude<MotifPreset, "none">, MotifSpec[]> = {
   edges: [
-    { kind: "butterfly", position: "left-[2%] top-[14%] h-16 w-16 sm:h-20 sm:w-20", rotate: -14 },
+    {
+      kind: "flower",
+      flower: "daisy",
+      position: "left-[2%] top-[14%] h-16 w-16 sm:h-20 sm:w-20",
+      rotate: -14,
+    },
     { kind: "star", position: "left-[8%] bottom-[18%] h-7 w-7 sm:h-9 sm:w-9", delay: 3, duration: 22 },
     { kind: "moon", position: "right-[3%] top-[22%] h-14 w-14 sm:h-16 sm:w-16", rotate: 18, delay: 1.5 },
-    { kind: "butterfly", position: "right-[7%] bottom-[12%] h-12 w-12 sm:h-16 sm:w-16", rotate: 22, delay: 4, duration: 20 },
+    {
+      kind: "flower",
+      flower: "poppy",
+      position: "right-[7%] bottom-[12%] h-12 w-12 sm:h-16 sm:w-16",
+      rotate: 22,
+      delay: 4,
+      duration: 20,
+    },
   ],
   left: [
-    { kind: "butterfly", position: "left-[3%] top-[18%] h-16 w-16 sm:h-24 sm:w-24", rotate: -18 },
+    {
+      kind: "flower",
+      flower: "tulip",
+      position: "left-[3%] top-[18%] h-16 w-16 sm:h-24 sm:w-24",
+      rotate: -18,
+    },
     { kind: "star", position: "left-[12%] bottom-[16%] h-8 w-8 sm:h-10 sm:w-10", delay: 2.5, duration: 21 },
     { kind: "moon", position: "left-[6%] bottom-[42%] h-10 w-10 sm:h-12 sm:w-12", rotate: -8, delay: 5 },
   ],
   right: [
     { kind: "moon", position: "right-[4%] top-[16%] h-14 w-14 sm:h-20 sm:w-20", rotate: 16 },
-    { kind: "butterfly", position: "right-[10%] bottom-[20%] h-14 w-14 sm:h-20 sm:w-20", rotate: 24, delay: 3, duration: 20 },
+    {
+      kind: "flower",
+      flower: "sunflower",
+      position: "right-[10%] bottom-[20%] h-14 w-14 sm:h-20 sm:w-20",
+      rotate: 24,
+      delay: 3,
+      duration: 20,
+    },
     { kind: "star", position: "right-[3%] bottom-[46%] h-7 w-7 sm:h-9 sm:w-9", delay: 1, duration: 24 },
   ],
   scatter: [
     { kind: "star", position: "left-[6%] top-[12%] h-6 w-6 sm:h-8 sm:w-8", duration: 20 },
-    { kind: "butterfly", position: "left-[16%] bottom-[10%] h-12 w-12 sm:h-16 sm:w-16", rotate: -20, delay: 2 },
+    {
+      kind: "flower",
+      flower: "cosmos",
+      position: "left-[16%] bottom-[10%] h-12 w-12 sm:h-16 sm:w-16",
+      rotate: -20,
+      delay: 2,
+    },
     { kind: "moon", position: "right-[8%] top-[26%] h-12 w-12 sm:h-14 sm:w-14", rotate: 12, delay: 4 },
     { kind: "star", position: "right-[18%] bottom-[14%] h-8 w-8 sm:h-10 sm:w-10", delay: 6, duration: 23 },
-    { kind: "butterfly", position: "left-[46%] top-[4%] h-10 w-10 sm:h-12 sm:w-12", rotate: 8, delay: 5, duration: 26 },
+    {
+      kind: "flower",
+      flower: "wildflower",
+      position: "left-[46%] top-[4%] h-10 w-10 sm:h-12 sm:w-12",
+      rotate: 8,
+      delay: 5,
+      duration: 26,
+    },
   ],
   corners: [
     { kind: "star", position: "left-[4%] top-[10%] h-8 w-8 sm:h-11 sm:w-11", duration: 21 },
@@ -135,7 +185,7 @@ export function DecorMotifs({
             className={`motif-float absolute ${motif.position}`}
             style={style}
           >
-            <Shape />
+            <Shape variant={motif.flower} />
           </span>
         );
       })}
