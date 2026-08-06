@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
+import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { SectionSurface } from "@/components/ui/SectionSurface";
 import { SectionReveal } from "@/components/ui/motion";
 
@@ -79,6 +80,7 @@ export function ClosingCtaSection() {
       className="scroll-section-anchor relative overflow-hidden px-4 py-16 sm:px-6 sm:py-24"
     >
       <SectionSurface tone="ivory" motifs="scatter" />
+      <SectionButterfly flight="closing" />
       <AdminEditButton section="cta" label="Edit CTA" />
 
       <div className="relative z-10 mx-auto grid max-w-5xl items-center gap-10 sm:gap-14 lg:grid-cols-[0.85fr_1.15fr]">

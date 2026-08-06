@@ -1,6 +1,5 @@
 "use client";
 
-import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
 import { HeroEntrance } from "@/components/ui/motion";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
@@ -35,7 +34,6 @@ export function HeroSection() {
       ) : (
         <PlantSectionBackground wallpaper={wallpaper} overlay={overlay} priority />
       )}
-      <SectionButterfly flight="hero" />
 
       <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col items-center text-center">
         <div className="flex flex-1 flex-col items-center justify-center">

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
+import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { SectionSurface } from "@/components/ui/SectionSurface";
 import { StaggerChildren, StaggerItem } from "@/components/ui/motion";
 import type { CollagePhotoShape } from "@/lib/site/types";
@@ -28,6 +29,7 @@ export function PhotographyCollage() {
       className="scroll-section-anchor relative overflow-hidden px-4 py-16 sm:px-6 sm:py-20"
     >
       <SectionSurface tone="blush" motifs="right" />
+      <SectionButterfly flight="photography" />
       <AdminEditButton section="photography" label="Edit photos" />
 
       <div className="relative z-10 mx-auto max-w-5xl">

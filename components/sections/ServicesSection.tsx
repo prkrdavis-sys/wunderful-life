@@ -2,6 +2,7 @@
 
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { BrandsBanner } from "@/components/sections/BrandsBanner";
+import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { SectionSurface } from "@/components/ui/SectionSurface";
 import { SectionReveal, StaggerChildren, StaggerItem } from "@/components/ui/motion";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
@@ -17,6 +18,7 @@ export function ServicesSection() {
 
       <div className="relative overflow-hidden px-4 pt-16 pb-20 sm:px-6 sm:pt-20 sm:pb-24">
         <SectionSurface tone="ivory" motifs="left" />
+        <SectionButterfly flight="services" />
         <AdminEditButton section="services" label="Edit services" />
 
         <div className="relative z-10 mx-auto max-w-6xl">

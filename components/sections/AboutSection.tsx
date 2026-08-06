@@ -1,6 +1,7 @@
 "use client";
 
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
+import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { SectionReveal, StaggerChildren, StaggerItem } from "@/components/ui/motion";
 import { EmilyPhoto } from "@/components/ui/EmilyPhoto";
 import { SectionSurface } from "@/components/ui/SectionSurface";
@@ -28,6 +29,7 @@ export function AboutSection() {
       className="scroll-section-anchor relative overflow-hidden px-4 pt-20 pb-14 sm:px-6 sm:pt-24 sm:pb-20"
     >
       <SectionSurface tone="ivory" motifs="right" />
+      <SectionButterfly flight="about" />
       <AdminEditButton section="about" label="Edit about" />
       <div className="relative z-10 mx-auto max-w-5xl">
         <SectionReveal className="mb-8 text-center md:mb-9 md:text-left">

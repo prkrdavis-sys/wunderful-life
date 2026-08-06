@@ -2,12 +2,10 @@
 
 import {
   animate,
-  motion,
   useInView,
   useMotionValue,
   useMotionValueEvent,
   useReducedMotion,
-  useTransform,
 } from "framer-motion";
 import {
   useCallback,
@@ -40,13 +38,24 @@ const HEADING_STEP = 0.004;
 /** A butterfly drifts rather than nose-dives, so the pitch is damped and capped. */
 const TILT_DAMPING = 0.7;
 const MAX_TILT_DEGREES = 26;
-/** How long the finished trail lingers before fading out for the next circuit. */
-const TRAIL_HOLD_SECONDS = 1.2;
-const TRAIL_FADE_SECONDS = 1.6;
+
+/**
+ * The trail fades out behind the butterfly rather than persisting, so it never
+ * accumulates into a drawing of the whole route. A stroke cannot fade along its own
+ * length, so the reveal mask is built from this many stacked slices, each a short
+ * piece of the path at a progressively lower opacity.
+ */
+const TRAIL_SLICES = 14;
+/**
+ * Slices are stretched past their own end so neighbours overlap, which hides the
+ * antialiased seams between them. They are drawn tail first, so the brighter slice
+ * always paints over the dimmer one it overlaps.
+ */
+const SLICE_OVERLAP = 1.6;
 
 /**
  * Drops a preset butterfly into a section, layered between the section's
- * background image and its `z-10` content.
+ * background wash and its `z-10` content.
  */
 export function SectionButterfly({ flight }: { flight: ButterflyFlightId }) {
   const preset = butterflyFlights[flight];
@@ -55,7 +64,7 @@ export function SectionButterfly({ flight }: { flight: ButterflyFlightId }) {
 }
 
 type ButterflyFlightProps = {
-  /** SVG path data authored in a 400 x 300 space. Should end near where it starts. */
+  /** SVG path data authored in a 400 x 300 space. Must end where it starts. */
   path: string;
   /** Tailwind positioning classes, e.g. "top-24 right-8". */
   className?: string;
@@ -66,6 +75,8 @@ type ButterflyFlightProps = {
   maxViewportWidth?: number;
   /** Butterfly width in path units. */
   size?: number;
+  /** Length of the visible trail, in path units. */
+  trailLength?: number;
   /** Seconds per wing beat. */
   flapDuration?: number;
   /** Tailwind text colour class; the sprite and trail both inherit currentColor. */
@@ -82,13 +93,15 @@ export function ButterflyFlight({
   areaWidth = 360,
   maxViewportWidth = 72,
   size = 34,
+  trailLength = 190,
   flapDuration = 0.72,
-  colorClassName = "text-indigo",
-  opacity = 0.5,
-  trailOpacity = 0.45,
+  colorClassName = "text-forest-deep",
+  opacity = 0.75,
+  trailOpacity = 0.6,
 }: ButterflyFlightProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const trailRef = useRef<SVGPathElement>(null);
+  const sliceRefs = useRef<(SVGPathElement | null)[]>([]);
   const butterflyRef = useRef<HTMLDivElement>(null);
 
   const reduceMotion = useReducedMotion();
@@ -96,9 +109,6 @@ export function ButterflyFlight({
   const isFlying = inView && !reduceMotion;
 
   const progress = useMotionValue(0);
-  const trailFade = useMotionValue(1);
-  const trailAlpha = useTransform(trailFade, (fade) => fade * trailOpacity);
-
   const maskId = `butterfly-trail-${useId()}`;
 
   // The sprite is sized as a fraction of the box so it scales with the container.
@@ -123,7 +133,7 @@ export function ButterflyFlight({
   );
 
   // Placing the butterfly means reading the path geometry, which only exists once
-  // the SVG is in the DOM, so position is applied imperatively rather than through
+  // the SVG is in the DOM, so this is applied imperatively rather than through
   // motion's style bindings.
   const applyProgress = useCallback(
     (value: number) => {
@@ -153,8 +163,27 @@ export function ButterflyFlight({
         facing;
 
       butterfly.style.transform = transformFor(here.x, here.y, tilt, facing);
+
+      // Expressing the trail in path units keeps it the same visual length whatever
+      // a given route's total length happens to be.
+      const sliceLength = Math.min(trailLength / total, 0.9) / TRAIL_SLICES;
+
+      sliceRefs.current.forEach((slice, index) => {
+        if (!slice) return;
+
+        // Slice 0 is the far tail, the last is at the butterfly.
+        const stepsBack = TRAIL_SLICES - 1 - index;
+        let start = value - (stepsBack + 1) * sliceLength;
+        // The routes are closed loops, so a tail running off the start of the path
+        // continues from its end and the trail stays unbroken across the seam.
+        if (start < 0) start += 1;
+        const length = Math.min(sliceLength * SLICE_OVERLAP, 1 - start);
+
+        // With pathLength normalised to 1: skip to `start`, draw `length`, stop.
+        slice.setAttribute("stroke-dasharray", `0 ${start} ${length} 1`);
+      });
     },
-    [transformFor],
+    [transformFor, trailLength],
   );
 
   useMotionValueEvent(progress, "change", applyProgress);
@@ -163,24 +192,12 @@ export function ButterflyFlight({
     applyProgress(progress.get());
   }, [applyProgress, progress]);
 
-  /**
-   * The path's own move-to command gives the butterfly a correct starting position
-   * on the very first render, so it never flashes in the corner while waiting for
-   * the geometry to be measurable.
-   */
-  const startTransform = useMemo(() => {
-    const moveTo = /M\s*(-?[\d.]+)[\s,]+(-?[\d.]+)/.exec(path);
-    if (!moveTo) return undefined;
-    return transformFor(Number(moveTo[1]), Number(moveTo[2]), 0, 1);
-  }, [path, transformFor]);
-
-  // With motion reduced there is no flight: the whole route is already drawn and
-  // the butterfly rests at the end of it, which on a closed path is where it began.
+  // With motion reduced there is no flight: the butterfly simply rests somewhere on
+  // its route with the short trail behind it.
   useEffect(() => {
     if (!reduceMotion) return;
     progress.set(1);
-    trailFade.set(1);
-  }, [reduceMotion, progress, trailFade]);
+  }, [reduceMotion, progress]);
 
   useEffect(() => {
     if (!isFlying) return;
@@ -190,8 +207,6 @@ export function ButterflyFlight({
 
     const flyCircuit = async () => {
       while (!cancelled) {
-        trailFade.set(1);
-
         // Resuming after the section scrolled away should only cover the distance
         // that is left, otherwise the butterfly crawls through the remainder.
         const remaining = 1 - progress.get();
@@ -203,18 +218,7 @@ export function ButterflyFlight({
         await flight;
         if (cancelled) return;
 
-        // The completed route lingers before being wiped, so the delay belongs to
-        // the fade itself; animating trailFade to the value it already holds would
-        // resolve immediately rather than waiting.
-        const fade = animate(trailFade, 0, {
-          duration: TRAIL_FADE_SECONDS,
-          delay: TRAIL_HOLD_SECONDS,
-          ease: "easeOut",
-        });
-        running = fade;
-        await fade;
-        if (cancelled) return;
-
+        // Closed routes make this a seamless restart rather than a jump.
         progress.set(0);
       }
     };
@@ -225,7 +229,18 @@ export function ButterflyFlight({
       cancelled = true;
       running?.stop();
     };
-  }, [isFlying, duration, progress, trailFade]);
+  }, [isFlying, duration, progress]);
+
+  /**
+   * The path's own move-to command gives the butterfly a correct starting position
+   * on the very first render, so it never flashes in the corner while waiting for
+   * the geometry to be measurable.
+   */
+  const startTransform = useMemo(() => {
+    const moveTo = /M\s*(-?[\d.]+)[\s,]+(-?[\d.]+)/.exec(path);
+    if (!moveTo) return undefined;
+    return transformFor(Number(moveTo[1]), Number(moveTo[2]), 0, 1);
+  }, [path, transformFor]);
 
   const flapStyle = {
     "--butterfly-flap-duration": `${flapDuration}s`,
@@ -249,8 +264,9 @@ export function ButterflyFlight({
       >
         {/*
           The visible line carries the dash pattern, so it cannot also use
-          stroke-dashoffset to draw itself on. A solid stroke of the same path,
-          revealed by pathLength, masks it into existence instead.
+          stroke-dashoffset to reveal itself. These solid slices of the same path
+          mask it into existence instead, and their stepped opacities are what make
+          the trail fade out behind the butterfly.
         */}
         <mask
           id={maskId}
@@ -260,29 +276,36 @@ export function ButterflyFlight({
           width={AREA.width * 1.2}
           height={AREA.height * 1.2}
         >
-          <motion.path
-            d={path}
-            fill="none"
-            stroke="white"
-            strokeWidth={5}
-            strokeLinecap="round"
-            style={{ pathLength: progress }}
-          />
+          {Array.from({ length: TRAIL_SLICES }, (_, index) => (
+            <path
+              key={index}
+              ref={(node) => {
+                sliceRefs.current[index] = node;
+              }}
+              d={path}
+              fill="none"
+              stroke="white"
+              strokeWidth={5}
+              pathLength={1}
+              strokeDasharray="0 1"
+              opacity={(index + 1) / TRAIL_SLICES}
+            />
+          ))}
         </mask>
 
-        <motion.path
+        <path
           ref={trailRef}
           d={path}
           className="butterfly-trail"
           mask={`url(#${maskId})`}
-          style={{ opacity: trailAlpha }}
+          opacity={trailOpacity}
         />
       </svg>
 
       {/*
         The sprite is a sibling rather than a foreignObject: keeping it in plain
         HTML avoids the browser inconsistencies around masked content inside SVG,
-        and the scale factor already puts it in the same coordinate space.
+        and percentage transforms already put it in the same coordinate space.
       */}
       <div
         ref={butterflyRef}
