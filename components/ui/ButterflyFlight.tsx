@@ -28,9 +28,11 @@ const SPRITE = { width: 152, height: 163 };
 /**
  * Where the butterfly's body sits within its sprite cell, as a fraction of the
  * cell. The path is followed by the body rather than the frame's centre, so the
- * trail emerges from the creature and the wing sweeps around it.
+ * trail emerges from the creature and the wing sweeps around it. The x anchor is
+ * the shared opaque body core across the flap frames; anchoring at the old 0.74
+ * value put the newest dash a few pixels in front of the body.
  */
-const BODY_ANCHOR = { x: 0.74, y: 0.62 };
+const BODY_ANCHOR = { x: 0.67, y: 0.62 };
 
 /** Fraction of the path sampled either side of the butterfly to read its heading. */
 const HEADING_STEP = 0.004;
