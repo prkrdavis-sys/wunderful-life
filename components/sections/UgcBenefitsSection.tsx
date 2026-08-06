@@ -1,6 +1,7 @@
 "use client";
 
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
+import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { DecorMotifs } from "@/components/ui/DecorMotifs";
 import { SectionReveal, StaggerChildren, StaggerItem } from "@/components/ui/motion";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
@@ -24,6 +25,7 @@ export function UgcBenefitsSection() {
     >
       <DecorMotifs preset="scatter" tone="paper" />
       <AdminEditButton section="ugc" label="Edit UGC" tone="light" />
+      <SectionButterfly flight="whatIsUgc" />
 
       <div className="relative z-10 mx-auto max-w-6xl">
         <SectionReveal className="mx-auto max-w-2xl text-center">

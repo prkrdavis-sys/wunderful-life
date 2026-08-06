@@ -466,6 +466,50 @@ body {
   );
 }
 
+/*
+ * The butterfly is a single alpha matte strip of 8 wing positions
+ * (public/butterfly/flap-strip.png, built by scripts/build-butterfly-frames.mjs)
+ * used as a mask, so the artwork picks up whatever colour the element inherits.
+ * `jump-none` is what lands the mask on all 8 frames: a plain steps(8) would stop
+ * one frame short of the final one.
+ */
+.butterfly-wing {
+  background-color: currentColor;
+  -webkit-mask-image: url("/butterfly/flap-strip.png");
+  mask-image: url("/butterfly/flap-strip.png");
+  -webkit-mask-size: 800% 100%;
+  mask-size: 800% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: 0% 50%;
+  mask-position: 0% 50%;
+  animation: butterfly-flap var(--butterfly-flap-duration, 0.72s)
+    steps(8, jump-none) infinite;
+}
+
+.butterfly-wing.paused {
+  animation-play-state: paused;
+}
+
+@keyframes butterfly-flap {
+  from {
+    -webkit-mask-position: 0% 50%;
+    mask-position: 0% 50%;
+  }
+  to {
+    -webkit-mask-position: 100% 50%;
+    mask-position: 100% 50%;
+  }
+}
+
+.butterfly-trail {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-dasharray: 3 7;
+}
+
 @keyframes upload-indeterminate {
   0% {
     transform: translateX(-120%);

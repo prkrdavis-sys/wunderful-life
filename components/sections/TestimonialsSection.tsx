@@ -1,6 +1,7 @@
 "use client";
 
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
+import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { SectionReveal, StaggerChildren, StaggerItem } from "@/components/ui/motion";
 import { SectionSurface } from "@/components/ui/SectionSurface";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
@@ -22,6 +23,7 @@ export function TestimonialsSection() {
     >
       <SectionSurface tone="lavender" motifs="edges" />
       <AdminEditButton section="testimonials" label="Edit quotes" />
+      <SectionButterfly flight="testimonials" />
       <div className="relative z-10 mx-auto max-w-6xl">
         {hiddenFromVisitors && (
           <SectionReveal className="mx-auto mb-6 max-w-xl rounded-full border border-forest/20 bg-paper/80 px-5 py-2 text-center text-sm font-medium text-forest shadow-sm backdrop-blur-md">
