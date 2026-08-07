@@ -20,6 +20,7 @@ export function ServicesSection() {
         <SectionSurface tone="ivory" motifs="left" />
         <SectionButterfly flight="services" />
         <SectionButterfly flight="servicesHigh" />
+        <SectionButterfly flight="servicesLow" />
         <AdminEditButton section="services" label="Edit services" />
 
         <div className="relative z-10 mx-auto max-w-6xl">

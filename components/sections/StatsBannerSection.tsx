@@ -1,6 +1,7 @@
 "use client";
 
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
+import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
 import { ScallopedBanner } from "@/components/ui/ScallopedBanner";
 import { StaggerChildren, StaggerItem } from "@/components/ui/motion";
@@ -14,8 +15,9 @@ export function StatsBannerSection() {
   if (!isAdminView && (!visible || items.length === 0)) return null;
 
   return (
-    <section aria-label="Audience stats" className="relative">
+    <section aria-label="Audience stats" className="relative overflow-hidden">
       <ScallopedBanner motifs="corners" className="pb-4 sm:pb-6">
+        <SectionButterfly flight="stats" />
         <AdminEditButton section="stats" label="Edit stats" tone="light" />
         {items.length === 0 ? (
           <p className="text-center font-label text-sm text-paper/70">

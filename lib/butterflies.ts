@@ -23,15 +23,25 @@
 export type ButterflyFlightId =
   | "about"
   | "aboutFar"
+  | "aboutGallery"
   | "photography"
   | "photographyLow"
+  | "photographyEdge"
   | "services"
   | "servicesHigh"
+  | "servicesLow"
+  | "brandsBand"
+  | "stats"
+  | "workBand"
+  | "workMarquee"
   | "ugc"
   | "ugcTrailing"
+  | "ugcLower"
   | "testimonials"
   | "testimonialsLow"
-  | "closing";
+  | "testimonialsEdge"
+  | "closing"
+  | "closingFar";
 
 export type ButterflyFlightPreset = {
   path: string;
@@ -192,5 +202,127 @@ export const butterflyFlights: Record<ButterflyFlightId, ButterflyFlightPreset> 
     flapDuration: 0.8,
     colorClassName: "text-ink",
     opacity: 0.76,
+  },
+  // A compact loop under the gallery grid, clear of the "A little more" heading. Clearance 96px.
+  aboutGallery: {
+    path: "M 64 218 C 112 178 188 186 228 222 C 268 258 224 288 162 282 C 100 276 44 262 64 218",
+    className: "bottom-10 right-6",
+    duration: 37,
+    areaWidth: 280,
+    size: 34,
+    trailLength: 155,
+    flapDuration: 0.76,
+    colorClassName: "text-forest",
+    opacity: 0.74,
+  },
+  // A tight circuit high on the left, opposite the existing right-edge loop.
+  photographyEdge: {
+    path: "M 56 72 C 104 40 172 52 192 100 C 212 148 164 184 112 176 C 60 168 32 116 56 72",
+    className: "top-14 left-5",
+    duration: 35,
+    areaWidth: 260,
+    size: 32,
+    trailLength: 145,
+    flapDuration: 0.68,
+    colorClassName: "text-ink",
+    opacity: 0.72,
+  },
+  // A wide drift along the bottom of the service cards, below their titles.
+  servicesLow: {
+    path: "M 72 238 C 132 198 222 208 282 234 C 342 260 312 288 232 284 C 152 280 52 278 72 238",
+    className: "bottom-8 left-6",
+    duration: 44,
+    areaWidth: 360,
+    size: 38,
+    trailLength: 175,
+    flapDuration: 0.84,
+    colorClassName: "text-forest-deep",
+    opacity: 0.76,
+  },
+  // A small loop tucked under the brand logos, clear of the script heading. Clearance 72px.
+  brandsBand: {
+    path: "M 296 82 C 336 62 376 92 366 132 C 356 172 306 182 266 162 C 236 146 256 102 296 82",
+    className: "bottom-3 right-8",
+    duration: 28,
+    areaWidth: 240,
+    maxViewportWidth: 34,
+    size: 30,
+    trailLength: 125,
+    flapDuration: 0.64,
+    colorClassName: "text-paper",
+    opacity: 0.7,
+  },
+  // A quick circuit in the corner of the stats band, clear of the script figures.
+  stats: {
+    path: "M 58 188 C 98 148 158 153 173 193 C 188 233 128 253 78 243 C 48 236 43 208 58 188",
+    className: "bottom-1 right-6",
+    duration: 26,
+    areaWidth: 220,
+    maxViewportWidth: 32,
+    size: 30,
+    trailLength: 120,
+    flapDuration: 0.62,
+    colorClassName: "text-paper",
+    opacity: 0.68,
+  },
+  // A shallow loop low on the forest title band, below the filter chips.
+  workBand: {
+    path: "M 52 228 C 108 188 184 196 246 212 C 312 230 368 218 380 186 C 392 154 328 118 242 112 C 156 106 62 126 50 164 C 44 188 46 212 52 228",
+    className: "bottom-3 left-4",
+    duration: 41,
+    areaWidth: 340,
+    size: 36,
+    trailLength: 165,
+    flapDuration: 0.8,
+    colorClassName: "text-paper",
+    opacity: 0.74,
+  },
+  // A rolling traverse along the phone marquee, clear of the work heading above.
+  workMarquee: {
+    path: "M 36 196 C 92 136 156 226 214 164 C 268 106 322 70 358 112 C 388 184 306 244 216 248 C 142 252 60 244 36 196",
+    className: "top-[48%] right-3",
+    duration: 43,
+    areaWidth: 380,
+    size: 40,
+    trailLength: 180,
+    flapDuration: 0.78,
+    colorClassName: "text-forest-deep",
+    opacity: 0.8,
+  },
+  // A slow circuit low on the sage band, opposite the main UGC drift.
+  ugcLower: {
+    path: "M 44 202 C 92 162 156 174 200 210 C 244 246 200 282 140 274 C 80 266 24 250 44 202",
+    className: "bottom-10 left-5",
+    duration: 45,
+    areaWidth: 300,
+    size: 36,
+    trailLength: 160,
+    flapDuration: 0.86,
+    colorClassName: "text-forest-deep",
+    opacity: 0.82,
+  },
+  // A mid-height loop on the left margin, between the heading block and quote cards.
+  testimonialsEdge: {
+    path: "M 58 118 C 110 74 190 86 230 130 C 270 174 222 226 162 220 C 102 214 38 174 58 118",
+    className: "top-[52%] left-4",
+    duration: 36,
+    areaWidth: 300,
+    size: 34,
+    trailLength: 150,
+    flapDuration: 0.72,
+    colorClassName: "text-forest",
+    opacity: 0.78,
+  },
+  // A compact loop on the far right, clear of the script CTA heading. Clearance 140px.
+  closingFar: {
+    path: "M 276 238 C 236 198 176 208 156 250 C 136 292 196 290 244 266 C 292 242 316 278 276 238",
+    className: "bottom-8 right-6",
+    duration: 32,
+    areaWidth: 260,
+    size: 32,
+    trailLength: 135,
+    flapDuration: 0.7,
+    colorClassName: "text-forest",
+    opacity: 0.74,
   },
 };

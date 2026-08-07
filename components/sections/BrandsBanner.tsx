@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
+import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
 import { ScallopedBanner } from "@/components/ui/ScallopedBanner";
 import { SectionReveal } from "@/components/ui/motion";
@@ -36,8 +37,9 @@ export function BrandsBanner() {
   if (!isAdminView && (!visible || items.length === 0)) return null;
 
   return (
-    <div className="relative">
+    <div className="relative overflow-hidden">
       <ScallopedBanner motifs="edges" className="pb-4 sm:pb-6">
+        <SectionButterfly flight="brandsBand" />
         <AdminEditButton section="brands" label="Edit brands" tone="light" />
         <SectionReveal className="text-center">
           <h2 className="font-script text-3xl text-paper sm:text-5xl">{heading}</h2>

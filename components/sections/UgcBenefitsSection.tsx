@@ -27,6 +27,7 @@ export function UgcBenefitsSection() {
       <AdminEditButton section="ugc" label="Edit UGC" tone="light" />
       <SectionButterfly flight="ugc" />
       <SectionButterfly flight="ugcTrailing" />
+      <SectionButterfly flight="ugcLower" />
 
       <div className="relative z-10 mx-auto max-w-6xl">
         <SectionReveal className="mx-auto max-w-2xl text-center">
