@@ -82,6 +82,7 @@ export function ClosingCtaSection() {
       <SectionSurface tone="ivory" motifs="scatter" />
       <SectionButterfly flight="closing" />
       <SectionButterfly flight="closingFar" />
+      <SectionButterfly flight="closingMid" />
       <AdminEditButton section="cta" label="Edit CTA" />
 
       <div className="relative z-10 mx-auto grid max-w-5xl items-center gap-10 sm:gap-14 lg:grid-cols-[0.85fr_1.15fr]">

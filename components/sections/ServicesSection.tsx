@@ -21,6 +21,7 @@ export function ServicesSection() {
         <SectionButterfly flight="services" />
         <SectionButterfly flight="servicesHigh" />
         <SectionButterfly flight="servicesLow" />
+        <SectionButterfly flight="servicesWide" />
         <AdminEditButton section="services" label="Edit services" />
 
         <div className="relative z-10 mx-auto max-w-6xl">

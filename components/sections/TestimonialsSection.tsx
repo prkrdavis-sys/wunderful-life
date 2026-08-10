@@ -26,6 +26,7 @@ export function TestimonialsSection() {
       <SectionButterfly flight="testimonials" />
       <SectionButterfly flight="testimonialsLow" />
       <SectionButterfly flight="testimonialsEdge" />
+      <SectionButterfly flight="testimonialsFar" />
       <div className="relative z-10 mx-auto max-w-6xl">
         {hiddenFromVisitors && (
           <SectionReveal className="mx-auto mb-6 max-w-xl rounded-full border border-forest/20 bg-paper/80 px-5 py-2 text-center text-sm font-medium text-forest shadow-sm backdrop-blur-md">

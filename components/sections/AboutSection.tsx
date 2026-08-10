@@ -32,6 +32,7 @@ export function AboutSection() {
       <SectionButterfly flight="about" />
       <SectionButterfly flight="aboutFar" />
       <SectionButterfly flight="aboutGallery" />
+      <SectionButterfly flight="aboutMid" />
       <AdminEditButton section="about" label="Edit about" />
       <div className="relative z-10 mx-auto max-w-5xl">
         <SectionReveal className="mb-8 text-center md:mb-9 md:text-left">
