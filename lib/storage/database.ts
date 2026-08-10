@@ -14,6 +14,12 @@ function readEnv(name: string): string | undefined {
   return process.env[name];
 }
 
+/** Accept a bare project URL or a mistakenly pasted REST endpoint. */
+function normalizeSupabaseUrl(raw: string): string {
+  const trimmed = raw.trim().replace(/\/+$/, "");
+  return trimmed.replace(/\/rest\/v1$/i, "");
+}
+
 export function hasSiteDatabaseConfig(): boolean {
   return Boolean(
     readEnv("SUPABASE_URL") && readEnv("SUPABASE_SERVICE_ROLE_KEY"),
@@ -21,17 +27,17 @@ export function hasSiteDatabaseConfig(): boolean {
 }
 
 function getSiteDatabase(): SupabaseClient {
-  const url = readEnv("SUPABASE_URL");
+  const rawUrl = readEnv("SUPABASE_URL");
   const serviceRoleKey = readEnv("SUPABASE_SERVICE_ROLE_KEY");
 
-  if (!url || !serviceRoleKey) {
+  if (!rawUrl || !serviceRoleKey) {
     throw new StorageError(
       "Site content storage is not configured. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
       503,
     );
   }
 
-  return createClient(url, serviceRoleKey, {
+  return createClient(normalizeSupabaseUrl(rawUrl), serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 }

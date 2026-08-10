@@ -8,14 +8,25 @@ import type { SiteContent } from "@/lib/site/types";
 import { StorageError } from "@/lib/storage";
 
 export async function GET() {
-  const record = await readSiteRecord();
-  return NextResponse.json(record.content, {
-    headers: {
-      "Cache-Control": "no-store, max-age=0",
-      ETag: `"${record.version}"`,
-      "X-Site-Version": String(record.version),
-    },
-  });
+  try {
+    const record = await readSiteRecord();
+    return NextResponse.json(record.content, {
+      headers: {
+        "Cache-Control": "no-store, max-age=0",
+        ETag: `"${record.version}"`,
+        "X-Site-Version": String(record.version),
+      },
+    });
+  } catch (error) {
+    if (error instanceof StorageError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    console.error(error);
+    return NextResponse.json(
+      { error: "Failed to load site content." },
+      { status: 500 },
+    );
+  }
 }
 
 export async function PATCH(request: Request) {
