@@ -3,8 +3,8 @@
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
-import { DecorMotifs } from "@/components/ui/DecorMotifs";
 import { PhoneMarquee } from "@/components/phone/PhoneMarquee";
+import { ScallopedBanner } from "@/components/ui/ScallopedBanner";
 import { SectionSurface } from "@/components/ui/SectionSurface";
 import { SectionReveal } from "@/components/ui/motion";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
@@ -23,16 +23,19 @@ export function WorkCarousel({ featuredVideos }: WorkCarouselProps) {
 
   return (
     <>
-      <div className="band-forest relative overflow-hidden px-4 pt-12 pb-16 sm:px-6 sm:pt-14 sm:pb-20">
-        <DecorMotifs preset="edges" tone="paper" />
+      <ScallopedBanner
+        motifs="edges"
+        className="pb-4 sm:pb-6"
+        contentClassName="py-12 text-center sm:py-16"
+      >
         <SectionButterfly flight="workBand" />
         <AdminEditButton target="portfolio" label="Edit videos" tone="light" />
-        <SectionReveal className="relative z-10 mx-auto max-w-4xl text-center">
+        <SectionReveal className="relative z-10 mx-auto max-w-4xl">
           <h2 className="font-script text-4xl leading-tight text-paper sm:text-6xl">
             {site.work.heading}
           </h2>
         </SectionReveal>
-      </div>
+      </ScallopedBanner>
 
       <div className="relative overflow-hidden pt-10 pb-16 sm:pt-12 sm:pb-20">
         <SectionSurface tone="sage" motifs="scatter" />

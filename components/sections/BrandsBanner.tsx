@@ -37,7 +37,7 @@ export function BrandsBanner() {
   if (!isAdminView && (!visible || items.length === 0)) return null;
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative">
       <ScallopedBanner motifs="edges" className="pb-4 sm:pb-6">
         <SectionButterfly flight="brandsBand" />
         <AdminEditButton section="brands" label="Edit brands" tone="light" />

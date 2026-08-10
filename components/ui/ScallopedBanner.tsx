@@ -22,6 +22,9 @@ const TONE_SURFACE: Record<BannerTone, string> = {
 /**
  * Full-bleed accent strip, optionally with a repeating scalloped bottom edge.
  * Place between lighter sections so the band reads as punctuation.
+ *
+ * Motifs/butterflies clip inside the band body; the scallop surface sits outside
+ * that clip so parent overflow never eats the edge.
  */
 export function ScallopedBanner({
   children,
@@ -41,11 +44,16 @@ export function ScallopedBanner({
           aria-hidden
         />
       )}
-      <DecorMotifs preset={motifs} tone="paper" />
-      <div
-        className={`relative mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 ${contentClassName}`}
-      >
-        {children}
+      {/* Clip decor to the band body without clipping the hanging scallops. */}
+      <div className="relative overflow-hidden">
+        <DecorMotifs preset={motifs} tone="paper" />
+        <div
+          className={`relative mx-auto max-w-6xl px-4 sm:px-6 ${
+            contentClassName || "py-8 sm:py-10"
+          }`}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );

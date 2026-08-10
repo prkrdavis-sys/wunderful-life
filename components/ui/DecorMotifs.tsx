@@ -1,12 +1,12 @@
 import type { CSSProperties } from "react";
 
 export type FlowerKind =
-  | "daisy"
-  | "tulip"
-  | "poppy"
+  | "rose"
+  | "peony"
+  | "chrysanthemum"
   | "sunflower"
-  | "cosmos"
-  | "wildflower";
+  | "hibiscus"
+  | "dahlia";
 export type MotifKind = "flower" | "moon" | "star";
 
 /** Named arrangements so sections can vary without repeating coordinates. */
@@ -29,15 +29,15 @@ type MotifSpec = {
 };
 
 const FLOWER_ASSETS: Record<FlowerKind, string> = {
-  daisy: "/flowers/daisy.png",
-  tulip: "/flowers/tulip.png",
-  poppy: "/flowers/poppy.png",
+  rose: "/flowers/rose.png",
+  peony: "/flowers/peony.png",
+  chrysanthemum: "/flowers/chrysanthemum.png",
   sunflower: "/flowers/sunflower.png",
-  cosmos: "/flowers/cosmos.png",
-  wildflower: "/flowers/wildflower.png",
+  hibiscus: "/flowers/hibiscus.png",
+  dahlia: "/flowers/dahlia.png",
 };
 
-function Flower({ variant = "daisy" }: { variant?: FlowerKind }) {
+function Flower({ variant = "rose" }: { variant?: FlowerKind }) {
   const style = {
     "--flower-image": `url("${FLOWER_ASSETS[variant]}")`,
   } as CSSProperties;
@@ -84,7 +84,7 @@ const PRESETS: Record<Exclude<MotifPreset, "none">, MotifSpec[]> = {
   edges: [
     {
       kind: "flower",
-      flower: "daisy",
+      flower: "rose",
       position: "left-[2%] top-[14%] h-16 w-16 sm:h-20 sm:w-20",
       rotate: -14,
     },
@@ -92,7 +92,7 @@ const PRESETS: Record<Exclude<MotifPreset, "none">, MotifSpec[]> = {
     { kind: "moon", position: "right-[3%] top-[22%] h-14 w-14 sm:h-16 sm:w-16", rotate: 18, delay: 1.5 },
     {
       kind: "flower",
-      flower: "poppy",
+      flower: "chrysanthemum",
       position: "right-[7%] bottom-[12%] h-12 w-12 sm:h-16 sm:w-16",
       rotate: 22,
       delay: 4,
@@ -102,7 +102,7 @@ const PRESETS: Record<Exclude<MotifPreset, "none">, MotifSpec[]> = {
   left: [
     {
       kind: "flower",
-      flower: "tulip",
+      flower: "peony",
       position: "left-[3%] top-[18%] h-16 w-16 sm:h-24 sm:w-24",
       rotate: -18,
     },
@@ -125,7 +125,7 @@ const PRESETS: Record<Exclude<MotifPreset, "none">, MotifSpec[]> = {
     { kind: "star", position: "left-[6%] top-[12%] h-6 w-6 sm:h-8 sm:w-8", duration: 20 },
     {
       kind: "flower",
-      flower: "cosmos",
+      flower: "hibiscus",
       position: "left-[16%] bottom-[10%] h-12 w-12 sm:h-16 sm:w-16",
       rotate: -20,
       delay: 2,
@@ -134,7 +134,7 @@ const PRESETS: Record<Exclude<MotifPreset, "none">, MotifSpec[]> = {
     { kind: "star", position: "right-[18%] bottom-[14%] h-8 w-8 sm:h-10 sm:w-10", delay: 6, duration: 23 },
     {
       kind: "flower",
-      flower: "wildflower",
+      flower: "dahlia",
       position: "left-[46%] top-[4%] h-10 w-10 sm:h-12 sm:w-12",
       rotate: 8,
       delay: 5,

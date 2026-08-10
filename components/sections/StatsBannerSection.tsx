@@ -15,7 +15,7 @@ export function StatsBannerSection() {
   if (!isAdminView && (!visible || items.length === 0)) return null;
 
   return (
-    <section aria-label="Audience stats" className="relative overflow-hidden">
+    <section aria-label="Audience stats" className="relative">
       <ScallopedBanner motifs="corners" className="pb-4 sm:pb-6">
         <SectionButterfly flight="stats" />
         <AdminEditButton section="stats" label="Edit stats" tone="light" />
