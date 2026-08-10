@@ -12,7 +12,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { HashScrollHandler } from "@/components/layout/HashScrollHandler";
 import { SiteHeaderHeightSync } from "@/components/layout/SiteHeaderHeightSync";
 import { AppProviders } from "@/components/layout/AppProviders";
-import { getSiteContent } from "@/lib/site";
+import { getSiteContentRecord } from "@/lib/site";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -55,7 +55,7 @@ const greatVibes = Great_Vibes({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const site = await getSiteContent();
+  const { content: site } = await getSiteContentRecord();
   const title = `${site.fullName} · ${site.brand}`;
   return {
     title: {
@@ -95,7 +95,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const site = await getSiteContent();
+  const { content: site, version: siteVersion } = await getSiteContentRecord();
 
   return (
     <html
@@ -103,7 +103,7 @@ export default async function RootLayout({
       className={`${bricolage.variable} ${dmSans.variable} ${fraunces.variable} ${instrumentSans.variable} ${greatVibes.variable} h-full scroll-smooth`}
     >
       <body className="relative min-h-full flex flex-col bg-cream font-body antialiased">
-        <AppProviders initialSite={site}>
+        <AppProviders initialSite={site} initialSiteVersion={siteVersion}>
           <HashScrollHandler />
           <div id="site-header" className="sticky top-0 z-50">
             <SiteNav />

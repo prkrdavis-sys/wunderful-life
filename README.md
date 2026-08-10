@@ -22,7 +22,9 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ### Editing placeholder copy
 
-Update [`data/site.json`](data/site.json) for bio, tagline, services, and social links.
+Update [`data/site.json`](data/site.json) for local development only. Production
+site content is stored in the dedicated transactional database so admin saves
+are versioned and cannot silently overwrite newer edits.
 
 ### Managing videos
 
@@ -43,9 +45,9 @@ Without `ADMIN_PASSWORD`, admin routes are open for local development.
 
 ## Deploying with uploads
 
-About photos uploaded locally are saved to `public/about-photos/` (committed to git) or **Vercel Blob** when `BLOB_READ_WRITE_TOKEN` is set on your Vercel project.
-
-Video uploads still use local disk (`public/uploads/`), which does **not** persist on serverless hosts. For production video uploads, move storage to Vercel Blob or another remote bucket.
+About photos and videos uploaded locally are saved to the local public folders.
+Production media is stored in **Vercel Blob**, while the URLs and all other site
+content are persisted in the dedicated transactional database.
 
 ### Fix broken photos on Vercel
 
@@ -53,7 +55,16 @@ If photos work locally but show broken icons on Vercel, the image files were lik
 
 1. In the Vercel dashboard → Storage → Create Blob store
 2. Link it to the project (sets `BLOB_READ_WRITE_TOKEN` automatically)
-3. Redeploy
+3. Create the dedicated Supabase project and add these server-only Vercel
+   environment variables for Production:
+   - `SUPABASE_URL`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+4. Redeploy
+
+The service role key must never be prefixed with `NEXT_PUBLIC_` or exposed to
+the browser. If the database credentials are missing or unavailable in
+production, the app returns a storage error instead of falling back to the
+checked-in `data/site.json`.
 
 ## Scripts
 

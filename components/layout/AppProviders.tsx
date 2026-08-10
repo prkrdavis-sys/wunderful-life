@@ -9,11 +9,19 @@ import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 type AppProvidersProps = {
   children: ReactNode;
   initialSite: SiteContent;
+  initialSiteVersion: number;
 };
 
-export function AppProviders({ children, initialSite }: AppProvidersProps) {
+export function AppProviders({
+  children,
+  initialSite,
+  initialSiteVersion,
+}: AppProvidersProps) {
   return (
-    <AdminViewProvider initialSite={initialSite}>
+    <AdminViewProvider
+      initialSite={initialSite}
+      initialSiteVersion={initialSiteVersion}
+    >
       {children}
       <AdminModePanel />
       <AdminModeGate />

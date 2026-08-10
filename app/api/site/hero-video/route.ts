@@ -5,19 +5,26 @@ import {
   setHeroVideoUrl,
   uploadHeroVideo,
 } from "@/lib/storage/site";
+import { readSiteRecord } from "@/lib/storage/site";
 import { StorageError } from "@/lib/storage";
+import { expectedSiteVersion } from "@/lib/storage/siteVersion";
+import { siteResponseHeaders } from "@/lib/site/response";
 import { isAcceptedVideoFile, videoUploadErrorMessage } from "@/lib/videos/upload";
 
 export async function POST(request: Request) {
   try {
+    const version = expectedSiteVersion(request);
     const form = await request.formData();
     const videoUrl = form.get("videoUrl");
     const file = form.get("video");
 
     if (typeof videoUrl === "string" && videoUrl.startsWith("https://")) {
-      const site = await setHeroVideoUrl(videoUrl);
+      const site = await setHeroVideoUrl(videoUrl, version);
+      const record = await readSiteRecord();
       revalidatePath("/", "layout");
-      return NextResponse.json(site);
+      return NextResponse.json(site, {
+        headers: siteResponseHeaders(record.version),
+      });
     }
 
     if (!(file instanceof File) || file.size === 0) {
@@ -31,9 +38,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: videoUploadErrorMessage() }, { status: 400 });
     }
 
-    const site = await uploadHeroVideo(file);
+    const site = await uploadHeroVideo(file, version);
+    const record = await readSiteRecord();
     revalidatePath("/", "layout");
-    return NextResponse.json(site);
+    return NextResponse.json(site, {
+      headers: siteResponseHeaders(record.version),
+    });
   } catch (error) {
     if (error instanceof StorageError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
@@ -46,11 +56,15 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
   try {
-    const site = await clearHeroVideo();
+    const version = expectedSiteVersion(request);
+    const site = await clearHeroVideo(version);
+    const record = await readSiteRecord();
     revalidatePath("/", "layout");
-    return NextResponse.json(site);
+    return NextResponse.json(site, {
+      headers: siteResponseHeaders(record.version),
+    });
   } catch (error) {
     if (error instanceof StorageError) {
       return NextResponse.json({ error: error.message }, { status: error.status });

@@ -8,6 +8,13 @@ import {
   getUseBlobStorage,
   SITE_METADATA_BLOB_PATH,
 } from "./blob";
+import {
+  hasSiteDatabaseConfig,
+  initializeStoredSiteContent,
+  readStoredSiteContent,
+  saveStoredSiteContent,
+  type StoredSiteContent,
+} from "./database";
 import { StorageError } from "./types";
 
 const SITE_PATH = path.join(process.cwd(), "data", "site.json");
@@ -65,66 +72,94 @@ async function readSiteFromBlob(): Promise<SiteContent | null> {
     const text = await new Response(result.stream).text();
     const parsed = JSON.parse(text) as SiteContent;
     return isCompleteSiteContent(parsed) ? normalizeSiteContent(parsed) : null;
-  } catch {
-    return null;
+  } catch (error) {
+    throw new StorageError(
+      error instanceof Error && error.message
+        ? `Could not load site content from Vercel Blob: ${error.message}`
+        : "Could not load site content from Vercel Blob.",
+      503,
+    );
   }
 }
 
-export async function readSiteContent(): Promise<SiteContent> {
+async function readLegacySiteContent(): Promise<SiteContent> {
   const blobSite = await readSiteFromBlob();
   if (blobSite !== null) return blobSite;
+
+  if (process.env.VERCEL === "1") {
+    throw new StorageError(
+      "Production site content is unavailable. Check the connected Blob store.",
+      503,
+    );
+  }
 
   return readSiteFromFile();
 }
 
-export async function writeSiteContent(content: SiteContent) {
+export async function readSiteRecord(): Promise<StoredSiteContent> {
+  if (hasSiteDatabaseConfig()) {
+    const stored = await readStoredSiteContent();
+    if (stored) {
+      return {
+        ...stored,
+        content: normalizeSiteContent(stored.content),
+      };
+    }
+
+    const legacy = await readLegacySiteContent();
+    const initialized = await initializeStoredSiteContent(legacy);
+    return {
+      ...initialized,
+      content: normalizeSiteContent(initialized.content),
+    };
+  }
+
+  if (process.env.VERCEL === "1") {
+    throw new StorageError(
+      "Production site content storage is not configured. Add the transactional database credentials.",
+      503,
+    );
+  }
+
+  return {
+    content: await readSiteFromFile(),
+    version: 1,
+    updatedAt: new Date(0).toISOString(),
+  };
+}
+
+export async function readSiteContent(): Promise<SiteContent> {
+  return (await readSiteRecord()).content;
+}
+
+export async function writeSiteContent(
+  content: SiteContent,
+  expectedVersion?: number,
+): Promise<SiteContent> {
   if (!isCompleteSiteContent(content)) {
     throw new StorageError("Invalid site content.", 400);
   }
 
-  const json = `${JSON.stringify(content, null, 2)}\n`;
+  const normalized = normalizeSiteContent(content);
 
-  if (getUseBlobStorage()) {
-    try {
-      await put(SITE_METADATA_BLOB_PATH, json, {
-        access: "public",
-        addRandomSuffix: false,
-        allowOverwrite: true,
-        contentType: "application/json",
-        cacheControlMaxAge: 60,
-      });
-      return;
-    } catch (error) {
-      if (readEnv("VERCEL") === "1") {
-        throw new StorageError(
-          toErrorMessage(
-            error,
-            "Could not save site content to Vercel Blob. Check that a Blob store is linked to this project.",
-          ),
-          503,
-        );
-      }
-      throw error;
+  if (hasSiteDatabaseConfig()) {
+    if (expectedVersion === undefined) {
+      throw new StorageError("A site content version is required to save.", 409);
     }
+    await saveStoredSiteContent(normalized, expectedVersion);
+    return normalized;
   }
 
+  const json = `${JSON.stringify(normalized, null, 2)}\n`;
   await fs.writeFile(SITE_PATH, json);
-}
-
-function readEnv(name: string): string | undefined {
-  return process.env[name];
-}
-
-function toErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error && error.message) return error.message;
-  if (typeof error === "string" && error.trim()) return error;
-  return fallback;
-}
-
-export async function updateSiteContent(content: SiteContent) {
-  const normalized = normalizeSiteContent(content);
-  await writeSiteContent(normalized);
   return normalized;
+}
+
+export async function updateSiteContent(
+  content: SiteContent,
+  expectedVersion: number,
+) {
+  return writeSiteContent(normalizeSiteContent(content), expectedVersion);
 }
 
 async function deleteStoredPhoto(imagePath: string) {
@@ -229,38 +264,69 @@ async function setPhotoImagePath(
   photoId: string,
   imagePath: string,
   kind: "about" | "collage",
+  expectedVersion?: number,
 ): Promise<SiteContent> {
-  const site = await readSiteContent();
+  const record = await readSiteRecord();
+  if (expectedVersion !== undefined && record.version !== expectedVersion) {
+    await deleteStoredPhoto(imagePath);
+    throw new StorageError(
+      "This editor is out of date. The latest site content was saved elsewhere.",
+      409,
+    );
+  }
+  const site = record.content;
   const photos =
     kind === "about" ? site.about.photos : site.photography.photos;
   const photoIndex = photos.findIndex((photo) => photo.id === photoId);
 
   if (photoIndex === -1) {
+    await deleteStoredPhoto(imagePath);
     throw new StorageError("Photo not found.", 404);
   }
 
   const current = photos[photoIndex];
+  photos[photoIndex] = { ...current, imagePath };
+  try {
+    await writeSiteContent(site, record.version);
+  } catch (error) {
+    if (imagePath !== current.imagePath) {
+      await deleteStoredPhoto(imagePath);
+    }
+    throw error;
+  }
   if (current.imagePath && current.imagePath !== imagePath) {
     await deleteStoredPhoto(current.imagePath);
   }
-
-  photos[photoIndex] = { ...current, imagePath };
-  await writeSiteContent(site);
   return site;
 }
 
-export async function uploadAboutPhoto(photoId: string, file: File) {
+export async function uploadAboutPhoto(
+  photoId: string,
+  file: File,
+  expectedVersion?: number,
+) {
   const imagePath = await savePhotoFile(photoId, file, "about-photos");
-  return setPhotoImagePath(photoId, imagePath, "about");
+  return setPhotoImagePath(photoId, imagePath, "about", expectedVersion);
 }
 
 /** Production path: the file was client-uploaded to Blob; persist its URL. */
-export async function setAboutPhotoUrl(photoId: string, url: string) {
-  return setPhotoImagePath(photoId, url, "about");
+export async function setAboutPhotoUrl(
+  photoId: string,
+  url: string,
+  expectedVersion?: number,
+) {
+  return setPhotoImagePath(photoId, url, "about", expectedVersion);
 }
 
-export async function clearAboutPhoto(photoId: string) {
-  const site = await readSiteContent();
+export async function clearAboutPhoto(photoId: string, expectedVersion?: number) {
+  const record = await readSiteRecord();
+  if (expectedVersion !== undefined && record.version !== expectedVersion) {
+    throw new StorageError(
+      "This editor is out of date. The latest site content was saved elsewhere.",
+      409,
+    );
+  }
+  const site = record.content;
   const photoIndex = site.about.photos.findIndex((photo) => photo.id === photoId);
 
   if (photoIndex === -1) {
@@ -268,13 +334,12 @@ export async function clearAboutPhoto(photoId: string) {
   }
 
   const current = site.about.photos[photoIndex];
+  const { imagePath: _removed, ...rest } = current;
+  site.about.photos[photoIndex] = rest;
+  await writeSiteContent(site, record.version);
   if (current.imagePath) {
     await deleteStoredPhoto(current.imagePath);
   }
-
-  const { imagePath: _removed, ...rest } = current;
-  site.about.photos[photoIndex] = rest;
-  await writeSiteContent(site);
   return site;
 }
 
@@ -307,8 +372,17 @@ async function saveVideoFile(slot: VideoSlot, file: File): Promise<string> {
 async function replaceVideoPath(
   slot: VideoSlot,
   videoPath: string,
+  expectedVersion?: number,
 ): Promise<SiteContent> {
-  const site = await readSiteContent();
+  const record = await readSiteRecord();
+  if (expectedVersion !== undefined && record.version !== expectedVersion) {
+    await deleteStoredPhoto(videoPath);
+    throw new StorageError(
+      "This editor is out of date. The latest site content was saved elsewhere.",
+      409,
+    );
+  }
+  const site = record.content;
   const previous =
     slot === "hero" ? site.hero.videoPath : site.closingCta.videoPath;
 
@@ -318,7 +392,14 @@ async function replaceVideoPath(
     site.closingCta = { ...site.closingCta, videoPath };
   }
 
-  await writeSiteContent(site);
+  try {
+    await writeSiteContent(site, record.version);
+  } catch (error) {
+    if (videoPath !== previous) {
+      await deleteStoredPhoto(videoPath);
+    }
+    throw error;
+  }
 
   if (previous && previous !== videoPath) {
     await deleteStoredPhoto(previous);
@@ -327,8 +408,18 @@ async function replaceVideoPath(
   return site;
 }
 
-async function clearVideoPath(slot: VideoSlot): Promise<SiteContent> {
-  const site = await readSiteContent();
+async function clearVideoPath(
+  slot: VideoSlot,
+  expectedVersion?: number,
+): Promise<SiteContent> {
+  const record = await readSiteRecord();
+  if (expectedVersion !== undefined && record.version !== expectedVersion) {
+    throw new StorageError(
+      "This editor is out of date. The latest site content was saved elsewhere.",
+      409,
+    );
+  }
+  const site = record.content;
   const previous =
     slot === "hero" ? site.hero.videoPath : site.closingCta.videoPath;
 
@@ -340,53 +431,89 @@ async function clearVideoPath(slot: VideoSlot): Promise<SiteContent> {
     site.closingCta = closingCta;
   }
 
-  await writeSiteContent(site);
+  await writeSiteContent(site, record.version);
 
-  if (previous) {
-    await deleteStoredPhoto(previous);
-  }
+  if (previous) await deleteStoredPhoto(previous);
 
   return site;
 }
 
 /** Local/dev path: the video file arrives in the request body. */
-export async function uploadHeroVideo(file: File): Promise<SiteContent> {
-  return replaceVideoPath("hero", await saveVideoFile("hero", file));
+export async function uploadHeroVideo(
+  file: File,
+  expectedVersion?: number,
+): Promise<SiteContent> {
+  return replaceVideoPath(
+    "hero",
+    await saveVideoFile("hero", file),
+    expectedVersion,
+  );
 }
 
 /** Production path: the file was client-uploaded to Blob; persist its URL. */
-export async function setHeroVideoUrl(url: string): Promise<SiteContent> {
-  return replaceVideoPath("hero", url);
+export async function setHeroVideoUrl(
+  url: string,
+  expectedVersion?: number,
+): Promise<SiteContent> {
+  return replaceVideoPath("hero", url, expectedVersion);
 }
 
-export async function clearHeroVideo(): Promise<SiteContent> {
-  return clearVideoPath("hero");
+export async function clearHeroVideo(expectedVersion?: number): Promise<SiteContent> {
+  return clearVideoPath("hero", expectedVersion);
 }
 
-export async function uploadCtaVideo(file: File): Promise<SiteContent> {
-  return replaceVideoPath("cta", await saveVideoFile("cta", file));
+export async function uploadCtaVideo(
+  file: File,
+  expectedVersion?: number,
+): Promise<SiteContent> {
+  return replaceVideoPath(
+    "cta",
+    await saveVideoFile("cta", file),
+    expectedVersion,
+  );
 }
 
-export async function setCtaVideoUrl(url: string): Promise<SiteContent> {
-  return replaceVideoPath("cta", url);
+export async function setCtaVideoUrl(
+  url: string,
+  expectedVersion?: number,
+): Promise<SiteContent> {
+  return replaceVideoPath("cta", url, expectedVersion);
 }
 
-export async function clearCtaVideo(): Promise<SiteContent> {
-  return clearVideoPath("cta");
+export async function clearCtaVideo(expectedVersion?: number): Promise<SiteContent> {
+  return clearVideoPath("cta", expectedVersion);
 }
 
-export async function uploadCollagePhoto(photoId: string, file: File) {
+export async function uploadCollagePhoto(
+  photoId: string,
+  file: File,
+  expectedVersion?: number,
+) {
   const imagePath = await savePhotoFile(photoId, file, "home-grid-photos");
-  return setPhotoImagePath(photoId, imagePath, "collage");
+  return setPhotoImagePath(photoId, imagePath, "collage", expectedVersion);
 }
 
 /** Production path: the file was client-uploaded to Blob; persist its URL. */
-export async function setCollagePhotoUrl(photoId: string, url: string) {
-  return setPhotoImagePath(photoId, url, "collage");
+export async function setCollagePhotoUrl(
+  photoId: string,
+  url: string,
+  expectedVersion?: number,
+) {
+  return setPhotoImagePath(photoId, url, "collage", expectedVersion);
 }
 
-export async function clearCollagePhoto(photoId: string) {
-  const site = await readSiteContent();
+export async function clearCollagePhoto(
+  photoId: string,
+  expectedVersion?: number,
+) {
+  const record = await readSiteRecord();
+  if (expectedVersion !== undefined && record.version !== expectedVersion) {
+    throw new StorageError(
+      "This editor is out of date. The latest site content was saved elsewhere.",
+      409,
+    );
+  }
+  const site = record.content;
   const photoIndex = site.photography.photos.findIndex(
     (photo) => photo.id === photoId,
   );
@@ -396,24 +523,39 @@ export async function clearCollagePhoto(photoId: string) {
   }
 
   const current = site.photography.photos[photoIndex];
+  const { imagePath: _removed, ...rest } = current;
+  site.photography.photos[photoIndex] = rest;
+  await writeSiteContent(site, record.version);
   if (current.imagePath) {
     await deleteStoredPhoto(current.imagePath);
   }
-
-  const { imagePath: _removed, ...rest } = current;
-  site.photography.photos[photoIndex] = rest;
-  await writeSiteContent(site);
   return site;
 }
 
-export async function uploadBrandLogo(brandId: string, file: File) {
+export async function uploadBrandLogo(
+  brandId: string,
+  file: File,
+  expectedVersion?: number,
+) {
   const logoPath = await savePhotoFile(brandId, file, "brand-logos");
-  return setBrandLogoUrl(brandId, logoPath);
+  return setBrandLogoUrl(brandId, logoPath, expectedVersion);
 }
 
 /** Production path: the file was client-uploaded to Blob; persist its URL. */
-export async function setBrandLogoUrl(brandId: string, logoPath: string) {
-  const site = await readSiteContent();
+export async function setBrandLogoUrl(
+  brandId: string,
+  logoPath: string,
+  expectedVersion?: number,
+) {
+  const record = await readSiteRecord();
+  if (expectedVersion !== undefined && record.version !== expectedVersion) {
+    await deleteStoredPhoto(logoPath);
+    throw new StorageError(
+      "This editor is out of date. The latest site content was saved elsewhere.",
+      409,
+    );
+  }
+  const site = record.content;
   const brandIndex = site.brands.items.findIndex((brand) => brand.id === brandId);
 
   if (brandIndex === -1) {
@@ -421,17 +563,33 @@ export async function setBrandLogoUrl(brandId: string, logoPath: string) {
   }
 
   const current = site.brands.items[brandIndex];
+  site.brands.items[brandIndex] = { ...current, logoPath };
+  try {
+    await writeSiteContent(site, record.version);
+  } catch (error) {
+    if (logoPath !== current.logoPath) {
+      await deleteStoredPhoto(logoPath);
+    }
+    throw error;
+  }
   if (current.logoPath && current.logoPath !== logoPath) {
     await deleteStoredPhoto(current.logoPath);
   }
-
-  site.brands.items[brandIndex] = { ...current, logoPath };
-  await writeSiteContent(site);
   return site;
 }
 
-export async function clearBrandLogo(brandId: string) {
-  const site = await readSiteContent();
+export async function clearBrandLogo(
+  brandId: string,
+  expectedVersion?: number,
+) {
+  const record = await readSiteRecord();
+  if (expectedVersion !== undefined && record.version !== expectedVersion) {
+    throw new StorageError(
+      "This editor is out of date. The latest site content was saved elsewhere.",
+      409,
+    );
+  }
+  const site = record.content;
   const brandIndex = site.brands.items.findIndex((brand) => brand.id === brandId);
 
   if (brandIndex === -1) {
@@ -439,12 +597,11 @@ export async function clearBrandLogo(brandId: string) {
   }
 
   const current = site.brands.items[brandIndex];
+  const { logoPath: _removed, ...rest } = current;
+  site.brands.items[brandIndex] = rest;
+  await writeSiteContent(site, record.version);
   if (current.logoPath) {
     await deleteStoredPhoto(current.logoPath);
   }
-
-  const { logoPath: _removed, ...rest } = current;
-  site.brands.items[brandIndex] = rest;
-  await writeSiteContent(site);
   return site;
 }

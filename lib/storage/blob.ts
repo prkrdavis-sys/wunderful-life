@@ -4,13 +4,7 @@ function readEnv(name: string): string | undefined {
 }
 
 export function getUseBlobStorage(): boolean {
-  if (readEnv("BLOB_READ_WRITE_TOKEN")) {
-    return true;
-  }
-
-  // Linked Blob stores inject the token at runtime on Vercel even when it was
-  // absent during `next build` (which would otherwise bake in `undefined`).
-  return readEnv("VERCEL") === "1";
+  return Boolean(readEnv("BLOB_READ_WRITE_TOKEN"));
 }
 
 export function getBlobReadWriteToken(): string | undefined {

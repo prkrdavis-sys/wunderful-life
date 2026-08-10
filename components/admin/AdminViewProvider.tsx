@@ -54,6 +54,8 @@ type AdminViewContextValue = {
   refreshSession: () => Promise<void>;
   site: SiteContent;
   setSite: (site: SiteContent) => void;
+  siteVersion: number;
+  setSiteVersion: (version: number) => void;
 };
 
 const AdminViewContext = createContext<AdminViewContextValue | null>(null);
@@ -63,11 +65,13 @@ const VIEW_MODE_KEY = "wunderful-view-mode";
 type AdminViewProviderProps = {
   children: ReactNode;
   initialSite: SiteContent;
+  initialSiteVersion: number;
 };
 
 export function AdminViewProvider({
   children,
   initialSite,
+  initialSiteVersion,
 }: AdminViewProviderProps) {
   const [viewMode, setViewModeState] = useState<ViewMode>(() => {
     if (typeof window === "undefined") return "regular";
@@ -81,6 +85,7 @@ export function AdminViewProvider({
   const [editorFocus, setEditorFocus] = useState<SiteEditorFocus | null>(null);
   const [preferredTab, setPreferredTab] = useState<AdminPanelTab | null>(null);
   const [site, setSite] = useState(initialSite);
+  const [siteVersion, setSiteVersion] = useState(initialSiteVersion);
 
   const refreshSession = useCallback(async () => {
     const response = await fetch("/api/admin/session");
@@ -156,6 +161,8 @@ export function AdminViewProvider({
       refreshSession,
       site,
       setSite,
+      siteVersion,
+      setSiteVersion,
     }),
     [
       viewMode,
@@ -172,6 +179,7 @@ export function AdminViewProvider({
       openPortfolioEditor,
       refreshSession,
       site,
+      siteVersion,
     ],
   );
 

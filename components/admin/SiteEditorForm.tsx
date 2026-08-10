@@ -187,6 +187,8 @@ export function SiteEditorForm({
     editorFocus,
     clearEditorFocus,
     openPortfolioEditor,
+    siteVersion,
+    setSiteVersion,
   } = useAdminView();
   const [form, setForm] = useState(site);
   const [section, setSection] = useState<SiteEditorSection>("profile");
@@ -217,6 +219,24 @@ export function SiteEditorForm({
   const isBusy = (state: VideoUploadState) =>
     state.status === "preparing" || state.status === "uploading";
   const uploadBusy = isBusy(videoUploads.hero) || isBusy(videoUploads.cta);
+
+  const responseVersion = (response: Response): number => {
+    const version = Number(response.headers.get("x-site-version"));
+    if (!Number.isSafeInteger(version) || version < 1) {
+      throw new Error("The server did not confirm the saved site version.");
+    }
+    return version;
+  };
+
+  const refreshAfterConflict = async () => {
+    const latestResponse = await fetch("/api/site", { cache: "no-store" });
+    const latest = await readUploadJson<SiteContent>(latestResponse);
+    setSite(latest);
+    setSiteVersion(responseVersion(latestResponse));
+    setError(
+      "This change was not applied because the site changed elsewhere. Your edits are still here; review them against the latest site and try again.",
+    );
+  };
 
   const videoPreviewUrls = useMemo(
     () => ({
@@ -296,6 +316,7 @@ export function SiteEditorForm({
 
   const startVideoUpload = async (slot: VideoSlot, file: File) => {
     const generation = ++videoUploadGenRef.current[slot];
+    const version = siteVersion;
     const { noun, endpoint } = SLOT_COPY[slot];
     setError(null);
     setMessage(null);
@@ -368,17 +389,23 @@ export function SiteEditorForm({
 
       const response = await fetch(endpoint, {
         method: "POST",
+        headers: { "If-Match": `"${version}"` },
         body: payload,
       });
       const data = await response.json();
       if (generation !== videoUploadGenRef.current[slot]) return;
 
       if (!response.ok) {
+        if (response.status === 409) {
+          await refreshAfterConflict();
+          throw new Error("The upload was not applied because the site changed.");
+        }
         throw new Error(data.error ?? `Failed to upload ${noun}.`);
       }
 
       setForm(data);
       setSite(data);
+      setSiteVersion(responseVersion(response));
       setVideoFiles((current) => ({ ...current, [slot]: null }));
       const inputRef = slot === "hero" ? heroVideoInputRef : ctaVideoInputRef;
       if (inputRef.current) inputRef.current.value = "";
@@ -407,17 +434,25 @@ export function SiteEditorForm({
     try {
       const response = await fetch("/api/site", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "If-Match": `"${siteVersion}"`,
+        },
         body: JSON.stringify(form),
       });
       const data = await readUploadJson<SiteContent & { error?: string }>(response);
 
       if (!response.ok) {
+        if (response.status === 409) {
+          await refreshAfterConflict();
+          return;
+        }
         throw new Error(data.error ?? "Failed to save.");
       }
 
       setSite(data);
       setForm(data);
+      setSiteVersion(responseVersion(response));
       onSaved?.(data);
       setMessage("Saved.");
     } catch (err) {
@@ -444,6 +479,7 @@ export function SiteEditorForm({
     file: File,
     kind: keyof typeof PHOTO_ENDPOINTS = "about",
   ) => {
+    const version = siteVersion;
     setLoading(true);
     setError(null);
     setMessage(null);
@@ -480,16 +516,22 @@ export function SiteEditorForm({
 
       const response = await fetch(endpoint, {
         method: "POST",
+        headers: { "If-Match": `"${version}"` },
         body: payload,
       });
       const data = await readUploadJson<SiteContent & { error?: string }>(response);
 
       if (!response.ok) {
+        if (response.status === 409) {
+          await refreshAfterConflict();
+          throw new Error("The upload was not applied because the site changed.");
+        }
         throw new Error(data.error ?? "Failed to upload photo.");
       }
 
       setForm(data);
       setSite(data);
+      setSiteVersion(responseVersion(response));
       setMessage("Photo uploaded.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload photo.");
@@ -502,21 +544,30 @@ export function SiteEditorForm({
     photoId: string,
     kind: keyof typeof PHOTO_ENDPOINTS = "about",
   ) => {
+    const version = siteVersion;
     setLoading(true);
     setError(null);
     setMessage(null);
 
     try {
       const endpoint = `${PHOTO_ENDPOINTS[kind]}/${photoId}`;
-      const response = await fetch(endpoint, { method: "DELETE" });
+      const response = await fetch(endpoint, {
+        method: "DELETE",
+        headers: { "If-Match": `"${version}"` },
+      });
       const data = await readUploadJson<SiteContent & { error?: string }>(response);
 
       if (!response.ok) {
+        if (response.status === 409) {
+          await refreshAfterConflict();
+          throw new Error("The removal was not applied because the site changed.");
+        }
         throw new Error(data.error ?? "Failed to remove photo.");
       }
 
       setForm(data);
       setSite(data);
+      setSiteVersion(responseVersion(response));
       setMessage(kind === "brandLogo" ? "Logo removed." : "Photo removed.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to remove photo.");
@@ -528,6 +579,7 @@ export function SiteEditorForm({
   const removeVideo = async (slot: VideoSlot) => {
     const { noun, endpoint } = SLOT_COPY[slot];
     const hadPending = Boolean(videoFiles[slot]);
+    const version = siteVersion;
 
     videoUploadGenRef.current[slot] += 1;
     setVideoFiles((current) => ({ ...current, [slot]: null }));
@@ -555,15 +607,23 @@ export function SiteEditorForm({
     setMessage(null);
 
     try {
-      const response = await fetch(endpoint, { method: "DELETE" });
+      const response = await fetch(endpoint, {
+        method: "DELETE",
+        headers: { "If-Match": `"${version}"` },
+      });
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 409) {
+          await refreshAfterConflict();
+          throw new Error(`The ${noun} removal was not applied because the site changed.`);
+        }
         throw new Error(data.error ?? `Failed to remove ${noun}.`);
       }
 
       setForm(data);
       setSite(data);
+      setSiteVersion(responseVersion(response));
       setMessage(`${noun[0].toUpperCase()}${noun.slice(1)} removed.`);
     } catch (err) {
       setError(
