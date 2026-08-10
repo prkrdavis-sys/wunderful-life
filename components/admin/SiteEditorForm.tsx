@@ -12,6 +12,12 @@ import {
   videoUploadErrorMessage,
 } from "@/lib/videos/upload";
 import { needsWebTranscode, prepareVideoForWebUpload } from "@/lib/videos/transcode";
+import {
+  photoBlobPathname,
+  photoContentType,
+  preparePhotoForUpload,
+  readUploadJson,
+} from "@/lib/site/photos";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { FileUploadButton } from "@/components/ui/FileUploadButton";
 import { UploadProgressBar } from "@/components/ui/UploadProgressBar";
@@ -404,7 +410,7 @@ export function SiteEditorForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      const data = await response.json();
+      const data = await readUploadJson<SiteContent & { error?: string }>(response);
 
       if (!response.ok) {
         throw new Error(data.error ?? "Failed to save.");
@@ -427,6 +433,12 @@ export function SiteEditorForm({
     brandLogo: "/api/site/brand-logos",
   } as const;
 
+  const PHOTO_FOLDERS = {
+    about: "about-photos",
+    collage: "home-grid-photos",
+    brandLogo: "brand-logos",
+  } as const;
+
   const uploadPhoto = async (
     photoId: string,
     file: File,
@@ -437,14 +449,40 @@ export function SiteEditorForm({
     setMessage(null);
 
     try {
+      const prepared = await preparePhotoForUpload(file);
       const payload = new FormData();
-      payload.set("photo", file);
       const endpoint = `${PHOTO_ENDPOINTS[kind]}/${photoId}`;
+
+      const configResponse = await fetch("/api/videos/config");
+      const config = await readUploadJson<{
+        clientUpload: boolean;
+        handleUploadUrl: string;
+      }>(configResponse);
+      if (!configResponse.ok) {
+        throw new Error("Could not load upload settings.");
+      }
+
+      if (config.clientUpload) {
+        const contentType = photoContentType(prepared);
+        const blob = await upload(
+          photoBlobPathname(PHOTO_FOLDERS[kind], `${photoId}-${crypto.randomUUID()}`, prepared),
+          prepared,
+          {
+            access: "public",
+            handleUploadUrl: config.handleUploadUrl,
+            ...(contentType ? { contentType } : {}),
+          },
+        );
+        payload.set("imageUrl", blob.url);
+      } else {
+        payload.set("photo", prepared);
+      }
+
       const response = await fetch(endpoint, {
         method: "POST",
         body: payload,
       });
-      const data = await response.json();
+      const data = await readUploadJson<SiteContent & { error?: string }>(response);
 
       if (!response.ok) {
         throw new Error(data.error ?? "Failed to upload photo.");
@@ -471,7 +509,7 @@ export function SiteEditorForm({
     try {
       const endpoint = `${PHOTO_ENDPOINTS[kind]}/${photoId}`;
       const response = await fetch(endpoint, { method: "DELETE" });
-      const data = await response.json();
+      const data = await readUploadJson<SiteContent & { error?: string }>(response);
 
       if (!response.ok) {
         throw new Error(data.error ?? "Failed to remove photo.");
@@ -1019,8 +1057,8 @@ export function SiteEditorForm({
                 <h3 className="font-display text-lg text-brown">Videos section</h3>
                 <p className="mt-1 text-sm text-muted">
                   Phone carousel clips live in the Videos tab. Feature a video to
-                  put it on the landing marquee. Below, edit the cursive title and
-                  content-type chips.
+                  put it on the landing marquee. Below, edit the cursive section
+                  title.
                 </p>
               </div>
 
@@ -1123,118 +1161,6 @@ export function SiteEditorForm({
                   className={inputClass}
                 />
               </label>
-
-              <label className="block max-w-2xl text-sm">
-                <span className="text-muted">
-                  How many content types to show ({form.work.categories.length}{" "}
-                  defined)
-                </span>
-                <input
-                  type="number"
-                  min={0}
-                  max={form.work.categories.length}
-                  value={form.work.categoriesShown}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      work: {
-                        ...current.work,
-                        categoriesShown: Math.max(
-                          0,
-                          Math.min(
-                            Number(event.target.value) || 0,
-                            current.work.categories.length,
-                          ),
-                        ),
-                      },
-                    }))
-                  }
-                  className={inputClass}
-                />
-              </label>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                {form.work.categories.map((category, index) => (
-                  <div key={category.id} className={cardClass}>
-                    <RowControls
-                      label="Content type"
-                      index={index}
-                      count={form.work.categories.length}
-                      onMove={(delta) =>
-                        setForm((current) => ({
-                          ...current,
-                          work: {
-                            ...current.work,
-                            categories: moveItem(
-                              current.work.categories,
-                              index,
-                              delta,
-                            ),
-                          },
-                        }))
-                      }
-                      onRemove={() =>
-                        setForm((current) => {
-                          const categories = current.work.categories.filter(
-                            (_, i) => i !== index,
-                          );
-                          return {
-                            ...current,
-                            work: {
-                              ...current.work,
-                              categories,
-                              categoriesShown: Math.min(
-                                current.work.categoriesShown,
-                                categories.length,
-                              ),
-                            },
-                          };
-                        })
-                      }
-                    />
-                    <label className="block text-sm">
-                      <span className="text-muted">Label</span>
-                      <input
-                        value={category.label}
-                        onChange={(event) =>
-                          setForm((current) => {
-                            const categories = [...current.work.categories];
-                            categories[index] = {
-                              ...categories[index],
-                              label: event.target.value,
-                            };
-                            return {
-                              ...current,
-                              work: { ...current.work, categories },
-                            };
-                          })
-                        }
-                        className={inputClass}
-                      />
-                    </label>
-                  </div>
-                ))}
-              </div>
-
-              <AddRowButton
-                label="Add content type"
-                onClick={() =>
-                  setForm((current) => {
-                    const categories = [
-                      ...current.work.categories,
-                      { id: uniqueId("category"), label: "New category" },
-                    ];
-                    return {
-                      ...current,
-                      work: {
-                        ...current.work,
-                        categories,
-                        categoriesShown: categories.length,
-                      },
-                    };
-                  })
-                }
-              />
             </section>
           )}
 

@@ -40,7 +40,6 @@ export function BrandsBanner() {
     <div className="relative overflow-hidden">
       <ScallopedBanner motifs="edges" className="pb-4 sm:pb-6">
         <SectionButterfly flight="brandsBand" />
-        <SectionButterfly flight="brandsBandLeft" />
         <AdminEditButton section="brands" label="Edit brands" tone="light" />
         <SectionReveal className="text-center">
           <h2 className="font-script text-3xl text-paper sm:text-5xl">{heading}</h2>

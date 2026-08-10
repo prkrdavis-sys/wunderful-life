@@ -12,7 +12,6 @@ export function WorkPreviewSection({ videos }: WorkPreviewSectionProps) {
   return (
     <section id="work" className="scroll-section-anchor relative">
       <WorkCarousel
-        videos={videos}
         featuredVideos={featured.length > 0 ? featured : videos}
       />
     </section>

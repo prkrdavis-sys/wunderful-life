@@ -48,12 +48,6 @@ export type StatItem = {
   label: string;
 };
 
-/** Content category a portfolio video can be filed under. */
-export type CategoryTag = {
-  id: string;
-  label: string;
-};
-
 export type BrandItem = {
   id: string;
   name: string;
@@ -78,9 +72,6 @@ export type SiteContent = {
   };
   work: {
     heading: string;
-    categories: CategoryTag[];
-    /** How many category chips to show, newest-first. */
-    categoriesShown: number;
   };
   photography: {
     label: string;

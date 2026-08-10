@@ -18,7 +18,6 @@ import { needsWebTranscode, prepareVideoForWebUpload } from "@/lib/videos/transc
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { FileUploadButton } from "@/components/ui/FileUploadButton";
 import { UploadProgressBar } from "@/components/ui/UploadProgressBar";
-import { useSiteContent } from "@/components/admin/AdminViewProvider";
 
 type VideoFormProps = {
   initial?: PortfolioVideo | null;
@@ -164,7 +163,6 @@ const emptyForm = {
   durationSec: 0,
   slug: "",
   featured: false,
-  tags: [] as string[],
 };
 
 export function VideoForm({
@@ -175,7 +173,6 @@ export function VideoForm({
   onCancel,
   onUploadBusyChange,
 }: VideoFormProps) {
-  const categories = useSiteContent().work.categories;
   const [form, setForm] = useState(() =>
     initial
       ? {
@@ -187,7 +184,6 @@ export function VideoForm({
           durationSec: initial.durationSec,
           slug: initial.slug,
           featured: initial.featured,
-          tags: initial.tags ?? [],
         }
       : emptyForm,
   );
@@ -495,11 +491,8 @@ export function VideoForm({
     payload.set("durationSec", String(form.durationSec));
     payload.set("slug", form.slug || slugify(form.title));
     payload.set("featured", String(form.featured));
-    // Sent even when empty so a PATCH can clear every category.
+    // Always clear legacy category tags — filters were removed from the site.
     payload.set("tagsPresent", "1");
-    for (const tag of form.tags) {
-      payload.append("tags", tag);
-    }
 
     try {
       if (videoFile) {
@@ -540,7 +533,6 @@ export function VideoForm({
           durationSec: saved.durationSec,
           slug: saved.slug,
           featured: saved.featured,
-          tags: saved.tags ?? [],
         });
         setVideoFile(null);
         setThumbnailFile(null);
@@ -757,50 +749,6 @@ export function VideoForm({
       </div>
 
       {mediaProgress}
-
-      <fieldset className="sm:col-span-2">
-        <legend className="text-sm font-medium text-brown">Content types</legend>
-        <p className="mt-1 text-xs text-muted">
-          Drives the filter chips on the home page. Manage the list in the site
-          editor under Videos.
-        </p>
-        {categories.length === 0 ? (
-          <p className="mt-2 text-xs text-muted">
-            No categories defined yet.
-          </p>
-        ) : (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {categories.map((category) => {
-              const checked = form.tags.includes(category.id);
-              return (
-                <label
-                  key={category.id}
-                  className={`inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition ${
-                    checked
-                      ? "border-forest/50 bg-forest/10 text-forest"
-                      : "border-brown/25 bg-white text-muted hover:border-forest/35"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        tags: event.target.checked
-                          ? [...current.tags, category.id]
-                          : current.tags.filter((tag) => tag !== category.id),
-                      }))
-                    }
-                    className="h-3.5 w-3.5 rounded border-brown/30"
-                  />
-                  {category.label}
-                </label>
-              );
-            })}
-          </div>
-        )}
-      </fieldset>
 
       <label className="flex items-center gap-2 text-sm sm:col-span-2">
         <input

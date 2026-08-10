@@ -32,7 +32,6 @@ export function PhotographyCollage() {
       <SectionButterfly flight="photography" />
       <SectionButterfly flight="photographyLow" />
       <SectionButterfly flight="photographyEdge" />
-      <SectionButterfly flight="photographyFar" />
       <AdminEditButton section="photography" label="Edit photos" />
 
       <div className="relative z-10 mx-auto max-w-5xl">

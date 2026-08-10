@@ -28,7 +28,6 @@ export function UgcBenefitsSection() {
       <SectionButterfly flight="ugc" />
       <SectionButterfly flight="ugcTrailing" />
       <SectionButterfly flight="ugcLower" />
-      <SectionButterfly flight="ugcStats" />
 
       <div className="relative z-10 mx-auto max-w-6xl">
         <SectionReveal className="mx-auto max-w-2xl text-center">

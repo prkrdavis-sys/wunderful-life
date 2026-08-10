@@ -30,7 +30,7 @@ const kindDefaults: Record<
     emoji: "✨",
     label: "Add a photo",
     selectedLabel: "Pick another",
-    hint: "JPG, PNG, or WebP",
+    hint: "JPG, PNG, WebP — iPhone photos OK",
   },
   video: {
     emoji: "🎬",

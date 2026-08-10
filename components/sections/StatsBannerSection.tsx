@@ -18,7 +18,6 @@ export function StatsBannerSection() {
     <section aria-label="Audience stats" className="relative overflow-hidden">
       <ScallopedBanner motifs="corners" className="pb-4 sm:pb-6">
         <SectionButterfly flight="stats" />
-        <SectionButterfly flight="statsFar" />
         <AdminEditButton section="stats" label="Edit stats" tone="light" />
         {items.length === 0 ? (
           <p className="text-center font-label text-sm text-paper/70">

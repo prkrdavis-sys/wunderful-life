@@ -78,26 +78,7 @@
     ]
   },
   "work": {
-    "heading": "My most recent videos",
-    "categories": [
-      {
-        "id": "fashion",
-        "label": "Fashion"
-      },
-      {
-        "id": "travel",
-        "label": "Travel"
-      },
-      {
-        "id": "skincare",
-        "label": "Skincare"
-      },
-      {
-        "id": "food",
-        "label": "Food"
-      }
-    ],
-    "categoriesShown": 4
+    "heading": "My most recent videos"
   },
   "photography": {
     "label": "photography",

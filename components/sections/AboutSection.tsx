@@ -32,7 +32,6 @@ export function AboutSection() {
       <SectionButterfly flight="about" />
       <SectionButterfly flight="aboutFar" />
       <SectionButterfly flight="aboutGallery" />
-      <SectionButterfly flight="aboutMid" />
       <AdminEditButton section="about" label="Edit about" />
       <div className="relative z-10 mx-auto max-w-5xl">
         <SectionReveal className="mb-8 text-center md:mb-9 md:text-left">
@@ -87,8 +86,8 @@ export function AboutSection() {
             </h3>
             <StaggerChildren className="mx-auto mt-6 grid max-w-4xl grid-cols-2 justify-items-center gap-x-5 gap-y-8 sm:gap-x-8 lg:grid-cols-4">
               {galleryPhotos.map((photo) => (
-                <StaggerItem key={photo.id}>
-                  <EmilyPhoto photo={photo} size="md" />
+                <StaggerItem key={photo.id} className="w-full max-w-[220px] sm:max-w-[250px]">
+                  <EmilyPhoto photo={photo} size="md" className="mx-auto" />
                 </StaggerItem>
               ))}
             </StaggerChildren>

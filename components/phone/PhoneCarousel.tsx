@@ -44,7 +44,7 @@ export function PhoneCarousel({ videos, size = "lg" }: PhoneCarouselProps) {
   if (uniqueVideos.length === 0) {
     return (
       <p className="py-16 text-center text-muted">
-        No videos match your filters.
+        No videos yet.
       </p>
     );
   }

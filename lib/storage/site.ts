@@ -35,7 +35,7 @@ function isCompleteSiteContent(value: unknown): value is SiteContent {
     Boolean(site.social?.email) &&
     Array.isArray(site.services) &&
     Array.isArray(site.statsBanner?.items) &&
-    Array.isArray(site.work?.categories) &&
+    Boolean(site.work?.heading) &&
     Array.isArray(site.photography?.photos) &&
     Array.isArray(site.brands?.items) &&
     Array.isArray(site.ugcBenefits?.benefits) &&
@@ -164,18 +164,57 @@ const PHOTO_DIRS: Record<PhotoFolder, string> = {
   "brand-logos": BRAND_LOGO_DIR,
 };
 
+function photoFileExtension(file: File): string {
+  const fromName = path.extname(file.name).toLowerCase();
+  if (
+    fromName === ".jpg" ||
+    fromName === ".jpeg" ||
+    fromName === ".png" ||
+    fromName === ".webp" ||
+    fromName === ".gif"
+  ) {
+    return fromName === ".jpeg" ? ".jpg" : fromName;
+  }
+
+  switch (file.type.toLowerCase()) {
+    case "image/png":
+      return ".png";
+    case "image/webp":
+      return ".webp";
+    case "image/gif":
+      return ".gif";
+    default:
+      return ".jpg";
+  }
+}
+
+function photoContentType(file: File): string {
+  if (file.type && file.type.startsWith("image/")) return file.type;
+  switch (photoFileExtension(file)) {
+    case ".png":
+      return "image/png";
+    case ".webp":
+      return "image/webp";
+    case ".gif":
+      return "image/gif";
+    default:
+      return "image/jpeg";
+  }
+}
+
 async function savePhotoFile(
   photoId: string,
   file: File,
   folder: PhotoFolder,
 ): Promise<string> {
-  const ext = path.extname(file.name) || ".jpg";
+  const ext = photoFileExtension(file);
   const filename = `${photoId}-${randomUUID()}${ext}`;
 
   if (getUseBlobStorage()) {
     const blob = await put(`${folder}/${filename}`, file, {
       access: "public",
       addRandomSuffix: false,
+      contentType: photoContentType(file),
     });
     return blob.url;
   }
@@ -186,24 +225,38 @@ async function savePhotoFile(
   return `/${folder}/${filename}`;
 }
 
-export async function uploadAboutPhoto(photoId: string, file: File) {
+async function setPhotoImagePath(
+  photoId: string,
+  imagePath: string,
+  kind: "about" | "collage",
+): Promise<SiteContent> {
   const site = await readSiteContent();
-  const photoIndex = site.about.photos.findIndex((photo) => photo.id === photoId);
+  const photos =
+    kind === "about" ? site.about.photos : site.photography.photos;
+  const photoIndex = photos.findIndex((photo) => photo.id === photoId);
 
   if (photoIndex === -1) {
     throw new StorageError("Photo not found.", 404);
   }
 
-  const current = site.about.photos[photoIndex];
-  const imagePath = await savePhotoFile(photoId, file, "about-photos");
-
-  if (current.imagePath) {
+  const current = photos[photoIndex];
+  if (current.imagePath && current.imagePath !== imagePath) {
     await deleteStoredPhoto(current.imagePath);
   }
 
-  site.about.photos[photoIndex] = { ...current, imagePath };
+  photos[photoIndex] = { ...current, imagePath };
   await writeSiteContent(site);
   return site;
+}
+
+export async function uploadAboutPhoto(photoId: string, file: File) {
+  const imagePath = await savePhotoFile(photoId, file, "about-photos");
+  return setPhotoImagePath(photoId, imagePath, "about");
+}
+
+/** Production path: the file was client-uploaded to Blob; persist its URL. */
+export async function setAboutPhotoUrl(photoId: string, url: string) {
+  return setPhotoImagePath(photoId, url, "about");
 }
 
 export async function clearAboutPhoto(photoId: string) {
@@ -323,25 +376,13 @@ export async function clearCtaVideo(): Promise<SiteContent> {
 }
 
 export async function uploadCollagePhoto(photoId: string, file: File) {
-  const site = await readSiteContent();
-  const photoIndex = site.photography.photos.findIndex(
-    (photo) => photo.id === photoId,
-  );
-
-  if (photoIndex === -1) {
-    throw new StorageError("Photo not found.", 404);
-  }
-
-  const current = site.photography.photos[photoIndex];
   const imagePath = await savePhotoFile(photoId, file, "home-grid-photos");
+  return setPhotoImagePath(photoId, imagePath, "collage");
+}
 
-  if (current.imagePath) {
-    await deleteStoredPhoto(current.imagePath);
-  }
-
-  site.photography.photos[photoIndex] = { ...current, imagePath };
-  await writeSiteContent(site);
-  return site;
+/** Production path: the file was client-uploaded to Blob; persist its URL. */
+export async function setCollagePhotoUrl(photoId: string, url: string) {
+  return setPhotoImagePath(photoId, url, "collage");
 }
 
 export async function clearCollagePhoto(photoId: string) {
@@ -366,6 +407,12 @@ export async function clearCollagePhoto(photoId: string) {
 }
 
 export async function uploadBrandLogo(brandId: string, file: File) {
+  const logoPath = await savePhotoFile(brandId, file, "brand-logos");
+  return setBrandLogoUrl(brandId, logoPath);
+}
+
+/** Production path: the file was client-uploaded to Blob; persist its URL. */
+export async function setBrandLogoUrl(brandId: string, logoPath: string) {
   const site = await readSiteContent();
   const brandIndex = site.brands.items.findIndex((brand) => brand.id === brandId);
 
@@ -374,9 +421,7 @@ export async function uploadBrandLogo(brandId: string, file: File) {
   }
 
   const current = site.brands.items[brandIndex];
-  const logoPath = await savePhotoFile(brandId, file, "brand-logos");
-
-  if (current.logoPath) {
+  if (current.logoPath && current.logoPath !== logoPath) {
     await deleteStoredPhoto(current.logoPath);
   }
 

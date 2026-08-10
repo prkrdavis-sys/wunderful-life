@@ -76,32 +76,6 @@ function getRevealProps(
   };
 }
 
-export function FilterChip({
-  active,
-  children,
-  onClick,
-}: {
-  active: boolean;
-  children: ReactNode;
-  onClick: () => void;
-}) {
-  return (
-    <motion.button
-      type="button"
-      onClick={onClick}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      className={`font-label rounded-full border-2 px-4 py-1.5 text-sm font-medium tracking-wide backdrop-blur-sm transition-colors ${
-        active
-          ? "border-forest/50 bg-forest/90 text-paper shadow-sm shadow-forest/15"
-          : "border-white/50 bg-white/25 text-ink hover:border-forest/35 hover:bg-white/35 hover:text-forest"
-      }`}
-    >
-      {children}
-    </motion.button>
-  );
-}
-
 export function HeroEntrance({
   children,
   className = "",

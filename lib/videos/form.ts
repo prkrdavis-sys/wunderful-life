@@ -34,7 +34,7 @@ function parseBoolean(value: FormDataEntryValue | null): boolean {
   return value === "on" || value === "true";
 }
 
-/** Category ids arrive as repeated `tags` entries from the admin multi-select. */
+/** Optional freeform tags; category filters were removed from the site. */
 function parseTags(form: FormData): string[] {
   const seen = new Set<string>();
 

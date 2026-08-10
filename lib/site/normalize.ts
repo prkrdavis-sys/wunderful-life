@@ -1,7 +1,6 @@
 import type {
   AboutPhoto,
   BrandItem,
-  CategoryTag,
   CollagePhoto,
   CollagePhotoShape,
   GridPhoto,
@@ -28,13 +27,6 @@ const DEFAULT_STATS_BANNER: SiteContent["statsBanner"] = {
 
 const DEFAULT_WORK: SiteContent["work"] = {
   heading: "My most recent videos",
-  categories: [
-    { id: "fashion", label: "Fashion" },
-    { id: "travel", label: "Travel" },
-    { id: "skincare", label: "Skincare" },
-    { id: "food", label: "Food" },
-  ],
-  categoriesShown: 4,
 };
 
 const DEFAULT_PHOTOGRAPHY_LABEL = "photography";
@@ -266,27 +258,6 @@ function normalizeStats(
     .filter((item): item is StatItem => item !== null);
 }
 
-function normalizeCategories(items: unknown): CategoryTag[] | null {
-  if (!Array.isArray(items)) return null;
-
-  const seen = new Set<string>();
-  const normalized: CategoryTag[] = [];
-
-  for (const [index, item] of items.entries()) {
-    if (!item || typeof item !== "object") continue;
-    const category = item as Partial<CategoryTag>;
-    const label = text(category.label, "");
-    if (!label) continue;
-
-    const id = text(category.id, slugId(label, `category-${index + 1}`));
-    if (seen.has(id)) continue;
-    seen.add(id);
-    normalized.push({ id, label });
-  }
-
-  return normalized;
-}
-
 function normalizeCollagePhotos(
   photos: unknown,
   legacyGrid: GridPhoto[] | undefined,
@@ -362,8 +333,6 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
   const closingCta = raw.closingCta ?? {};
   const testimonials = raw.testimonials ?? DEFAULT_TESTIMONIALS;
 
-  const categories = normalizeCategories(work.categories) ?? DEFAULT_WORK.categories;
-
   return {
     fullName: raw.fullName,
     name: raw.name,
@@ -391,11 +360,6 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
     },
     work: {
       heading: text(work.heading, DEFAULT_WORK.heading),
-      categories,
-      categoriesShown:
-        typeof work.categoriesShown === "number" && work.categoriesShown >= 0
-          ? Math.min(work.categoriesShown, categories.length)
-          : categories.length,
     },
     photography: {
       label: text(photography.label, DEFAULT_PHOTOGRAPHY_LABEL),

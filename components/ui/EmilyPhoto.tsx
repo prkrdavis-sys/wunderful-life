@@ -10,10 +10,10 @@ type EmilyPhotoProps = {
 };
 
 const sizeClasses = {
-  sm: "w-full max-w-[160px]",
-  md: "w-full max-w-[220px] sm:max-w-[250px]",
-  lg: "w-full max-w-[280px] sm:max-w-[340px] xl:max-w-[400px]",
-  xl: "w-full max-w-[320px] sm:max-w-[420px] xl:max-w-[480px]",
+  sm: "w-[160px] max-w-full",
+  md: "w-[220px] max-w-full sm:w-[250px]",
+  lg: "w-[280px] max-w-full sm:w-[340px] xl:w-[400px]",
+  xl: "w-[320px] max-w-full sm:w-[420px] xl:w-[480px]",
   hero: "w-full max-w-full sm:max-w-[min(100%,480px)] xl:max-w-[min(100%,560px)]",
   gallery: "w-full max-w-md mx-auto sm:max-w-none",
 };
@@ -68,7 +68,7 @@ export function EmilyPhoto({
           </div>
         )}
       </div>
-      <figcaption className="font-label mt-3 text-center text-xs tracking-wide text-ink/90 sm:text-sm">
+      <figcaption className="font-label mt-3 w-full text-center text-xs tracking-wide break-words text-ink/90 sm:text-sm">
         {photo.caption}
       </figcaption>
     </figure>
