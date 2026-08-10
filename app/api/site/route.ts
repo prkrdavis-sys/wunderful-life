@@ -6,16 +6,14 @@ import {
 } from "@/lib/storage/site";
 import type { SiteContent } from "@/lib/site/types";
 import { StorageError } from "@/lib/storage";
+import { expectedSiteVersion } from "@/lib/storage/siteVersion";
+import { siteResponseHeaders } from "@/lib/site/response";
 
 export async function GET() {
   try {
     const record = await readSiteRecord();
     return NextResponse.json(record.content, {
-      headers: {
-        "Cache-Control": "no-store, max-age=0",
-        ETag: `"${record.version}"`,
-        "X-Site-Version": String(record.version),
-      },
+      headers: siteResponseHeaders(record.version),
     });
   } catch (error) {
     if (error instanceof StorageError) {
@@ -31,24 +29,13 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
-    const version = Number(request.headers.get("if-match")?.replaceAll('"', ""));
-    if (!Number.isSafeInteger(version) || version < 1) {
-      return NextResponse.json(
-        { error: "A current site content version is required to save." },
-        { status: 428 },
-      );
-    }
-
+    const version = expectedSiteVersion(request);
     const body = (await request.json()) as SiteContent;
     const site = await updateSiteContent(body, version);
     const record = await readSiteRecord();
     revalidatePath("/", "layout");
     return NextResponse.json(site, {
-      headers: {
-        "Cache-Control": "no-store, max-age=0",
-        ETag: `"${record.version}"`,
-        "X-Site-Version": String(record.version),
-      },
+      headers: siteResponseHeaders(record.version),
     });
   } catch (error) {
     if (error instanceof StorageError) {

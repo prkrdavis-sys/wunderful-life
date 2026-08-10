@@ -74,8 +74,10 @@ begin
   returning * into result;
 
   if not found then
-    raise exception using errcode = '40001',
-      message = 'SITE_CONTENT_VERSION_CONFLICT';
+    -- Use P0001 (not 40001 serialization_failure). PostgREST retries 40001
+    -- until the statement times out, which made stale saves hang for ~60s.
+    raise exception 'SITE_CONTENT_VERSION_CONFLICT'
+      using errcode = 'P0001';
   end if;
 
   insert into public.site_content_revisions (

@@ -159,7 +159,7 @@ export async function updateSiteContent(
   content: SiteContent,
   expectedVersion: number,
 ) {
-  return writeSiteContent(normalizeSiteContent(content), expectedVersion);
+  return writeSiteContent(content, expectedVersion);
 }
 
 async function deleteStoredPhoto(imagePath: string) {

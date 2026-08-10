@@ -389,7 +389,7 @@ export function SiteEditorForm({
 
       const response = await fetch(endpoint, {
         method: "POST",
-        headers: { "If-Match": `"${version}"` },
+        headers: { "X-Site-Version": String(version) },
         body: payload,
       });
       const data = await response.json();
@@ -436,7 +436,7 @@ export function SiteEditorForm({
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "If-Match": `"${siteVersion}"`,
+          "X-Site-Version": String(siteVersion),
         },
         body: JSON.stringify(form),
       });
@@ -516,7 +516,7 @@ export function SiteEditorForm({
 
       const response = await fetch(endpoint, {
         method: "POST",
-        headers: { "If-Match": `"${version}"` },
+        headers: { "X-Site-Version": String(version) },
         body: payload,
       });
       const data = await readUploadJson<SiteContent & { error?: string }>(response);
@@ -553,7 +553,7 @@ export function SiteEditorForm({
       const endpoint = `${PHOTO_ENDPOINTS[kind]}/${photoId}`;
       const response = await fetch(endpoint, {
         method: "DELETE",
-        headers: { "If-Match": `"${version}"` },
+        headers: { "X-Site-Version": String(version) },
       });
       const data = await readUploadJson<SiteContent & { error?: string }>(response);
 
@@ -609,7 +609,7 @@ export function SiteEditorForm({
     try {
       const response = await fetch(endpoint, {
         method: "DELETE",
-        headers: { "If-Match": `"${version}"` },
+        headers: { "X-Site-Version": String(version) },
       });
       const data = await response.json();
 
