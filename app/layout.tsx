@@ -3,8 +3,8 @@ import {
   Bricolage_Grotesque,
   DM_Sans,
   Fraunces,
-  Great_Vibes,
   Instrument_Sans,
+  Sacramento,
 } from "next/font/google";
 import { AdminModeBanner } from "@/components/admin/AdminModePanel";
 import { SiteNav } from "@/components/layout/SiteNav";
@@ -47,8 +47,8 @@ const instrumentSans = Instrument_Sans({
   display: "swap",
 });
 
-const greatVibes = Great_Vibes({
-  variable: "--font-great-vibes",
+const sacramento = Sacramento({
+  variable: "--font-sacramento",
   weight: "400",
   subsets: ["latin"],
   display: "swap",
@@ -100,7 +100,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bricolage.variable} ${dmSans.variable} ${fraunces.variable} ${instrumentSans.variable} ${greatVibes.variable} h-full scroll-smooth`}
+      className={`${bricolage.variable} ${dmSans.variable} ${fraunces.variable} ${instrumentSans.variable} ${sacramento.variable} h-full scroll-smooth`}
     >
       <body className="relative min-h-full flex flex-col bg-cream font-body antialiased">
         <AppProviders initialSite={site} initialSiteVersion={siteVersion}>

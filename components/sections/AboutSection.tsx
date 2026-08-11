@@ -14,7 +14,6 @@ export function AboutSection() {
   const photos = site.about.photos;
   const mainPhoto = photos[0];
   const accentPhoto = photos[1];
-  const galleryPhotos = photos.slice(2, 6);
   const paragraphs = site.about.paragraphs;
   const leadParagraphs =
     paragraphs.length > 1 ? paragraphs.slice(0, -1) : paragraphs;
@@ -30,8 +29,6 @@ export function AboutSection() {
     >
       <SectionSurface tone="ivory" motifs="right" />
       <SectionButterfly flight="about" />
-      <SectionButterfly flight="aboutFar" />
-      <SectionButterfly flight="aboutGallery" />
       <AdminEditButton section="about" label="Edit about" />
       <div className="relative z-10 mx-auto max-w-5xl">
         <SectionReveal className="mb-8 text-center md:mb-9 md:text-left">
@@ -78,21 +75,6 @@ export function AboutSection() {
             )}
           </StaggerChildren>
         </div>
-
-        {galleryPhotos.length > 0 && (
-          <SectionReveal className="mt-12 md:mt-14">
-            <h3 className={`font-serif text-xl sm:text-3xl ${text.heading}`}>
-              A little more {site.name}
-            </h3>
-            <StaggerChildren className="mx-auto mt-6 grid max-w-4xl grid-cols-2 justify-items-center gap-x-5 gap-y-8 sm:gap-x-8 lg:grid-cols-4">
-              {galleryPhotos.map((photo) => (
-                <StaggerItem key={photo.id} className="w-full max-w-[220px] sm:max-w-[250px]">
-                  <EmilyPhoto photo={photo} size="md" className="mx-auto" />
-                </StaggerItem>
-              ))}
-            </StaggerChildren>
-          </SectionReveal>
-        )}
       </div>
     </section>
   );

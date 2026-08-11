@@ -38,11 +38,11 @@ const SECTIONS: { id: SiteEditorSection; label: string }[] = [
   { id: "hero", label: "Hero" },
   { id: "stats", label: "Stats banner" },
   { id: "about", label: "About" },
-  { id: "photos", label: "About photos" },
-  { id: "work", label: "Videos" },
   { id: "photography", label: "Photography" },
+  { id: "work", label: "Videos" },
   { id: "brands", label: "Brands" },
   { id: "services", label: "Services" },
+  { id: "photos", label: "A little more" },
   { id: "ugc", label: "Why UGC" },
   { id: "testimonials", label: "Testimonials" },
   { id: "cta", label: "Closing CTA" },
@@ -1023,7 +1023,7 @@ export function SiteEditorForm({
           {activeSection === "photos" && (
             <section className="space-y-4">
               <div>
-                <h3 className="font-display text-lg text-brown">About photos</h3>
+                <h3 className="font-display text-lg text-brown">A little more</h3>
                 <p className="mt-1 text-sm text-muted">
                   Upload images, captions, and rotation for each photo.
                 </p>

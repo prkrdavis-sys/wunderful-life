@@ -11,7 +11,7 @@ type EmilyPhotoProps = {
 
 const sizeClasses = {
   sm: "w-[160px] max-w-full",
-  md: "w-[220px] max-w-full sm:w-[250px]",
+  md: "w-[260px] max-w-full sm:w-[290px]",
   lg: "w-[280px] max-w-full sm:w-[340px] xl:w-[400px]",
   xl: "w-[320px] max-w-full sm:w-[420px] xl:w-[480px]",
   hero: "w-full max-w-full sm:max-w-[min(100%,480px)] xl:max-w-[min(100%,560px)]",
@@ -29,7 +29,7 @@ const frameClasses = {
 
 const imageSizes: Record<NonNullable<EmilyPhotoProps["size"]>, string> = {
   sm: "160px",
-  md: "250px",
+  md: "290px",
   lg: "340px",
   xl: "480px",
   hero: "(max-width: 640px) 360px, (max-width: 1024px) 480px, 640px",
@@ -55,7 +55,7 @@ export function EmilyPhoto({
             alt={photo.caption}
             fill
             sizes={imageSizes[size]}
-            className="object-cover"
+            className="object-cover object-center"
           />
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center">
