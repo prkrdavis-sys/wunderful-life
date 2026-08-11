@@ -1,4 +1,4 @@
-import { del, get, put } from "@vercel/blob";
+import { get } from "@vercel/blob";
 import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
@@ -15,6 +15,11 @@ import {
   saveStoredSiteContent,
   type StoredSiteContent,
 } from "./database";
+import {
+  deletePublicMedia,
+  hasSupabaseMediaConfig,
+  uploadPublicMedia,
+} from "./supabase-media";
 import { StorageError } from "./types";
 
 const SITE_PATH = path.join(process.cwd(), "data", "site.json");
@@ -164,12 +169,10 @@ export async function updateSiteContent(
 
 async function deleteStoredPhoto(imagePath: string) {
   if (imagePath.startsWith("https://")) {
-    if (getUseBlobStorage()) {
-      try {
-        await del(imagePath);
-      } catch {
-        // ignore missing blobs
-      }
+    try {
+      await deletePublicMedia(imagePath);
+    } catch {
+      // A stale file should not prevent its metadata from being replaced.
     }
     return;
   }
@@ -245,13 +248,12 @@ async function savePhotoFile(
   const ext = photoFileExtension(file);
   const filename = `${photoId}-${randomUUID()}${ext}`;
 
-  if (getUseBlobStorage()) {
-    const blob = await put(`${folder}/${filename}`, file, {
-      access: "public",
-      addRandomSuffix: false,
-      contentType: photoContentType(file),
-    });
-    return blob.url;
+  if (hasSupabaseMediaConfig()) {
+    return uploadPublicMedia(
+      `${folder}/${filename}`,
+      file,
+      photoContentType(file),
+    );
   }
 
   await ensurePhotoDir(PHOTO_DIRS[folder]);
@@ -354,13 +356,12 @@ async function saveVideoFile(slot: VideoSlot, file: File): Promise<string> {
   const ext = path.extname(file.name) || ".mp4";
   const filename = `${slot}-${randomUUID()}${ext}`;
 
-  if (getUseBlobStorage()) {
-    const blob = await put(`${slot}/${filename}`, file, {
-      access: "public",
-      addRandomSuffix: false,
-      ...(file.type ? { contentType: file.type } : {}),
-    });
-    return blob.url;
+  if (hasSupabaseMediaConfig()) {
+    return uploadPublicMedia(
+      `${slot}/${filename}`,
+      file,
+      file.type || undefined,
+    );
   }
 
   await ensurePhotoDir(VIDEO_DIRS[slot]);

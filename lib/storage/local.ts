@@ -1,4 +1,3 @@
-import { del, get, put } from "@vercel/blob";
 import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
@@ -15,7 +14,17 @@ import {
   videoContentTypeFromFilename,
   videoUploadErrorMessage,
 } from "@/lib/videos/upload";
-import { getUseBlobStorage, VIDEOS_METADATA_BLOB_PATH } from "./blob";
+import {
+  hasSiteDatabaseConfig,
+  initializeStoredPortfolioLibrary,
+  readStoredPortfolioLibrary,
+  saveStoredPortfolioLibrary,
+} from "./database";
+import {
+  deletePublicMedia,
+  hasSupabaseMediaConfig,
+  uploadPublicMedia,
+} from "./supabase-media";
 import { StorageError } from "./types";
 
 const DATA_PATH = path.join(process.cwd(), "data", "videos.json");
@@ -23,7 +32,7 @@ const UPLOADS_ROOT = path.join(process.cwd(), "public", "uploads");
 const VIDEO_DIR = path.join(UPLOADS_ROOT, "videos");
 const THUMB_DIR = path.join(UPLOADS_ROOT, "thumbnails");
 
-const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
 function normalizeVideo(video: PortfolioVideo): PortfolioVideo {
   return {
@@ -41,28 +50,9 @@ function normalizeVideos(videos: PortfolioVideo[]): PortfolioVideo[] {
 }
 
 async function ensureUploadDirs() {
-  if (getUseBlobStorage()) return;
+  if (hasSupabaseMediaConfig()) return;
   await fs.mkdir(VIDEO_DIR, { recursive: true });
   await fs.mkdir(THUMB_DIR, { recursive: true });
-}
-
-async function readVideosFromBlob(): Promise<PortfolioVideo[]> {
-  try {
-    const result = await get(VIDEOS_METADATA_BLOB_PATH, { access: "public" });
-    if (!result || !result.stream) {
-      return [];
-    }
-
-    const text = await new Response(result.stream).text();
-    const parsed = JSON.parse(text) as PortfolioVideo[];
-    return Array.isArray(parsed) ? normalizeVideos(parsed) : [];
-  } catch (error) {
-    if (error instanceof StorageError) throw error;
-    throw new StorageError(
-      "Could not load video library. Check your connection and try again.",
-      503,
-    );
-  }
 }
 
 async function readVideosFromLocalFile(): Promise<PortfolioVideo[]> {
@@ -79,29 +69,47 @@ async function readVideosFromLocalFile(): Promise<PortfolioVideo[]> {
 }
 
 async function readVideosFile(): Promise<PortfolioVideo[]> {
-  if (getUseBlobStorage()) {
-    return readVideosFromBlob();
+  if (hasSiteDatabaseConfig()) {
+    try {
+      const stored = await readStoredPortfolioLibrary();
+      if (stored) return normalizeVideos(stored.videos);
+
+      const initialVideos = await readVideosFromLocalFile();
+      const initialized = await initializeStoredPortfolioLibrary(initialVideos);
+      return normalizeVideos(initialized.videos);
+    } catch {
+      // The bundled catalog is a read-only uptime fallback. Storage outages
+      // must never be interpreted as an empty or deleted video library.
+      return readVideosFromLocalFile();
+    }
   }
 
   return readVideosFromLocalFile();
 }
 
 async function writeVideosFile(videos: PortfolioVideo[]) {
-  const content = `${JSON.stringify(sortVideos(normalizeVideos(videos)), null, 2)}\n`;
+  const normalized = sortVideos(normalizeVideos(videos));
 
-  if (getUseBlobStorage()) {
-    await put(VIDEOS_METADATA_BLOB_PATH, content, {
-      access: "public",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-    });
+  if (hasSiteDatabaseConfig()) {
+    const stored = await readStoredPortfolioLibrary();
+    if (stored) {
+      await saveStoredPortfolioLibrary(normalized, stored.version);
+    } else {
+      await initializeStoredPortfolioLibrary(normalized);
+    }
+    return;
   }
 
-  if (!getUseBlobStorage() || process.env.VERCEL !== "1") {
-    await fs.mkdir(path.dirname(DATA_PATH), { recursive: true });
-    await fs.writeFile(DATA_PATH, content);
+  if (process.env.VERCEL === "1") {
+    throw new StorageError(
+      "Video library storage is not configured. Add the Supabase credentials.",
+      503,
+    );
   }
+
+  const content = `${JSON.stringify(normalized, null, 2)}\n`;
+  await fs.mkdir(path.dirname(DATA_PATH), { recursive: true });
+  await fs.writeFile(DATA_PATH, content);
 }
 
 async function saveUploadFile(
@@ -112,17 +120,14 @@ async function saveUploadFile(
     path.extname(file.name).toLowerCase() || (dir === "videos" ? ".mp4" : ".jpg");
   const filename = `${randomUUID()}${ext}`;
 
-  if (getUseBlobStorage()) {
-    const blob = await put(`${dir}/${filename}`, file, {
-      access: "public",
-      addRandomSuffix: false,
-      multipart: dir === "videos",
-      contentType:
-        dir === "videos"
-          ? videoContentTypeFromFilename(file.name)
-          : undefined,
-    });
-    return blob.url;
+  if (hasSupabaseMediaConfig()) {
+    return uploadPublicMedia(
+      `${dir}/${filename}`,
+      file,
+      dir === "videos"
+        ? videoContentTypeFromFilename(file.name)
+        : file.type || undefined,
+    );
   }
 
   const targetDir = dir === "videos" ? VIDEO_DIR : THUMB_DIR;
@@ -133,12 +138,10 @@ async function saveUploadFile(
 
 async function deleteStoredFile(filePath: string) {
   if (filePath.startsWith("https://")) {
-    if (getUseBlobStorage()) {
-      try {
-        await del(filePath);
-      } catch {
-        // ignore missing blobs
-      }
+    try {
+      await deletePublicMedia(filePath);
+    } catch {
+      // A stale file should not prevent its metadata from being replaced.
     }
     return;
   }
@@ -153,9 +156,9 @@ async function deleteStoredFile(filePath: string) {
 }
 
 function assertCanPersistUploads() {
-  if (process.env.VERCEL && !getUseBlobStorage()) {
+  if (process.env.VERCEL && !hasSupabaseMediaConfig()) {
     throw new StorageError(
-      "Video uploads require Vercel Blob storage. Create a Blob store in your Vercel project and redeploy.",
+      "Video uploads require Supabase media storage. Add the Supabase credentials and redeploy.",
       503,
     );
   }
@@ -166,7 +169,7 @@ function validateVideoFile(file: File) {
     throw new StorageError(videoUploadErrorMessage(), 415);
   }
   if (file.size > MAX_VIDEO_BYTES) {
-    throw new StorageError("Video must be 100MB or smaller.", 413);
+    throw new StorageError("Video must be 50MB or smaller.", 413);
   }
 }
 
@@ -175,7 +178,7 @@ function isRemoteAssetUrl(value: string | null | undefined): value is string {
 }
 
 async function rollbackClientUploads(files?: UploadFiles) {
-  if (!files || !getUseBlobStorage()) return;
+  if (!files || !hasSupabaseMediaConfig()) return;
 
   const urls = [files.videoUrl, files.thumbnailUrl].filter(isRemoteAssetUrl);
   await Promise.all(urls.map((url) => deleteStoredFile(url)));
