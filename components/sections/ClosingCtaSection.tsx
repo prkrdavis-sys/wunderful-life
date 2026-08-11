@@ -32,7 +32,60 @@ function CtaVideo({ videoPath }: { videoPath?: string }) {
   const [muted, setMuted] = useState(true);
 
   useEffect(() => {
-    if (videoRef.current) videoRef.current.muted = muted;
+    const video = videoRef.current;
+    if (!video || !videoPath) return;
+
+    video.defaultMuted = true;
+    video.playsInline = true;
+
+    const tryPlay = () => {
+      if (!video.paused) return;
+      void video.play().catch(() => {
+        if (!video.muted) {
+          video.muted = true;
+          setMuted(true);
+          void video.play().catch(() => {
+            // Autoplay can be deferred; keep retrying without surfacing controls.
+          });
+        }
+      });
+    };
+
+    tryPlay();
+    video.addEventListener("loadeddata", tryPlay);
+    video.addEventListener("canplay", tryPlay);
+    video.addEventListener("pause", tryPlay);
+    document.addEventListener("visibilitychange", tryPlay);
+    window.addEventListener("pageshow", tryPlay);
+    window.addEventListener("focus", tryPlay);
+
+    const observer =
+      typeof IntersectionObserver !== "undefined"
+        ? new IntersectionObserver(
+            (entries) => {
+              if (entries.some((entry) => entry.isIntersecting)) tryPlay();
+            },
+            { threshold: 0.15 },
+          )
+        : null;
+    observer?.observe(video);
+
+    return () => {
+      video.removeEventListener("loadeddata", tryPlay);
+      video.removeEventListener("canplay", tryPlay);
+      video.removeEventListener("pause", tryPlay);
+      document.removeEventListener("visibilitychange", tryPlay);
+      window.removeEventListener("pageshow", tryPlay);
+      window.removeEventListener("focus", tryPlay);
+      observer?.disconnect();
+    };
+  }, [videoPath]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = muted;
+    if (video.paused) void video.play().catch(() => {});
   }, [muted]);
 
   if (!videoPath) {
@@ -51,10 +104,12 @@ function CtaVideo({ videoPath }: { videoPath?: string }) {
         ref={videoRef}
         src={videoPath}
         autoPlay
-        muted
+        muted={muted}
         loop
         playsInline
-        preload="metadata"
+        preload="auto"
+        disablePictureInPicture
+        disableRemotePlayback
         className="h-full w-full object-cover"
       />
       <button
