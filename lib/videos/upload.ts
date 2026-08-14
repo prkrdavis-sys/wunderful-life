@@ -31,7 +31,7 @@ export const VIDEO_FILE_ACCEPT = [
 ].join(",");
 
 export const VIDEO_UPLOAD_HELP =
-  "MP4, MOV, and M4V supported. iPhone MOV files are auto-converted for web playback.";
+  "MP4, MOV, and M4V supported. Videos are compressed in the browser so they stay small on the free plan.";
 
 export function videoUploadErrorMessage(): string {
   return "Please upload an MP4, MOV, M4V, or WebM video (Apple Photos and iPhone videos are supported).";

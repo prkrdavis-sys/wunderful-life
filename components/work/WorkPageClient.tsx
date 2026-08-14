@@ -34,7 +34,7 @@ function WorkVideoCard({ video }: WorkVideoCardProps) {
             src={video.videoPath}
             controls
             playsInline
-            preload="metadata"
+            preload="none"
             className="h-full w-full bg-black object-cover"
             onEnded={() => setPlaying(false)}
           />
@@ -49,7 +49,6 @@ function WorkVideoCard({ video }: WorkVideoCardProps) {
               src={video.thumbnailPath}
               alt={video.title}
               sizes="(max-width: 640px) 78vw, (max-width: 1024px) 42vw, 280px"
-              videoSrc={video.videoPath}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-brown/38 via-brown/5 to-white/10 transition group-hover/play:from-brown/30" />
             <span className="absolute inset-0 flex items-center justify-center">

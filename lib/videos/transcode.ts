@@ -127,9 +127,62 @@ function loadFfmpegScript(): Promise<void> {
   return scriptPromise;
 }
 
-export function needsWebTranscode(file: File): boolean {
+export type VideoUploadProfile = "portfolio" | "hero" | "cta";
+
+type CompressSettings = {
+  maxEdge: number;
+  crf: number;
+  stripAudio: boolean;
+  maxDurationSec: number | null;
+  skipIfMp4UnderBytes: number;
+};
+
+function settingsForProfile(profile: VideoUploadProfile): CompressSettings {
+  switch (profile) {
+    case "hero":
+      return {
+        maxEdge: 720,
+        crf: 32,
+        stripAudio: true,
+        maxDurationSec: 8,
+        skipIfMp4UnderBytes: 1_200_000,
+      };
+    case "cta":
+      return {
+        maxEdge: 720,
+        crf: 30,
+        stripAudio: false,
+        maxDurationSec: null,
+        skipIfMp4UnderBytes: 2_000_000,
+      };
+    case "portfolio":
+      return {
+        maxEdge: 1280,
+        crf: 28,
+        stripAudio: false,
+        maxDurationSec: null,
+        skipIfMp4UnderBytes: 5_000_000,
+      };
+    default: {
+      const _exhaustive: never = profile;
+      return _exhaustive;
+    }
+  }
+}
+
+function isAlreadyMp4(file: File): boolean {
   const ext = extensionFromFilename(file.name);
-  return ext === ".mov" || ext === ".m4v";
+  return ext === ".mp4" || file.type === "video/mp4";
+}
+
+export function needsWebTranscode(
+  file: File,
+  profile: VideoUploadProfile = "portfolio",
+): boolean {
+  const ext = extensionFromFilename(file.name);
+  if (ext === ".mov" || ext === ".m4v" || ext === ".webm") return true;
+  if (!isAlreadyMp4(file)) return true;
+  return file.size > settingsForProfile(profile).skipIfMp4UnderBytes;
 }
 
 async function getFFmpeg(): Promise<FFmpegInstance> {
@@ -175,8 +228,63 @@ async function getFFmpeg(): Promise<FFmpegInstance> {
   return loadPromise;
 }
 
+function scaleFilter(maxEdge: number): string {
+  return `scale='if(gte(iw,ih),min(iw,${maxEdge}),-2)':'if(gt(ih,iw),min(ih,${maxEdge}),-2)',scale=trunc(iw/2)*2:trunc(ih/2)*2`;
+}
+
+function ffmpegArgs(
+  profile: VideoUploadProfile,
+  inputName: string,
+  outputName: string,
+): string[] {
+  const settings = settingsForProfile(profile);
+  const args = ["-i", inputName];
+  if (settings.maxDurationSec !== null) {
+    args.push("-t", String(settings.maxDurationSec));
+  }
+  args.push(
+    "-map",
+    "0:v:0",
+    "-c:v",
+    "libx264",
+    "-preset",
+    "veryfast",
+    "-crf",
+    String(settings.crf),
+    "-vf",
+    scaleFilter(settings.maxEdge),
+    "-pix_fmt",
+    "yuv420p",
+    "-movflags",
+    "+faststart",
+  );
+  if (settings.stripAudio) {
+    args.push("-an");
+  } else {
+    args.push("-map", "0:a:0?", "-c:a", "aac", "-b:a", "96k", "-ac", "2");
+  }
+  args.push(outputName);
+  return args;
+}
+
+function progressMessage(profile: VideoUploadProfile): string {
+  switch (profile) {
+    case "hero":
+      return "Compressing background video (short, muted, 720p)…";
+    case "cta":
+      return "Compressing looping video for the web…";
+    case "portfolio":
+      return "Compressing video for the web…";
+    default: {
+      const _exhaustive: never = profile;
+      return _exhaustive;
+    }
+  }
+}
+
 async function transcodeToMp4(
   file: File,
+  profile: VideoUploadProfile,
   onProgress?: (message: string) => void,
 ): Promise<File> {
   onProgress?.("Loading video converter…");
@@ -186,33 +294,17 @@ async function transcodeToMp4(
   const outputName = "output.mp4";
 
   await ff.writeFile(inputName, await readFileBytes(file));
-  onProgress?.("Converting iPhone video for web playback…");
+  onProgress?.(progressMessage(profile));
 
   const exitCode = await withTimeout(
-    ff.exec([
-      "-i",
-      inputName,
-      "-c:v",
-      "libx264",
-      "-preset",
-      "fast",
-      "-crf",
-      "23",
-      "-c:a",
-      "aac",
-      "-movflags",
-      "+faststart",
-      "-pix_fmt",
-      "yuv420p",
-      outputName,
-    ]),
+    ff.exec(ffmpegArgs(profile, inputName, outputName)),
     FFMPEG_CONVERT_TIMEOUT_MS,
     "Video conversion timed out.",
   );
 
   if (exitCode !== 0) {
     throw new Error(
-      "Could not convert this iPhone video. Export as MP4 from Photos and try again.",
+      "Could not compress this video. Export a smaller MP4 from Photos and try again.",
     );
   }
 
@@ -239,13 +331,18 @@ async function transcodeToMp4(
 export async function prepareVideoForWebUpload(
   file: File,
   onProgress?: (message: string) => void,
+  profile: VideoUploadProfile = "portfolio",
 ): Promise<File> {
-  if (!needsWebTranscode(file)) {
+  if (!needsWebTranscode(file, profile)) {
     return file;
   }
 
   try {
-    return await transcodeToMp4(file, onProgress);
+    const compressed = await transcodeToMp4(file, profile, onProgress);
+    if (isAlreadyMp4(file) && compressed.size >= file.size) {
+      return file;
+    }
+    return compressed;
   } catch (error) {
     console.warn("Client video transcode skipped:", error);
     onProgress?.("Uploading original video…");

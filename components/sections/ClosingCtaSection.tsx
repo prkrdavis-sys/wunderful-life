@@ -1,9 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
+import { AutoplayLoopVideo } from "@/components/ui/AutoplayLoopVideo";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { SectionSurface } from "@/components/ui/SectionSurface";
 import { SectionReveal } from "@/components/ui/motion";
@@ -28,66 +28,6 @@ function InstagramIcon() {
 }
 
 function CtaVideo({ videoPath }: { videoPath?: string }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [muted, setMuted] = useState(true);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !videoPath) return;
-
-    video.defaultMuted = true;
-    video.playsInline = true;
-
-    const tryPlay = () => {
-      if (!video.paused) return;
-      void video.play().catch(() => {
-        if (!video.muted) {
-          video.muted = true;
-          setMuted(true);
-          void video.play().catch(() => {
-            // Autoplay can be deferred; keep retrying without surfacing controls.
-          });
-        }
-      });
-    };
-
-    tryPlay();
-    video.addEventListener("loadeddata", tryPlay);
-    video.addEventListener("canplay", tryPlay);
-    video.addEventListener("pause", tryPlay);
-    document.addEventListener("visibilitychange", tryPlay);
-    window.addEventListener("pageshow", tryPlay);
-    window.addEventListener("focus", tryPlay);
-
-    const observer =
-      typeof IntersectionObserver !== "undefined"
-        ? new IntersectionObserver(
-            (entries) => {
-              if (entries.some((entry) => entry.isIntersecting)) tryPlay();
-            },
-            { threshold: 0.15 },
-          )
-        : null;
-    observer?.observe(video);
-
-    return () => {
-      video.removeEventListener("loadeddata", tryPlay);
-      video.removeEventListener("canplay", tryPlay);
-      video.removeEventListener("pause", tryPlay);
-      document.removeEventListener("visibilitychange", tryPlay);
-      window.removeEventListener("pageshow", tryPlay);
-      window.removeEventListener("focus", tryPlay);
-      observer?.disconnect();
-    };
-  }, [videoPath]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.muted = muted;
-    if (video.paused) void video.play().catch(() => {});
-  }, [muted]);
-
   if (!videoPath) {
     return (
       <div className="flex aspect-[4/5] w-full items-center justify-center rounded-[2rem] border border-white/70 bg-paper/60 p-6 text-center shadow-lg backdrop-blur-sm">
@@ -100,26 +40,12 @@ function CtaVideo({ videoPath }: { videoPath?: string }) {
 
   return (
     <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[2rem] border border-white/70 shadow-xl">
-      <video
-        ref={videoRef}
+      <AutoplayLoopVideo
         src={videoPath}
-        autoPlay
-        muted={muted}
-        loop
-        playsInline
-        preload="auto"
-        disablePictureInPicture
-        disableRemotePlayback
+        muted
+        showMuteToggle
         className="h-full w-full object-cover"
       />
-      <button
-        type="button"
-        onClick={() => setMuted((current) => !current)}
-        aria-pressed={!muted}
-        className="absolute right-3 bottom-3 rounded-full border border-white/50 bg-forest-deep/70 px-3 py-1.5 font-label text-[11px] font-semibold tracking-[0.12em] text-paper uppercase backdrop-blur-md transition hover:bg-forest-deep"
-      >
-        {muted ? "Unmute" : "Mute"}
-      </button>
     </div>
   );
 }

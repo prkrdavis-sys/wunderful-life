@@ -12,6 +12,7 @@ import {
   videoUploadErrorMessage,
 } from "@/lib/videos/upload";
 import { needsWebTranscode, prepareVideoForWebUpload } from "@/lib/videos/transcode";
+import { isVercelBlobUrl } from "@/lib/storage/blob";
 import {
   photoBlobPathname,
   photoContentType,
@@ -323,8 +324,8 @@ export function SiteEditorForm({
     setSlotUpload(slot, {
       status: "preparing",
       progress: 0,
-      message: needsWebTranscode(file)
-        ? "Converting iPhone video for web playback… (can take a minute)"
+      message: needsWebTranscode(file, slot)
+        ? "Compressing video for the web… (can take a minute)"
         : "Preparing video…",
     });
 
@@ -339,10 +340,14 @@ export function SiteEditorForm({
       }
       if (generation !== videoUploadGenRef.current[slot]) return;
 
-      const prepared = await prepareVideoForWebUpload(file, (progressMessage) => {
-        if (generation !== videoUploadGenRef.current[slot]) return;
-        patchSlotUpload(slot, { status: "preparing", message: progressMessage });
-      });
+      const prepared = await prepareVideoForWebUpload(
+        file,
+        (progressMessage) => {
+          if (generation !== videoUploadGenRef.current[slot]) return;
+          patchSlotUpload(slot, { status: "preparing", message: progressMessage });
+        },
+        slot,
+      );
       if (generation !== videoUploadGenRef.current[slot]) return;
 
       const payload = new FormData();
@@ -485,7 +490,10 @@ export function SiteEditorForm({
     setMessage(null);
 
     try {
-      const prepared = await preparePhotoForUpload(file);
+      const prepared = await preparePhotoForUpload(file, {
+        preferJpeg: kind !== "brandLogo",
+        maxEdge: kind === "brandLogo" ? 800 : 1920,
+      });
       const payload = new FormData();
       const endpoint = `${PHOTO_ENDPOINTS[kind]}/${photoId}`;
 
@@ -692,7 +700,9 @@ export function SiteEditorForm({
         {videoPath && !busy && (
           <p className="inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">
             <span aria-hidden>🌸</span>
-            Live on your site
+            {isVercelBlobUrl(videoPath)
+              ? "Stored on the old host — re-upload to keep this video cheap to play"
+              : "Live on your site"}
           </p>
         )}
       </>

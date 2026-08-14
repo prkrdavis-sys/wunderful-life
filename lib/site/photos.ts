@@ -11,7 +11,8 @@ const ACCEPTED_PHOTO_EXTENSIONS = [
 const WEB_SAFE_PHOTO_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".gif"] as const;
 
 /** Max edge length when re-encoding iPhone / large camera photos for the web. */
-const MAX_PHOTO_EDGE = 4096;
+const MAX_PHOTO_EDGE = 1920;
+const COMPRESS_PHOTO_OVER_BYTES = 300_000;
 
 type PhotoFolder = "about-photos" | "home-grid-photos" | "brand-logos";
 
@@ -107,7 +108,7 @@ async function canvasToJpegFile(
   width: number,
   height: number,
   filename: string,
-  quality = 0.85,
+  quality = 0.8,
 ): Promise<File> {
   const canvas = document.createElement("canvas");
   canvas.width = width;
@@ -132,11 +133,15 @@ async function canvasToJpegFile(
   return new File([blob], filename, { type: "image/jpeg" });
 }
 
-function scaledSize(width: number, height: number): { width: number; height: number } {
-  if (width <= MAX_PHOTO_EDGE && height <= MAX_PHOTO_EDGE) {
+function scaledSize(
+  width: number,
+  height: number,
+  maxEdge = MAX_PHOTO_EDGE,
+): { width: number; height: number } {
+  if (width <= maxEdge && height <= maxEdge) {
     return { width, height };
   }
-  const scale = Math.min(MAX_PHOTO_EDGE / width, MAX_PHOTO_EDGE / height);
+  const scale = Math.min(maxEdge / width, maxEdge / height);
   return {
     width: Math.max(1, Math.round(width * scale)),
     height: Math.max(1, Math.round(height * scale)),
@@ -149,10 +154,22 @@ function scaledSize(width: number, height: number): { width: number; height: num
  */
 export async function preparePhotoForUpload(
   file: File,
-  options?: { forceEncode?: boolean },
+  options?: {
+    forceEncode?: boolean;
+    maxEdge?: number;
+    quality?: number;
+    preferJpeg?: boolean;
+  },
 ): Promise<File> {
   const id = `photo-${crypto.randomUUID()}`;
-  const needsEncode = options?.forceEncode || isHeicLike(file) || !isWebSafePhoto(file);
+  const maxEdge = options?.maxEdge ?? MAX_PHOTO_EDGE;
+  const quality = options?.quality ?? 0.8;
+  const preferJpeg = options?.preferJpeg ?? !file.type.toLowerCase().includes("png");
+  const needsEncode =
+    options?.forceEncode ||
+    isHeicLike(file) ||
+    !isWebSafePhoto(file) ||
+    (preferJpeg && file.size > COMPRESS_PHOTO_OVER_BYTES);
 
   if (!needsEncode) {
     const name = asciiPhotoName(file, id);
@@ -165,9 +182,9 @@ export async function preparePhotoForUpload(
 
   try {
     const bitmap = await createImageBitmap(file);
-    const { width, height } = scaledSize(bitmap.width, bitmap.height);
+    const { width, height } = scaledSize(bitmap.width, bitmap.height, maxEdge);
     try {
-      return await canvasToJpegFile(bitmap, width, height, `${id}.jpg`);
+      return await canvasToJpegFile(bitmap, width, height, `${id}.jpg`, quality);
     } finally {
       bitmap.close();
     }
@@ -188,8 +205,8 @@ export async function preparePhotoForUpload(
         );
       element.src = objectUrl;
     });
-    const { width, height } = scaledSize(image.naturalWidth, image.naturalHeight);
-    return await canvasToJpegFile(image, width, height, `${id}.jpg`);
+    const { width, height } = scaledSize(image.naturalWidth, image.naturalHeight, maxEdge);
+    return await canvasToJpegFile(image, width, height, `${id}.jpg`, quality);
   } finally {
     URL.revokeObjectURL(objectUrl);
   }
@@ -202,7 +219,7 @@ export async function readUploadJson<T>(response: Response): Promise<T> {
   } catch {
     if (response.status === 413) {
       throw new Error(
-        "That photo is too large for a direct upload. Try again — photos now upload through Blob storage automatically.",
+        "That photo is too large for a direct upload. Try a smaller JPEG and save again.",
       );
     }
     throw new Error(

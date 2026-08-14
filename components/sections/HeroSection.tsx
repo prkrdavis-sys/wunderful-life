@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { AutoplayLoopVideo } from "@/components/ui/AutoplayLoopVideo";
 import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
 import { HeroEntrance } from "@/components/ui/motion";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
@@ -8,54 +8,15 @@ import { sectionWallpapers } from "@/lib/plants";
 import { lightOnDarkShadow, sectionText } from "@/lib/sectionText";
 
 function HeroBackgroundVideo({ src }: { src: string }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    video.muted = true;
-    video.defaultMuted = true;
-    video.playsInline = true;
-
-    const tryPlay = () => {
-      if (!video.paused) return;
-      void video.play().catch(() => {
-        // Autoplay can be deferred; keep retrying without surfacing controls.
-      });
-    };
-
-    tryPlay();
-    video.addEventListener("loadeddata", tryPlay);
-    video.addEventListener("canplay", tryPlay);
-    document.addEventListener("visibilitychange", tryPlay);
-    window.addEventListener("pageshow", tryPlay);
-    window.addEventListener("focus", tryPlay);
-
-    return () => {
-      video.removeEventListener("loadeddata", tryPlay);
-      video.removeEventListener("canplay", tryPlay);
-      document.removeEventListener("visibilitychange", tryPlay);
-      window.removeEventListener("pageshow", tryPlay);
-      window.removeEventListener("focus", tryPlay);
-    };
-  }, [src]);
-
   return (
     <>
-      <video
-        ref={videoRef}
+      <AutoplayLoopVideo
         src={src}
-        autoPlay
         muted
-        loop
-        playsInline
-        preload="auto"
-        disablePictureInPicture
-        disableRemotePlayback
-        tabIndex={-1}
+        eager
         aria-hidden
-        className="hero-bg-video pointer-events-none absolute inset-0 h-full w-full object-cover"
+        tabIndex={-1}
+        className="hero-bg-video pointer-events-none h-full w-full object-cover"
       />
       <div
         aria-hidden

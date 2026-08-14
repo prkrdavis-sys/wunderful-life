@@ -12,7 +12,8 @@ export async function extractVideoFrame(
 ): Promise<File> {
   const seekTo = options?.seekTo ?? 0.1;
   const mimeType = options?.mimeType ?? "image/jpeg";
-  const quality = options?.quality ?? 0.92;
+  const quality = options?.quality ?? 0.74;
+  const maxEdge = 720;
   const objectUrl = URL.createObjectURL(file);
 
   try {
@@ -71,14 +72,15 @@ export async function extractVideoFrame(
       throw new Error("Could not read video dimensions for thumbnail.");
     }
 
+    const scale = Math.min(1, maxEdge / Math.max(width, height));
     const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
+    canvas.width = Math.max(1, Math.round(width * scale));
+    canvas.height = Math.max(1, Math.round(height * scale));
     const context = canvas.getContext("2d");
     if (!context) {
       throw new Error("Could not create canvas for thumbnail.");
     }
-    context.drawImage(video, 0, 0, width, height);
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(

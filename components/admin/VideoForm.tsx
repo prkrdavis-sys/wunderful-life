@@ -15,6 +15,7 @@ import {
 } from "@/lib/videos/upload";
 import { extractVideoFrame } from "@/lib/videos/extractThumbnail";
 import { needsWebTranscode, prepareVideoForWebUpload } from "@/lib/videos/transcode";
+import { isVercelBlobUrl } from "@/lib/storage/blob";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { FileUploadButton } from "@/components/ui/FileUploadButton";
 import { UploadProgressBar } from "@/components/ui/UploadProgressBar";
@@ -62,7 +63,7 @@ async function readJsonResponse<T>(response: Response): Promise<T> {
   } catch {
     if (response.status === 413) {
       throw new Error(
-        "That file is too large for a direct upload. Try again — large videos upload through Blob storage automatically.",
+        "That file is too large for a direct upload. Compress it or try a shorter clip.",
       );
     }
     throw new Error(
@@ -380,8 +381,8 @@ export function VideoForm({
       setVideoUpload({
         status: "preparing",
         progress: 0,
-        message: needsWebTranscode(file)
-          ? "Converting iPhone video for web playback… (can take a minute)"
+        message: needsWebTranscode(file, "portfolio")
+          ? "Compressing video for the web… (can take a minute)"
           : "Preparing video…",
         url: null,
         error: null,
@@ -392,18 +393,22 @@ export function VideoForm({
         const config = await getUploadConfig();
         if (generation !== videoUploadGenRef.current) return;
 
-        const prepared = await prepareVideoForWebUpload(file, (progressMessage) => {
-          if (generation !== videoUploadGenRef.current) return;
-          setVideoUpload((current) => ({
-            ...current,
-            status: "preparing",
-            message: progressMessage,
-          }));
-        });
+        const prepared = await prepareVideoForWebUpload(
+          file,
+          (progressMessage) => {
+            if (generation !== videoUploadGenRef.current) return;
+            setVideoUpload((current) => ({
+              ...current,
+              status: "preparing",
+              message: progressMessage,
+            }));
+          },
+          "portfolio",
+        );
 
         if (generation !== videoUploadGenRef.current) return;
 
-        // Prefer the web-ready file so iPhone MOV captures decode in-browser.
+        setVideoFile(prepared);
         void captureThumbnailFromVideo(prepared);
 
         if (!config.clientUpload) {
@@ -696,7 +701,9 @@ export function VideoForm({
         {initial?.videoPath && !videoFile && !isMediaUploadBusy(videoUpload) && (
           <p className="inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">
             <span aria-hidden>🌸</span>
-            Live on your site
+            {isVercelBlobUrl(initial.videoPath)
+              ? "Stored on the old host — re-upload to keep this video cheap to play"
+              : "Live on your site"}
           </p>
         )}
       </div>
