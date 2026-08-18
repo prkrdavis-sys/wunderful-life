@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
@@ -19,6 +20,11 @@ export function AdminUnlockButton() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -84,69 +90,73 @@ export function AdminUnlockButton() {
         Admin
       </button>
 
-      <AnimatePresence>
-        {open && (
-          <div className="fixed inset-0 z-[80] flex items-center justify-center px-4">
-            <motion.button
-              type="button"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              aria-label="Close admin login"
-              className="absolute inset-0 bg-brown/30 backdrop-blur-[2px]"
-              onClick={() => setOpen(false)}
-            />
-            <motion.form
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="admin-unlock-title"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ type: "spring", stiffness: 380, damping: 32 }}
-              onSubmit={handleSubmit}
-              className="relative w-full max-w-sm rounded-2xl border border-brown/15 bg-paper p-5 shadow-2xl"
-            >
-              <h2
-                id="admin-unlock-title"
-                className="font-display text-xl text-brown"
-              >
-                Admin
-              </h2>
-              <p className="mt-1 text-sm text-ink/70">
-                Enter the password to edit this site.
-              </p>
-              <input
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Password"
-                className="mt-4 w-full rounded-xl border border-lavender/40 bg-cream px-3 py-2 text-sm text-ink outline-none focus:border-forest/50"
-                required
-                autoComplete="current-password"
-                autoFocus
-              />
-              {error && (
-                <p className="mt-3 rounded-lg bg-blush/15 px-3 py-2 text-xs text-forest">
-                  {error}
-                </p>
-              )}
-              <div className="mt-4 flex items-center justify-end gap-2">
-                <button
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {open && (
+              <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+                <motion.button
                   type="button"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  aria-label="Close admin login"
+                  className="absolute inset-0 bg-brown/30 backdrop-blur-[2px]"
                   onClick={() => setOpen(false)}
-                  className="rounded-full px-3 py-2 text-sm text-ink/70 hover:bg-cream"
+                />
+                <motion.form
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="admin-unlock-title"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                  onSubmit={handleSubmit}
+                  className="relative w-full max-w-sm rounded-2xl border border-brown/15 bg-paper p-5 shadow-2xl"
                 >
-                  Cancel
-                </button>
-                <AnimatedButton type="submit" disabled={loading}>
-                  {loading ? "Unlocking…" : "Unlock"}
-                </AnimatedButton>
+                  <h2
+                    id="admin-unlock-title"
+                    className="font-display text-xl text-brown"
+                  >
+                    Admin
+                  </h2>
+                  <p className="mt-1 text-sm text-ink/70">
+                    Enter the password to edit this site.
+                  </p>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Password"
+                    className="mt-4 w-full rounded-xl border border-lavender/40 bg-cream px-3 py-2 text-sm text-ink outline-none focus:border-forest/50"
+                    required
+                    autoComplete="current-password"
+                    autoFocus
+                  />
+                  {error && (
+                    <p className="mt-3 rounded-lg bg-blush/15 px-3 py-2 text-xs text-forest">
+                      {error}
+                    </p>
+                  )}
+                  <div className="mt-4 flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setOpen(false)}
+                      className="rounded-full px-3 py-2 text-sm text-ink/70 hover:bg-cream"
+                    >
+                      Cancel
+                    </button>
+                    <AnimatedButton type="submit" disabled={loading}>
+                      {loading ? "Unlocking…" : "Unlock"}
+                    </AnimatedButton>
+                  </div>
+                </motion.form>
               </div>
-            </motion.form>
-          </div>
+            )}
+          </AnimatePresence>,
+          document.body,
         )}
-      </AnimatePresence>
     </>
   );
 }
