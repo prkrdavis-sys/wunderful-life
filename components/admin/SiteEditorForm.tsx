@@ -417,9 +417,11 @@ export function SiteEditorForm({
       setSlotUpload(slot, {
         status: "ready",
         progress: 100,
-        message: `The ${noun} is live on your site.`,
+        message: `Already on your site — no need to press Save.`,
       });
-      setMessage(`${noun[0].toUpperCase()}${noun.slice(1)} uploaded.`);
+      setMessage(
+        `${noun[0].toUpperCase()}${noun.slice(1)} is on your site now — no need to press Save.`,
+      );
     } catch (err) {
       if (generation !== videoUploadGenRef.current[slot]) return;
       const uploadError =
@@ -702,7 +704,7 @@ export function SiteEditorForm({
             <span aria-hidden>🌸</span>
             {isVercelBlobUrl(videoPath)
               ? "Stored on the old host — re-upload to keep this video cheap to play"
-              : "Live on your site"}
+              : "Live on your site — no Save needed"}
           </p>
         )}
       </>
@@ -845,8 +847,9 @@ export function SiteEditorForm({
                   Background video
                 </p>
                 <p className="text-sm text-muted">
-                  Uploads as soon as you pick a file and replaces the current
-                  video. Without a video, the hero shows the plant wallpaper.
+                  Goes live as soon as you pick a file — no need to press
+                  &ldquo;Save site content&rdquo;. Replaces the current video.
+                  Without a video, the hero shows the plant wallpaper.
                 </p>
                 {renderVideoUpload("hero", form.hero.videoPath)}
               </div>
@@ -2150,7 +2153,8 @@ export function SiteEditorForm({
                 </p>
                 <p className="text-sm text-muted">
                   Plays muted on a loop next to the headline. Visitors can unmute
-                  it. Uploads as soon as you pick a file.
+                  it. Goes live as soon as you pick a file — no need to press
+                  &ldquo;Save site content&rdquo;.
                 </p>
                 {renderVideoUpload("cta", form.closingCta.videoPath)}
               </div>
