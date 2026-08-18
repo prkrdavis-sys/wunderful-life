@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
 import {
   Bricolage_Grotesque,
   DM_Sans,
@@ -12,6 +13,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { HashScrollHandler } from "@/components/layout/HashScrollHandler";
 import { SiteHeaderHeightSync } from "@/components/layout/SiteHeaderHeightSync";
 import { AppProviders } from "@/components/layout/AppProviders";
+import { ADMIN_COOKIE, canAccessAdmin, isAdminAuthRequired } from "@/lib/auth";
 import { getSiteContentRecord } from "@/lib/site";
 import "./globals.css";
 
@@ -96,6 +98,9 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const { content: site, version: siteVersion } = await getSiteContentRecord();
+  const session = (await cookies()).get(ADMIN_COOKIE)?.value;
+  const initialAuthRequired = isAdminAuthRequired();
+  const initialAuthenticated = canAccessAdmin(session);
 
   return (
     <html
@@ -103,7 +108,12 @@ export default async function RootLayout({
       className={`${bricolage.variable} ${dmSans.variable} ${fraunces.variable} ${instrumentSans.variable} ${sacramento.variable} h-full scroll-smooth`}
     >
       <body className="relative min-h-full flex flex-col bg-cream font-body antialiased">
-        <AppProviders initialSite={site} initialSiteVersion={siteVersion}>
+        <AppProviders
+          initialSite={site}
+          initialSiteVersion={siteVersion}
+          initialAuthenticated={initialAuthenticated}
+          initialAuthRequired={initialAuthRequired}
+        >
           <HashScrollHandler />
           <div id="site-header" className="sticky top-0 z-50">
             <SiteNav />

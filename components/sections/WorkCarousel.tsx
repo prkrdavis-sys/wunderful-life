@@ -24,11 +24,9 @@ export function WorkCarousel({ featuredVideos }: WorkCarouselProps) {
   return (
     <>
       <ScallopedBanner
-        motifs="edges"
         className="pb-4 sm:pb-6"
         contentClassName="py-12 text-center sm:py-16"
       >
-        <SectionButterfly flight="workBand" />
         <AdminEditButton target="portfolio" label="Edit videos" tone="light" />
         <SectionReveal className="relative z-10 mx-auto max-w-4xl">
           <h2 className="font-script text-4xl leading-tight text-paper sm:text-6xl">
@@ -39,6 +37,7 @@ export function WorkCarousel({ featuredVideos }: WorkCarouselProps) {
 
       <div className="relative overflow-hidden pt-10 pb-16 sm:pt-12 sm:pb-20">
         <SectionSurface tone="sage" motifs="scatter" />
+        <SectionButterfly flight="workBand" />
         <SectionButterfly flight="workMarquee" />
         <div className="relative z-10">
           <PhoneMarquee

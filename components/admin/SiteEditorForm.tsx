@@ -39,13 +39,13 @@ const SECTIONS: { id: SiteEditorSection; label: string }[] = [
   { id: "hero", label: "Hero" },
   { id: "stats", label: "Stats banner" },
   { id: "about", label: "About" },
-  { id: "photography", label: "Photography" },
-  { id: "work", label: "Videos" },
-  { id: "brands", label: "Brands" },
   { id: "services", label: "Services" },
-  { id: "photos", label: "A little more" },
+  { id: "work", label: "Videos" },
   { id: "ugc", label: "Why UGC" },
+  { id: "brands", label: "Brands" },
+  { id: "photography", label: "Photography" },
   { id: "testimonials", label: "Testimonials" },
+  { id: "photos", label: "A little more" },
   { id: "cta", label: "Closing CTA" },
 ];
 
@@ -1432,7 +1432,7 @@ export function SiteEditorForm({
                   Brands banner
                 </h3>
                 <p className="mt-1 text-sm text-muted">
-                  The scalloped band above Services. Upload a logo, or leave it
+                  The scalloped band after Why UGC. Upload a logo, or leave it
                   empty to show the brand name as text.
                 </p>
               </div>

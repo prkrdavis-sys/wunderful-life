@@ -14,40 +14,32 @@ function isProtectedApiRoute(pathname: string, method: string): boolean {
   return true;
 }
 
-function isProtectedAdminRoute(pathname: string): boolean {
-  return pathname === "/admin" || pathname.startsWith("/admin/");
-}
-
 export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
   if (!isAdminAuthRequired()) {
     return NextResponse.next();
   }
 
-  const { pathname } = request.nextUrl;
   const session = request.cookies.get(ADMIN_COOKIE)?.value;
 
-  if (pathname === "/admin/login" || pathname === "/api/admin/login") {
-    if (canAccessAdmin(session)) {
-      return NextResponse.redirect(new URL("/admin", request.url));
-    }
-    return NextResponse.next();
-  }
-
-  const needsAuth =
-    isProtectedAdminRoute(pathname) || isProtectedApiRoute(pathname, request.method);
-
-  if (needsAuth && !canAccessAdmin(session)) {
-    if (pathname.startsWith("/api/")) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-    }
-    const loginUrl = new URL("/admin/login", request.url);
-    loginUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(loginUrl);
+  if (isProtectedApiRoute(pathname, request.method) && !canAccessAdmin(session)) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/videos/:path*", "/api/videos", "/api/site/:path*"],
+  matcher: [
+    "/admin",
+    "/admin/:path*",
+    "/api/videos/:path*",
+    "/api/videos",
+    "/api/site/:path*",
+  ],
 };

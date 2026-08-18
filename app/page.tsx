@@ -1,4 +1,5 @@
 import { AboutSection } from "@/components/sections/AboutSection";
+import { BrandsBanner } from "@/components/sections/BrandsBanner";
 import { ClosingCtaSection } from "@/components/sections/ClosingCtaSection";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { MoreEmilySection } from "@/components/sections/MoreEmilySection";
@@ -19,12 +20,13 @@ export default async function HomePage() {
       <HeroSection />
       <StatsBannerSection />
       <AboutSection />
-      <PhotographyCollage />
-      <WorkPreviewSection videos={videos} />
       <ServicesSection />
-      <MoreEmilySection />
+      <WorkPreviewSection videos={videos} />
       <UgcBenefitsSection />
+      <BrandsBanner />
+      <PhotographyCollage />
       <TestimonialsSection />
+      <MoreEmilySection />
       <ClosingCtaSection />
     </>
   );

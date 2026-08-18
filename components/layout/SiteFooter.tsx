@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminUnlockButton } from "@/components/admin/AdminUnlockButton";
 import { SectionLink } from "@/components/ui/SectionLink";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
 
@@ -23,8 +24,11 @@ export function SiteFooter() {
             Contact
           </SectionLink>
         </div>
-        <p className="text-xs text-ink/60">
-          © {new Date().getFullYear()} {site.brand}
+        <p className="flex items-center gap-3 text-xs text-ink/60">
+          <span>
+            © {new Date().getFullYear()} {site.brand}
+          </span>
+          <AdminUnlockButton />
         </p>
       </div>
     </footer>

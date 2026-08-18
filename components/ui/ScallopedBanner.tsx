@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { DecorMotifs, type MotifPreset } from "@/components/ui/DecorMotifs";
 
 type BannerTone = "forest" | "brown";
 
@@ -11,7 +10,6 @@ type ScallopedBannerProps = {
   tone?: BannerTone;
   /** Scalloped bottom edge. Off gives a clean full-bleed band. */
   scalloped?: boolean;
-  motifs?: MotifPreset;
 };
 
 const TONE_SURFACE: Record<BannerTone, string> = {
@@ -23,8 +21,9 @@ const TONE_SURFACE: Record<BannerTone, string> = {
  * Full-bleed accent strip, optionally with a repeating scalloped bottom edge.
  * Place between lighter sections so the band reads as punctuation.
  *
- * Motifs/butterflies clip inside the band body; the scallop surface sits outside
- * that clip so parent overflow never eats the edge.
+ * The scallop surface sits outside the content clip so parent overflow never
+ * eats the edge. Banners stay unornamented — flowers, moons, and butterflies
+ * belong on the neighboring section washes instead.
  */
 export function ScallopedBanner({
   children,
@@ -32,7 +31,6 @@ export function ScallopedBanner({
   contentClassName = "",
   tone = "forest",
   scalloped = true,
-  motifs = "corners",
 }: ScallopedBannerProps) {
   return (
     <div
@@ -44,9 +42,7 @@ export function ScallopedBanner({
           aria-hidden
         />
       )}
-      {/* Clip decor to the band body without clipping the hanging scallops. */}
       <div className="relative overflow-hidden">
-        <DecorMotifs preset={motifs} tone="paper" />
         <div
           className={`relative mx-auto max-w-6xl px-4 sm:px-6 ${
             contentClassName || "py-8 sm:py-10"

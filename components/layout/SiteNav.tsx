@@ -1,47 +1,17 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { SectionLink } from "@/components/ui/SectionLink";
-import { EditorPanelIcon } from "@/components/ui/EditorPanelIcon";
-import { AdminLoginInline } from "@/components/admin/AdminLoginInline";
-import { useAdminView, useSiteContent } from "@/components/admin/AdminViewProvider";
+import { useSiteContent } from "@/components/admin/AdminViewProvider";
 import type { HeroLink } from "@/lib/site/types";
 
 export function SiteNav() {
   const site = useSiteContent();
   const pathname = usePathname();
-  const router = useRouter();
-  const {
-    viewMode,
-    setViewMode,
-    authenticated,
-    authRequired,
-    panelOpen,
-    setPanelOpen,
-    refreshSession,
-  } = useAdminView();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [adminOpen, setAdminOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
-  const adminMenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!adminOpen) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (
-        adminMenuRef.current &&
-        !adminMenuRef.current.contains(event.target as Node)
-      ) {
-        setAdminOpen(false);
-      }
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [adminOpen]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -63,106 +33,6 @@ export function SiteNav() {
     link.activePathPrefix
       ? pathname.startsWith(link.activePathPrefix)
       : false;
-
-  const handleRegularView = () => {
-    setViewMode("regular");
-    setPanelOpen(false);
-    setAdminOpen(false);
-    setMenuOpen(false);
-  };
-
-  const handleAdminView = () => {
-    setViewMode("admin");
-    setAdminOpen(false);
-    setMenuOpen(false);
-  };
-
-  const openEditorPanel = () => {
-    setPanelOpen(true);
-    setAdminOpen(false);
-    setMenuOpen(false);
-  };
-
-  const handleSignOut = async () => {
-    await fetch("/api/admin/logout", { method: "POST" });
-    await refreshSession();
-    setViewMode("regular");
-    setPanelOpen(false);
-    setAdminOpen(false);
-    setMenuOpen(false);
-    router.refresh();
-  };
-
-  const viewMenuItems = (
-    <>
-      <button
-        type="button"
-        onClick={handleRegularView}
-        className={`block w-full px-4 py-3 text-left text-sm font-medium transition hover:bg-white/25 ${
-          viewMode === "regular" ? "text-forest" : "text-ink"
-        }`}
-      >
-        Regular view {viewMode === "regular" ? "✓" : ""}
-      </button>
-
-      <div className="border-t border-white/35">
-        <button
-          type="button"
-          onClick={handleAdminView}
-          className={`block w-full px-4 py-3 text-left text-sm font-medium transition hover:bg-white/25 ${
-            viewMode === "admin" ? "text-forest" : "text-ink"
-          }`}
-        >
-          Admin view {viewMode === "admin" ? "✓" : ""}
-        </button>
-
-        {viewMode === "admin" && (
-          <div className="mx-3 mb-3 space-y-2">
-            {authRequired && !authenticated ? (
-              <div className="overflow-hidden rounded-xl border border-forest/20 bg-forest/8 p-3">
-                <p className="mb-2 text-xs font-medium text-ink/85">
-                  Sign in to open the editing panel
-                </p>
-                <AdminLoginInline />
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={openEditorPanel}
-                className={`flex w-full items-start gap-3 rounded-xl border px-3 py-3 text-left transition ${
-                  panelOpen
-                    ? "border-forest/35 bg-forest/12 shadow-inner"
-                    : "border-forest/20 bg-white/40 hover:border-forest/35 hover:bg-white/55"
-                }`}
-              >
-                <span
-                  aria-hidden
-                  className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-forest/20 bg-paper/90 text-forest shadow-sm"
-                >
-                  <EditorPanelIcon />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-forest">
-                    {panelOpen ? "Editing panel open" : "Open editing panel"}
-                  </span>
-                </span>
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-
-      {authenticated && (
-        <button
-          type="button"
-          onClick={() => void handleSignOut()}
-          className="block w-full border-t border-white/35 px-4 py-3 text-left text-sm font-medium text-ink/70 transition hover:bg-white/25"
-        >
-          Sign out
-        </button>
-      )}
-    </>
-  );
 
   return (
     <header
@@ -191,37 +61,6 @@ export function SiteNav() {
               {link.label}
             </SectionLink>
           ))}
-
-          <div ref={adminMenuRef} className="relative">
-            <button
-              type="button"
-              onClick={() => setAdminOpen((open) => !open)}
-              className={`flex items-center gap-1 rounded-full border-2 px-3 py-1.5 text-sm font-medium transition ${
-                viewMode === "admin"
-                  ? "border-forest/40 bg-forest/10 text-forest"
-                  : "border-white/50 bg-white/20 text-ink backdrop-blur-sm hover:border-forest/35 hover:bg-white/30"
-              }`}
-              aria-expanded={adminOpen}
-              aria-haspopup="true"
-            >
-              Menu
-              <span className="text-xs" aria-hidden>
-                ▾
-              </span>
-            </button>
-            <AnimatePresence>
-              {adminOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  className="glass-panel absolute right-0 z-20 mt-2 min-w-[260px] overflow-hidden rounded-2xl border border-white/50"
-                >
-                  {viewMenuItems}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
         </nav>
 
         <button
@@ -253,9 +92,6 @@ export function SiteNav() {
                   {link.label}
                 </SectionLink>
               ))}
-              <div className="glass-panel mt-2 overflow-hidden rounded-xl border border-white/50">
-                {viewMenuItems}
-              </div>
             </div>
           </motion.nav>
         )}

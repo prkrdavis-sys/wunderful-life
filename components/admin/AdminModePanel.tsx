@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import type { PortfolioVideo } from "@/lib/videos/types";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
-import { AdminLoginInline } from "@/components/admin/AdminLoginInline";
 import { SiteEditorForm } from "@/components/admin/SiteEditorForm";
 import {
   useAdminView,
@@ -14,29 +13,30 @@ import { EditorPanelIcon } from "@/components/ui/EditorPanelIcon";
 import { confirmLeaveDuringUpload } from "@/lib/admin/uploadGuard";
 
 export function AdminModeBanner() {
-  const { viewMode, authenticated, authRequired, setPanelOpen } = useAdminView();
+  const { viewMode, setPanelOpen, exitAdminView } = useAdminView();
 
   if (viewMode !== "admin") return null;
 
-  const needsLogin = authRequired && !authenticated;
-
   return (
     <div className="relative z-0 border-b border-lavender/35 bg-forest/92 px-4 py-2 text-center text-sm text-paper backdrop-blur-sm">
-      {needsLogin ? (
-        <span>Admin view — sign in from the Menu to make edits.</span>
-      ) : (
-        <span className="inline-flex flex-wrap items-center justify-center gap-2">
-          <span>Admin view is on.</span>
-          <button
-            type="button"
-            onClick={() => setPanelOpen(true)}
-            className="inline-flex items-center gap-2 rounded-full border border-paper/35 bg-paper/15 px-3 py-1.5 text-sm font-semibold text-paper transition hover:bg-paper/25"
-          >
-            <EditorPanelIcon className="h-3.5 w-3.5 shrink-0 opacity-95" />
-            Open editing panel
-          </button>
-        </span>
-      )}
+      <span className="inline-flex flex-wrap items-center justify-center gap-2">
+        <span>Admin view is on.</span>
+        <button
+          type="button"
+          onClick={() => setPanelOpen(true)}
+          className="inline-flex items-center gap-2 rounded-full border border-paper/35 bg-paper/15 px-3 py-1.5 text-sm font-semibold text-paper transition hover:bg-paper/25"
+        >
+          <EditorPanelIcon className="h-3.5 w-3.5 shrink-0 opacity-95" />
+          Open editing panel
+        </button>
+        <button
+          type="button"
+          onClick={() => void exitAdminView()}
+          className="rounded-full px-3 py-1.5 text-sm font-medium text-paper/80 underline-offset-2 transition hover:text-paper hover:underline"
+        >
+          Exit Admin View
+        </button>
+      </span>
     </div>
   );
 }
@@ -229,28 +229,5 @@ export function AdminModePanel() {
         </>
       )}
     </AnimatePresence>
-  );
-}
-
-export function AdminModeGate() {
-  const { viewMode, authenticated, authRequired, setPanelOpen } = useAdminView();
-
-  if (viewMode !== "admin" || !authRequired || authenticated) {
-    return null;
-  }
-
-  return (
-    <div className="fixed bottom-6 left-1/2 z-50 w-[min(92vw,24rem)] -translate-x-1/2 rounded-2xl border border-brown/15 bg-white p-1 shadow-xl">
-      <div className="rounded-xl bg-cream/80 p-1">
-        <AdminLoginInline />
-        <button
-          type="button"
-          onClick={() => setPanelOpen(false)}
-          className="mt-1 w-full rounded-lg py-2 text-xs text-muted hover:bg-white"
-        >
-          Stay in preview only
-        </button>
-      </div>
-    </div>
   );
 }

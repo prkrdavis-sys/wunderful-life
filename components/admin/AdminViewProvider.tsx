@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
 import type { SiteContent } from "@/lib/site/types";
 
 export type ViewMode = "regular" | "admin";
@@ -51,6 +52,8 @@ type AdminViewContextValue = {
     focus?: SiteEditorFocus,
   ) => void;
   openPortfolioEditor: () => void;
+  enterAdminView: () => void;
+  exitAdminView: () => Promise<void>;
   refreshSession: () => Promise<void>;
   site: SiteContent;
   setSite: (site: SiteContent) => void;
@@ -60,26 +63,27 @@ type AdminViewContextValue = {
 
 const AdminViewContext = createContext<AdminViewContextValue | null>(null);
 
-const VIEW_MODE_KEY = "wunderful-view-mode";
-
 type AdminViewProviderProps = {
   children: ReactNode;
   initialSite: SiteContent;
   initialSiteVersion: number;
+  initialAuthenticated: boolean;
+  initialAuthRequired: boolean;
 };
 
 export function AdminViewProvider({
   children,
   initialSite,
   initialSiteVersion,
+  initialAuthenticated,
+  initialAuthRequired,
 }: AdminViewProviderProps) {
-  const [viewMode, setViewModeState] = useState<ViewMode>(() => {
-    if (typeof window === "undefined") return "regular";
-    const stored = window.localStorage.getItem(VIEW_MODE_KEY);
-    return stored === "admin" || stored === "regular" ? stored : "regular";
-  });
-  const [authenticated, setAuthenticated] = useState(false);
-  const [authRequired, setAuthRequired] = useState(false);
+  const router = useRouter();
+  const [viewMode, setViewModeState] = useState<ViewMode>(() =>
+    initialAuthRequired && initialAuthenticated ? "admin" : "regular",
+  );
+  const [authenticated, setAuthenticated] = useState(initialAuthenticated);
+  const [authRequired, setAuthRequired] = useState(initialAuthRequired);
   const [panelOpen, setPanelOpen] = useState(false);
   const [editorSection, setEditorSection] = useState<SiteEditorSection | null>(null);
   const [editorFocus, setEditorFocus] = useState<SiteEditorFocus | null>(null);
@@ -96,6 +100,10 @@ export function AdminViewProvider({
     };
     setAuthenticated(data.authenticated);
     setAuthRequired(data.authRequired);
+    if (data.authRequired && !data.authenticated) {
+      setViewModeState("regular");
+      setPanelOpen(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -106,16 +114,25 @@ export function AdminViewProvider({
     return () => window.clearTimeout(timer);
   }, [refreshSession]);
 
-  const setViewMode = useCallback(
-    (mode: ViewMode) => {
-      setViewModeState(mode);
-      localStorage.setItem(VIEW_MODE_KEY, mode);
-      if (mode === "regular") {
-        setPanelOpen(false);
-      }
-    },
-    [],
-  );
+  const setViewMode = useCallback((mode: ViewMode) => {
+    setViewModeState(mode);
+    if (mode === "regular") {
+      setPanelOpen(false);
+    }
+  }, []);
+
+  const enterAdminView = useCallback(() => {
+    setViewModeState("admin");
+    setPanelOpen(true);
+  }, []);
+
+  const exitAdminView = useCallback(async () => {
+    await fetch("/api/admin/logout", { method: "POST" });
+    setAuthenticated(false);
+    setViewModeState("regular");
+    setPanelOpen(false);
+    router.refresh();
+  }, [router]);
 
   const clearPreferredTab = useCallback(() => {
     setPreferredTab(null);
@@ -158,6 +175,8 @@ export function AdminViewProvider({
       clearPreferredTab,
       openSiteEditor,
       openPortfolioEditor,
+      enterAdminView,
+      exitAdminView,
       refreshSession,
       site,
       setSite,
@@ -177,6 +196,8 @@ export function AdminViewProvider({
       clearPreferredTab,
       openSiteEditor,
       openPortfolioEditor,
+      enterAdminView,
+      exitAdminView,
       refreshSession,
       site,
       siteVersion,
