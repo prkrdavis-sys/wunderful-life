@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PortfolioVideo } from "@/lib/videos/types";
 import { VideoThumbnail } from "@/components/ui/VideoThumbnail";
+import { useAdminView } from "@/components/admin/AdminViewProvider";
 import { PhoneFrame } from "./PhoneFrame";
 
 type CaptionClasses = {
@@ -43,6 +44,7 @@ export function PhoneVideoPlayer({
   captionClasses,
 }: PhoneVideoPlayerProps) {
   const caption = { ...defaultCaptionClasses, ...captionClasses };
+  const { viewMode } = useAdminView();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playbackError, setPlaybackError] = useState(false);
   const isPlaying = activeId === video.id;
@@ -137,12 +139,14 @@ export function PhoneVideoPlayer({
                 {playbackError ? (
                   <div className="flex h-full flex-col items-center justify-center gap-3 px-4 text-center">
                     <p className="text-sm font-medium text-white">
-                      This video format is not supported in your browser.
+                      This video could not be played.
                     </p>
-                    <p className="text-xs text-white/70">
-                      Re-upload the video from Admin to auto-convert it, or export
-                      as MP4 from Photos.
-                    </p>
+                    {viewMode === "admin" && (
+                      <p className="text-xs text-white/70">
+                        Re-upload it from the editor as an MP4 so it plays in every
+                        browser.
+                      </p>
+                    )}
                     <button
                       type="button"
                       onClick={handleDeactivate}

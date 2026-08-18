@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
-import { useSiteContent } from "@/components/admin/AdminViewProvider";
+import { useAdminView, useSiteContent } from "@/components/admin/AdminViewProvider";
 import { AutoplayLoopVideo } from "@/components/ui/AutoplayLoopVideo";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { SectionSurface } from "@/components/ui/SectionSurface";
@@ -28,7 +28,10 @@ function InstagramIcon() {
 }
 
 function CtaVideo({ videoPath }: { videoPath?: string }) {
+  const { viewMode } = useAdminView();
+
   if (!videoPath) {
+    if (viewMode !== "admin") return null;
     return (
       <div className="flex aspect-[4/5] w-full items-center justify-center rounded-[2rem] border border-white/70 bg-paper/60 p-6 text-center shadow-lg backdrop-blur-sm">
         <p className="font-label text-xs font-semibold tracking-[0.16em] text-brown/70 uppercase">

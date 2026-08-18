@@ -96,7 +96,7 @@ export function AdminModePanel() {
   useEffect(() => {
     if (!isOpen || videosLoaded) return;
 
-    void fetch("/api/videos")
+    void fetch("/api/videos", { cache: "no-store" })
       .then((response) => response.json())
       .then((data: PortfolioVideo[]) => {
         setVideos(data);

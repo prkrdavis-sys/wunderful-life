@@ -5,6 +5,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { PortfolioVideo } from "@/lib/videos/types";
 import { uniqueVideosById } from "@/lib/videos/sort";
+import { useAdminView } from "@/components/admin/AdminViewProvider";
 import { phoneTilt } from "./constants";
 import { PhoneVideoPlayer } from "./PhoneVideoPlayer";
 
@@ -83,6 +84,7 @@ export function PhoneMarquee({
   const [isHovered, setIsHovered] = useState(false);
   // Desktop-first default so the first paint already overflows wide viewports.
   const [minSlides, setMinSlides] = useState(() => slidesNeededForWidth(1440));
+  const { viewMode } = useAdminView();
   const uniqueVideos = useMemo(() => uniqueVideosById(videos), [videos]);
   const marqueeSlides = useMemo(
     () => buildMarqueeSlides(uniqueVideos, minSlides),
@@ -179,6 +181,7 @@ export function PhoneMarquee({
   }, [emblaApi, syncAutoScroll]);
 
   if (uniqueVideos.length === 0) {
+    if (viewMode !== "admin") return null;
     return (
       <p className={`text-center ${emptyClassName}`}>
         No featured work yet — add videos in Admin.

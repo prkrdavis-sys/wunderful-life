@@ -1,13 +1,23 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createVideo, listVideos, reorderVideos, StorageError } from "@/lib/storage";
 import {
   parseCreateVideoForm,
   parseUploadFiles,
 } from "@/lib/videos/form";
 
+const VIDEO_LIST_HEADERS = {
+  "Cache-Control": "no-store, max-age=0",
+};
+
+function revalidateVideoPages() {
+  revalidatePath("/", "layout");
+  revalidatePath("/work");
+}
+
 export async function GET() {
   const videos = await listVideos();
-  return NextResponse.json(videos);
+  return NextResponse.json(videos, { headers: VIDEO_LIST_HEADERS });
 }
 
 export async function POST(request: Request) {
@@ -17,8 +27,9 @@ export async function POST(request: Request) {
       parseCreateVideoForm(form),
       parseUploadFiles(form),
     );
+    revalidateVideoPages();
 
-    return NextResponse.json(video, { status: 201 });
+    return NextResponse.json(video, { status: 201, headers: VIDEO_LIST_HEADERS });
   } catch (error) {
     if (error instanceof StorageError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
@@ -38,7 +49,8 @@ export async function PATCH(request: Request) {
     }
 
     const videos = await reorderVideos(body.orderedIds);
-    return NextResponse.json(videos);
+    revalidateVideoPages();
+    return NextResponse.json(videos, { headers: VIDEO_LIST_HEADERS });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Failed to reorder videos." }, { status: 500 });

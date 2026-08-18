@@ -9,10 +9,10 @@ import { StatsBannerSection } from "@/components/sections/StatsBannerSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { UgcBenefitsSection } from "@/components/sections/UgcBenefitsSection";
 import { WorkPreviewSection } from "@/components/sections/WorkPreviewSection";
-import { listVideos } from "@/lib/storage";
+import { getVideos } from "@/lib/videos/load";
 
 export default async function HomePage() {
-  const videos = await listVideos();
+  const videos = await getVideos();
 
   // Colored bands now separate the sections, so no dividers are needed.
   return (

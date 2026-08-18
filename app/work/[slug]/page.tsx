@@ -2,24 +2,19 @@ import { notFound } from "next/navigation";
 import { DetailVideoPlayer } from "@/components/work/DetailVideoPlayer";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { SectionReveal } from "@/components/ui/motion";
+import { getVideo } from "@/lib/videos/load";
 import {
   formatDuration,
   platformLabel,
 } from "@/lib/videos/types";
-import { getVideoBySlug, listVideos } from "@/lib/storage";
 
 type WorkDetailPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export async function generateStaticParams() {
-  const videos = await listVideos();
-  return videos.map((video) => ({ slug: video.slug }));
-}
-
 export async function generateMetadata({ params }: WorkDetailPageProps) {
   const { slug } = await params;
-  const video = await getVideoBySlug(slug);
+  const video = await getVideo(slug);
   if (!video) return { title: "Not Found" };
   return {
     title: video.title,
@@ -29,7 +24,7 @@ export async function generateMetadata({ params }: WorkDetailPageProps) {
 
 export default async function WorkDetailPage({ params }: WorkDetailPageProps) {
   const { slug } = await params;
-  const video = await getVideoBySlug(slug);
+  const video = await getVideo(slug);
 
   if (!video) notFound();
 

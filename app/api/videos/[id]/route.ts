@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { deleteVideo, StorageError, updateVideo } from "@/lib/storage";
 import {
   parseUpdateVideoForm,
   parseUploadFiles,
 } from "@/lib/videos/form";
+
+function revalidateVideoPages() {
+  revalidatePath("/", "layout");
+  revalidatePath("/work");
+}
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -24,6 +30,8 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Video not found." }, { status: 404 });
     }
 
+    revalidateVideoPages();
+    revalidatePath(`/work/${video.slug}`);
     return NextResponse.json(video);
   } catch (error) {
     if (error instanceof StorageError) {
@@ -45,6 +53,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Video not found." }, { status: 404 });
     }
 
+    revalidateVideoPages();
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);

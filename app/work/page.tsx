@@ -2,7 +2,7 @@ import { WorkPageClient } from "@/components/work/WorkPageClient";
 import { SectionSurface } from "@/components/ui/SectionSurface";
 import { sectionText } from "@/lib/sectionText";
 import { getSiteContent } from "@/lib/site";
-import { listVideos } from "@/lib/storage";
+import { getVideos } from "@/lib/videos/load";
 
 export const metadata = {
   title: "Work",
@@ -10,7 +10,7 @@ export const metadata = {
 
 export default async function WorkPage() {
   const site = await getSiteContent();
-  const videos = await listVideos();
+  const videos = await getVideos();
   const text = sectionText.services;
 
   return (
