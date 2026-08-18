@@ -17,9 +17,17 @@ export async function POST(request: Request) {
     const form = await request.formData();
     const videoUrl = form.get("videoUrl");
     const file = form.get("video");
+    const posterUrl = form.get("posterUrl");
+    const poster = form.get("poster");
+    const posterFile =
+      poster instanceof File && poster.size > 0 ? poster : undefined;
+    const posterRemote =
+      typeof posterUrl === "string" && posterUrl.startsWith("https://")
+        ? posterUrl
+        : undefined;
 
     if (typeof videoUrl === "string" && videoUrl.startsWith("https://")) {
-      const site = await setHeroVideoUrl(videoUrl, version);
+      const site = await setHeroVideoUrl(videoUrl, version, posterRemote);
       const record = await readSiteRecord();
       revalidatePath("/", "layout");
       return NextResponse.json(site, {
@@ -38,7 +46,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: videoUploadErrorMessage() }, { status: 400 });
     }
 
-    const site = await uploadHeroVideo(file, version);
+    const site = await uploadHeroVideo(file, version, posterFile);
     const record = await readSiteRecord();
     revalidatePath("/", "layout");
     return NextResponse.json(site, {

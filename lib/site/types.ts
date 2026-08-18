@@ -38,6 +38,8 @@ export type Testimonial = {
 
 export type HeroContent = {
   videoPath?: string;
+  /** First-frame still shown while the hero video buffers. */
+  posterPath?: string;
   subtitle: string;
 };
 

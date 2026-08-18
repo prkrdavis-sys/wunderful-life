@@ -75,6 +75,12 @@ export function videoContentTypeFromFilename(filename: string): string | undefin
   }
 }
 
+/** MIME type for a stored video path or URL, used by <link rel="preload">. */
+export function videoContentTypeFromPath(path: string): string {
+  const pathname = path.split("?")[0]?.split("#")[0] ?? path;
+  return videoContentTypeFromFilename(pathname) ?? "video/mp4";
+}
+
 export function uploadFilename(
   dir: "videos" | "thumbnails",
   originalName: string,

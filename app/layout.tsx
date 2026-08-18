@@ -5,7 +5,7 @@ import {
   DM_Sans,
   Fraunces,
   Instrument_Sans,
-  Sacramento,
+  Niconne,
 } from "next/font/google";
 import { AdminModeBanner } from "@/components/admin/AdminModePanel";
 import { SiteNav } from "@/components/layout/SiteNav";
@@ -15,7 +15,14 @@ import { SiteHeaderHeightSync } from "@/components/layout/SiteHeaderHeightSync";
 import { AppProviders } from "@/components/layout/AppProviders";
 import { ADMIN_COOKIE, canAccessAdmin, isAdminAuthRequired } from "@/lib/auth";
 import { getSiteContentRecord } from "@/lib/site";
+import { videoContentTypeFromPath } from "@/lib/videos/upload";
 import "./globals.css";
+
+function preloadCrossOrigin(url: string): "anonymous" | undefined {
+  return url.startsWith("https://") || url.startsWith("http://")
+    ? "anonymous"
+    : undefined;
+}
 
 export const viewport: Viewport = {
   themeColor: "#f7f3ec",
@@ -49,8 +56,8 @@ const instrumentSans = Instrument_Sans({
   display: "swap",
 });
 
-const sacramento = Sacramento({
-  variable: "--font-sacramento",
+const niconne = Niconne({
+  variable: "--font-niconne",
   weight: "400",
   subsets: ["latin"],
   display: "swap",
@@ -105,8 +112,27 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bricolage.variable} ${dmSans.variable} ${fraunces.variable} ${instrumentSans.variable} ${sacramento.variable} h-full scroll-smooth`}
+      className={`${bricolage.variable} ${dmSans.variable} ${fraunces.variable} ${instrumentSans.variable} ${niconne.variable} h-full scroll-smooth`}
     >
+      {site.hero.videoPath ? (
+        <link
+          rel="preload"
+          as="video"
+          href={site.hero.videoPath}
+          type={videoContentTypeFromPath(site.hero.videoPath)}
+          fetchPriority="high"
+          crossOrigin={preloadCrossOrigin(site.hero.videoPath)}
+        />
+      ) : null}
+      {site.hero.posterPath ? (
+        <link
+          rel="preload"
+          as="image"
+          href={site.hero.posterPath}
+          fetchPriority="high"
+          crossOrigin={preloadCrossOrigin(site.hero.posterPath)}
+        />
+      ) : null}
       <body className="relative min-h-full flex flex-col bg-cream font-body antialiased">
         <AppProviders
           initialSite={site}

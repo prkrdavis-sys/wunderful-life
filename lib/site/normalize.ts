@@ -341,6 +341,7 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
     hero: {
       subtitle: text(raw.hero?.subtitle, defaultHeroSubtitle(raw.name)),
       ...(raw.hero?.videoPath ? { videoPath: raw.hero.videoPath } : {}),
+      ...(raw.hero?.posterPath ? { posterPath: raw.hero.posterPath } : {}),
     },
     statsBanner: {
       visible:

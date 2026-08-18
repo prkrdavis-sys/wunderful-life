@@ -1,5 +1,5 @@
 /* Wunderful Life — installable PWA service worker (network-first). */
-const CACHE_NAME = "wunderful-life-shell-v1";
+const CACHE_NAME = "wunderful-life-shell-v2";
 const OFFLINE_URL = "/offline.html";
 
 self.addEventListener("install", (event) => {
@@ -31,6 +31,15 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/")) return;
+  // Let the browser stream media with Range requests; intercepting videos
+  // delays the hero and can stall on the first frame.
+  if (
+    request.destination === "video" ||
+    request.destination === "audio" ||
+    /\.(mp4|m4v|mov|webm|mp3)$/i.test(url.pathname)
+  ) {
+    return;
+  }
 
   if (request.mode === "navigate") {
     event.respondWith(

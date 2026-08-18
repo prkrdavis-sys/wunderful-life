@@ -370,25 +370,50 @@ async function saveVideoFile(slot: VideoSlot, file: File): Promise<string> {
   return `/uploads/${slot}/${filename}`;
 }
 
+async function savePosterFile(slot: VideoSlot, file: File): Promise<string> {
+  const ext = path.extname(file.name) || ".jpg";
+  const filename = `${slot}-poster-${randomUUID()}${ext}`;
+
+  if (hasSupabaseMediaConfig()) {
+    return uploadPublicMedia(
+      `${slot}/${filename}`,
+      file,
+      file.type || "image/jpeg",
+    );
+  }
+
+  await ensurePhotoDir(VIDEO_DIRS[slot]);
+  const buffer = Buffer.from(await file.arrayBuffer());
+  await fs.writeFile(path.join(VIDEO_DIRS[slot], filename), buffer);
+  return `/uploads/${slot}/${filename}`;
+}
+
 async function replaceVideoPath(
   slot: VideoSlot,
   videoPath: string,
   expectedVersion?: number,
+  posterPath?: string,
 ): Promise<SiteContent> {
   const record = await readSiteRecord();
   if (expectedVersion !== undefined && record.version !== expectedVersion) {
     await deleteStoredPhoto(videoPath);
+    if (posterPath) await deleteStoredPhoto(posterPath);
     throw new StorageError(
       "This editor is out of date. The latest site content was saved elsewhere.",
       409,
     );
   }
   const site = record.content;
-  const previous =
+  const previousVideo =
     slot === "hero" ? site.hero.videoPath : site.closingCta.videoPath;
+  const previousPoster = slot === "hero" ? site.hero.posterPath : undefined;
 
   if (slot === "hero") {
-    site.hero = { ...site.hero, videoPath };
+    site.hero = {
+      subtitle: site.hero.subtitle,
+      videoPath,
+      ...(posterPath ? { posterPath } : {}),
+    };
   } else {
     site.closingCta = { ...site.closingCta, videoPath };
   }
@@ -396,14 +421,20 @@ async function replaceVideoPath(
   try {
     await writeSiteContent(site, record.version);
   } catch (error) {
-    if (videoPath !== previous) {
+    if (videoPath !== previousVideo) {
       await deleteStoredPhoto(videoPath);
+    }
+    if (posterPath && posterPath !== previousPoster) {
+      await deleteStoredPhoto(posterPath);
     }
     throw error;
   }
 
-  if (previous && previous !== videoPath) {
-    await deleteStoredPhoto(previous);
+  if (previousVideo && previousVideo !== videoPath) {
+    await deleteStoredPhoto(previousVideo);
+  }
+  if (previousPoster && previousPoster !== posterPath) {
+    await deleteStoredPhoto(previousPoster);
   }
 
   return site;
@@ -421,12 +452,12 @@ async function clearVideoPath(
     );
   }
   const site = record.content;
-  const previous =
+  const previousVideo =
     slot === "hero" ? site.hero.videoPath : site.closingCta.videoPath;
+  const previousPoster = slot === "hero" ? site.hero.posterPath : undefined;
 
   if (slot === "hero") {
-    const { videoPath: _removed, ...hero } = site.hero;
-    site.hero = hero;
+    site.hero = { subtitle: site.hero.subtitle };
   } else {
     const { videoPath: _removed, ...closingCta } = site.closingCta;
     site.closingCta = closingCta;
@@ -434,7 +465,8 @@ async function clearVideoPath(
 
   await writeSiteContent(site, record.version);
 
-  if (previous) await deleteStoredPhoto(previous);
+  if (previousVideo) await deleteStoredPhoto(previousVideo);
+  if (previousPoster) await deleteStoredPhoto(previousPoster);
 
   return site;
 }
@@ -443,11 +475,13 @@ async function clearVideoPath(
 export async function uploadHeroVideo(
   file: File,
   expectedVersion?: number,
+  poster?: File,
 ): Promise<SiteContent> {
   return replaceVideoPath(
     "hero",
     await saveVideoFile("hero", file),
     expectedVersion,
+    poster ? await savePosterFile("hero", poster) : undefined,
   );
 }
 
@@ -455,8 +489,9 @@ export async function uploadHeroVideo(
 export async function setHeroVideoUrl(
   url: string,
   expectedVersion?: number,
+  posterUrl?: string,
 ): Promise<SiteContent> {
-  return replaceVideoPath("hero", url, expectedVersion);
+  return replaceVideoPath("hero", url, expectedVersion, posterUrl);
 }
 
 export async function clearHeroVideo(expectedVersion?: number): Promise<SiteContent> {

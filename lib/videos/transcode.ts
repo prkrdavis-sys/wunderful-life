@@ -175,6 +175,37 @@ function isAlreadyMp4(file: File): boolean {
   return ext === ".mp4" || file.type === "video/mp4";
 }
 
+/**
+ * True when the MP4 index (`moov`) appears before media data (`mdat`), so
+ * playback can start without downloading the whole file first.
+ */
+async function mp4HasFastStart(file: File): Promise<boolean> {
+  const probeSize = Math.min(file.size, 256 * 1024);
+  if (probeSize < 8) return false;
+  const bytes = new Uint8Array(await file.slice(0, probeSize).arrayBuffer());
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let offset = 0;
+  while (offset + 8 <= view.byteLength) {
+    let boxSize = view.getUint32(offset);
+    const type = String.fromCharCode(
+      bytes[offset + 4],
+      bytes[offset + 5],
+      bytes[offset + 6],
+      bytes[offset + 7],
+    );
+    if (type === "moov") return true;
+    if (type === "mdat") return false;
+    if (boxSize === 1) {
+      if (offset + 16 > view.byteLength) break;
+      if (view.getUint32(offset + 8) !== 0) break;
+      boxSize = view.getUint32(offset + 12);
+    }
+    if (boxSize < 8) break;
+    offset += boxSize;
+  }
+  return false;
+}
+
 export function needsWebTranscode(
   file: File,
   profile: VideoUploadProfile = "portfolio",
@@ -328,18 +359,76 @@ async function transcodeToMp4(
   });
 }
 
+async function remuxMp4FastStart(
+  file: File,
+  onProgress?: (message: string) => void,
+): Promise<File> {
+  onProgress?.("Optimizing video so it can start sooner…");
+  const ff = await getFFmpeg();
+  const inputName = "input.mp4";
+  const outputName = "output.mp4";
+
+  await ff.writeFile(inputName, await readFileBytes(file));
+  const exitCode = await withTimeout(
+    ff.exec(["-i", inputName, "-c", "copy", "-movflags", "+faststart", outputName]),
+    FFMPEG_CONVERT_TIMEOUT_MS,
+    "Video conversion timed out.",
+  );
+
+  if (exitCode !== 0) {
+    throw new Error("Could not optimize this video for fast start.");
+  }
+
+  const data = await ff.readFile(outputName);
+  await ff.deleteFile(inputName);
+  await ff.deleteFile(outputName);
+
+  const bytes =
+    data instanceof Uint8Array ? new Uint8Array(data) : new TextEncoder().encode(data);
+
+  if (bytes.byteLength === 0) {
+    throw new Error("Could not optimize this video for fast start.");
+  }
+
+  const baseName = file.name.replace(/\.[^.]+$/i, "") || "video";
+  return new File([bytes], `${baseName}.mp4`, {
+    type: "video/mp4",
+    lastModified: Date.now(),
+  });
+}
+
 export async function prepareVideoForWebUpload(
   file: File,
   onProgress?: (message: string) => void,
   profile: VideoUploadProfile = "portfolio",
 ): Promise<File> {
   if (!needsWebTranscode(file, profile)) {
+    if (
+      profile === "hero" &&
+      isAlreadyMp4(file) &&
+      !(await mp4HasFastStart(file))
+    ) {
+      try {
+        return await remuxMp4FastStart(file, onProgress);
+      } catch (error) {
+        console.warn("Fast-start remux skipped:", error);
+        return file;
+      }
+    }
     return file;
   }
 
   try {
     const compressed = await transcodeToMp4(file, profile, onProgress);
     if (isAlreadyMp4(file) && compressed.size >= file.size) {
+      if (profile === "hero" && !(await mp4HasFastStart(file))) {
+        try {
+          return await remuxMp4FastStart(file, onProgress);
+        } catch (error) {
+          console.warn("Fast-start remux skipped:", error);
+          return file;
+        }
+      }
       return file;
     }
     return compressed;

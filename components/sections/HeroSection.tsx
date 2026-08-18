@@ -7,11 +7,18 @@ import { useSiteContent } from "@/components/admin/AdminViewProvider";
 import { sectionWallpapers } from "@/lib/plants";
 import { lightOnDarkShadow, sectionText } from "@/lib/sectionText";
 
-function HeroBackgroundVideo({ src }: { src: string }) {
+function HeroBackgroundVideo({
+  src,
+  poster,
+}: {
+  src: string;
+  poster?: string;
+}) {
   return (
     <>
       <AutoplayLoopVideo
         src={src}
+        poster={poster}
         muted
         eager
         aria-hidden
@@ -36,7 +43,7 @@ export function HeroSection() {
   return (
     <section className="relative flex min-h-[85svh] flex-col overflow-hidden px-4 py-16 sm:px-6 sm:py-20">
       {hasVideo && videoPath ? (
-        <HeroBackgroundVideo src={videoPath} />
+        <HeroBackgroundVideo src={videoPath} poster={site.hero.posterPath} />
       ) : (
         <PlantSectionBackground wallpaper={wallpaper} overlay={overlay} priority />
       )}

@@ -76,7 +76,7 @@ export function ClosingCtaSection() {
         <SectionReveal delay={0.12} className="text-center lg:text-left">
           <h2
             id="closing-cta-heading"
-            className="font-script text-5xl leading-[1.05] text-forest sm:text-7xl"
+            className="font-script pb-1 text-5xl leading-[1.15] text-forest sm:text-7xl"
           >
             {closingCta.headline}
           </h2>

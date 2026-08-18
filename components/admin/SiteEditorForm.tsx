@@ -12,6 +12,7 @@ import {
   videoUploadErrorMessage,
 } from "@/lib/videos/upload";
 import { needsWebTranscode, prepareVideoForWebUpload } from "@/lib/videos/transcode";
+import { extractVideoFrame } from "@/lib/videos/extractThumbnail";
 import { isVercelBlobUrl } from "@/lib/storage/blob";
 import {
   photoBlobPathname,
@@ -350,6 +351,23 @@ export function SiteEditorForm({
       );
       if (generation !== videoUploadGenRef.current[slot]) return;
 
+      let posterFile: File | null = null;
+      if (slot === "hero") {
+        patchSlotUpload(slot, {
+          status: "preparing",
+          message: "Capturing a still so the hero can appear instantly…",
+        });
+        try {
+          posterFile = await extractVideoFrame(prepared, {
+            mimeType: "image/jpeg",
+            quality: 0.72,
+          });
+        } catch (error) {
+          console.warn("Hero poster capture skipped:", error);
+        }
+        if (generation !== videoUploadGenRef.current[slot]) return;
+      }
+
       const payload = new FormData();
 
       if (config.clientUpload) {
@@ -383,6 +401,19 @@ export function SiteEditorForm({
         );
         if (generation !== videoUploadGenRef.current[slot]) return;
         payload.set("videoUrl", blob.url);
+        if (posterFile) {
+          const posterBlob = await upload(
+            `${slot}/${slot}-poster-${crypto.randomUUID()}.jpg`,
+            posterFile,
+            {
+              access: "public",
+              handleUploadUrl: config.handleUploadUrl,
+              contentType: posterFile.type || "image/jpeg",
+            },
+          );
+          if (generation !== videoUploadGenRef.current[slot]) return;
+          payload.set("posterUrl", posterBlob.url);
+        }
       } else {
         setSlotUpload(slot, {
           status: "uploading",
@@ -390,6 +421,7 @@ export function SiteEditorForm({
           message: `Uploading ${noun}…`,
         });
         payload.set("video", prepared);
+        if (posterFile) payload.set("poster", posterFile);
       }
 
       const response = await fetch(endpoint, {
