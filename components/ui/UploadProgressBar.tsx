@@ -14,10 +14,10 @@ export function UploadProgressBar({
   const clamped = Math.max(0, Math.min(100, progress));
 
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-start justify-between gap-3 text-sm">
-        <span className="font-medium text-brown">{label}</span>
-        <span className="text-right text-muted">{message}</span>
+    <div className="min-w-0 space-y-1.5">
+      <div className="flex min-w-0 items-start justify-between gap-3 text-sm">
+        <span className="shrink-0 font-medium text-brown">{label}</span>
+        <span className="min-w-0 break-words text-right text-muted">{message}</span>
       </div>
       <div
         className="h-2 overflow-hidden rounded-full bg-lavender/30"

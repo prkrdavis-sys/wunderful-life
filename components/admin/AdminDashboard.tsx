@@ -89,7 +89,7 @@ export function AdminDashboard({
 
   if (editing) {
     return (
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <VideoForm
           key={editing.id}
           initial={editing}
@@ -103,12 +103,12 @@ export function AdminDashboard({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col md:flex-row">
       <nav
         aria-label="Video sections"
-        className="shrink-0 border-b border-brown/10 bg-cream/40 md:w-52 md:border-r md:border-b-0 lg:w-56"
+        className="max-w-full shrink-0 border-b border-brown/10 bg-cream/40 md:w-52 md:max-w-none md:border-r md:border-b-0 lg:w-56"
       >
-        <div className="flex gap-1 overflow-x-auto px-3 py-2 md:flex-col md:gap-0.5 md:overflow-visible md:px-3 md:py-4">
+        <div className="flex max-w-full gap-1 overflow-x-auto overscroll-x-contain px-3 py-2 md:flex-col md:gap-0.5 md:overflow-visible md:px-3 md:py-4">
           {SECTIONS.map((item) => (
             <button
               key={item.id}
@@ -134,7 +134,7 @@ export function AdminDashboard({
       </nav>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-5">
+        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 py-4 sm:px-6 sm:py-5">
           {view === "library" ? (
             <section className="space-y-4">
               <div>

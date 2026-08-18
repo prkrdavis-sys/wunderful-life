@@ -397,6 +397,67 @@ async function remuxMp4FastStart(
   });
 }
 
+const FFMPEG_THUMBNAIL_TIMEOUT_MS = 45_000;
+
+export async function extractThumbnailWithFfmpeg(file: File): Promise<File> {
+  const ff = await getFFmpeg();
+  const inputExt = extensionFromFilename(file.name) || ".mov";
+  const inputName = `thumb-input${inputExt}`;
+  const outputName = "thumb.jpg";
+
+  try {
+    await ff.writeFile(inputName, await readFileBytes(file));
+    const exitCode = await withTimeout(
+      ff.exec([
+        "-ss",
+        "0",
+        "-i",
+        inputName,
+        "-frames:v",
+        "1",
+        "-q:v",
+        "5",
+        "-vf",
+        scaleFilter(720),
+        outputName,
+      ]),
+      FFMPEG_THUMBNAIL_TIMEOUT_MS,
+      "Thumbnail capture timed out.",
+    );
+
+    if (exitCode !== 0) {
+      throw new Error("Could not capture a thumbnail from this video.");
+    }
+
+    const data = await ff.readFile(outputName);
+    const bytes =
+      data instanceof Uint8Array
+        ? new Uint8Array(data)
+        : new TextEncoder().encode(data);
+
+    if (bytes.byteLength === 0) {
+      throw new Error("Could not capture a thumbnail from this video.");
+    }
+
+    const baseName = file.name.replace(/\.[^.]+$/i, "") || "video";
+    return new File([bytes], `${baseName}-thumbnail.jpg`, {
+      type: "image/jpeg",
+      lastModified: Date.now(),
+    });
+  } finally {
+    try {
+      await ff.deleteFile(inputName);
+    } catch {
+      // File may not have been written.
+    }
+    try {
+      await ff.deleteFile(outputName);
+    } catch {
+      // Frame grab may have failed before writing output.
+    }
+  }
+}
+
 export async function prepareVideoForWebUpload(
   file: File,
   onProgress?: (message: string) => void,

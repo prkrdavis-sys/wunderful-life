@@ -129,7 +129,7 @@ export function AdminUnlockButton() {
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     placeholder="Password"
-                    className="mt-4 w-full rounded-xl border border-lavender/40 bg-cream px-3 py-2 text-sm text-ink outline-none focus:border-forest/50"
+                    className="mt-4 w-full min-w-0 rounded-xl border border-lavender/40 bg-cream px-3 py-2 text-base text-ink outline-none focus:border-forest/50"
                     required
                     autoComplete="current-password"
                     autoFocus

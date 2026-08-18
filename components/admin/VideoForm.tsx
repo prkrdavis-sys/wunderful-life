@@ -14,8 +14,13 @@ import {
   videoUploadErrorMessage,
 } from "@/lib/videos/upload";
 import { extractVideoFrame } from "@/lib/videos/extractThumbnail";
-import { needsWebTranscode, prepareVideoForWebUpload } from "@/lib/videos/transcode";
+import {
+  extractThumbnailWithFfmpeg,
+  needsWebTranscode,
+  prepareVideoForWebUpload,
+} from "@/lib/videos/transcode";
 import { isVercelBlobUrl } from "@/lib/storage/blob";
+import { AutoResizeTextarea } from "@/components/admin/AutoResizeTextarea";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { FileUploadButton } from "@/components/ui/FileUploadButton";
 import { UploadProgressBar } from "@/components/ui/UploadProgressBar";
@@ -30,7 +35,7 @@ type VideoFormProps = {
 };
 
 const inputClass =
-  "mt-1 w-full rounded-xl border border-brown/20 bg-white px-3 py-2 text-brown outline-none focus:border-forest/50";
+  "mt-1 w-full min-w-0 rounded-xl border border-brown/20 bg-white px-3 py-2.5 text-base leading-normal text-brown outline-none focus:border-forest/50";
 
 type UploadConfig = {
   clientUpload: boolean;
@@ -197,13 +202,18 @@ export function VideoForm({
   const [saveMessage, setSaveMessage] = useState("Saving video details…");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [capturingThumbnail, setCapturingThumbnail] = useState(false);
+  const [thumbnailHint, setThumbnailHint] = useState<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const uploadConfigRef = useRef<UploadConfig | null>(null);
   const videoUploadGenRef = useRef(0);
   const thumbnailUploadGenRef = useRef(0);
   const thumbnailExtractGenRef = useRef(0);
+  const thumbnailFileRef = useRef<File | null>(null);
+  const captureInFlightRef = useRef(0);
 
   const videoPreviewUrl = useMediaPreview(videoFile, initial?.videoPath);
+  thumbnailFileRef.current = thumbnailFile;
   const thumbnailPreviewUrl = useMediaPreview(thumbnailFile, initial?.thumbnailPath);
   /** Prefer a captured still for the video picker preview. */
   const videoUploadPreviewUrl = thumbnailPreviewUrl ?? videoPreviewUrl;
@@ -354,21 +364,40 @@ export function VideoForm({
   );
 
   const captureThumbnailFromVideo = useCallback(
-    async (file: File) => {
-      const generation = ++thumbnailExtractGenRef.current;
+    async (file: File, allowFfmpeg = false) => {
+      const generation = thumbnailExtractGenRef.current;
+      captureInFlightRef.current += 1;
+      setCapturingThumbnail(true);
 
       try {
-        const frame = await extractVideoFrame(file);
+        let frame: File;
+        try {
+          frame = await extractVideoFrame(file, { seekTo: 0 });
+        } catch (browserError) {
+          if (!allowFfmpeg) throw browserError;
+          frame = await extractThumbnailWithFfmpeg(file);
+        }
         if (generation !== thumbnailExtractGenRef.current) return;
 
         setThumbnailFile(frame);
+        thumbnailFileRef.current = frame;
+        setThumbnailHint(null);
         void startThumbnailUpload(frame);
       } catch (err) {
         if (generation !== thumbnailExtractGenRef.current) return;
-        // Non-fatal: user can still upload a cover image manually.
         console.warn(
           toErrorMessage(err, "Could not capture a thumbnail from the video."),
         );
+      } finally {
+        captureInFlightRef.current = Math.max(0, captureInFlightRef.current - 1);
+        if (generation !== thumbnailExtractGenRef.current) return;
+        if (captureInFlightRef.current > 0) return;
+        setCapturingThumbnail(false);
+        if (!thumbnailFileRef.current && allowFfmpeg) {
+          setThumbnailHint(
+            "Couldn't capture a thumbnail from this video. Upload a PNG, JPEG, or WebP cover to save.",
+          );
+        }
       }
     },
     [startThumbnailUpload],
@@ -409,7 +438,9 @@ export function VideoForm({
         if (generation !== videoUploadGenRef.current) return;
 
         setVideoFile(prepared);
-        void captureThumbnailFromVideo(prepared);
+        if (!thumbnailFileRef.current) {
+          void captureThumbnailFromVideo(prepared, true);
+        }
 
         if (!config.clientUpload) {
           setVideoUpload({
@@ -477,7 +508,26 @@ export function VideoForm({
 
   const saveBlocked =
     isMediaBlockingSave(videoFile, videoUpload, !initial) ||
-    isMediaBlockingSave(thumbnailFile, thumbnailUpload, !initial);
+    isMediaBlockingSave(thumbnailFile, thumbnailUpload, !initial) ||
+    capturingThumbnail;
+
+  const submitLabel = saving
+    ? saveMessage
+    : capturingThumbnail
+      ? "Capturing thumbnail…"
+      : isMediaUploadBusy(videoUpload) || isMediaUploadBusy(thumbnailUpload)
+        ? "Waiting for uploads…"
+        : !initial && !videoFile
+          ? "Add a video to save"
+          : !initial && !thumbnailFile
+            ? "Add a thumbnail to save"
+            : saveBlocked
+              ? "Waiting for uploads…"
+              : initial
+                ? "Save video"
+                : layout === "panel"
+                  ? "Add video"
+                  : "Add Video";
 
   const save = async () => {
     if (saveBlocked) return;
@@ -543,6 +593,8 @@ export function VideoForm({
         setThumbnailFile(null);
         setVideoUpload(idleMediaUpload());
         setThumbnailUpload(idleMediaUpload());
+        setThumbnailHint(null);
+        setCapturingThumbnail(false);
         if (videoInputRef.current) videoInputRef.current.value = "";
         setMessage("Saved.");
         onSuccess(saved);
@@ -556,6 +608,8 @@ export function VideoForm({
         setThumbnailFile(null);
         setVideoUpload(idleMediaUpload());
         setThumbnailUpload(idleMediaUpload());
+        setThumbnailHint(null);
+        setCapturingThumbnail(false);
         if (videoInputRef.current) videoInputRef.current.value = "";
       }
     } catch (err) {
@@ -575,32 +629,38 @@ export function VideoForm({
           indeterminate={videoUpload.status === "preparing"}
         />
       )}
-      {thumbnailFile && thumbnailUpload.status !== "idle" && (
+      {(capturingThumbnail ||
+        (thumbnailFile && thumbnailUpload.status !== "idle")) && (
         <UploadProgressBar
           label="Thumbnail"
-          message={thumbnailUpload.message}
+          message={
+            capturingThumbnail
+              ? "Capturing thumbnail from video…"
+              : thumbnailUpload.message
+          }
           progress={thumbnailUpload.progress}
-          indeterminate={thumbnailUpload.status === "preparing"}
+          indeterminate={
+            capturingThumbnail || thumbnailUpload.status === "preparing"
+          }
         />
       )}
     </div>
   );
 
   const fields = (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid min-w-0 gap-4 sm:grid-cols-2">
       {(
         [
-          ["title", "Title", "text"],
-          ["brand", "Brand", "text"],
-          ["hook", "Hook", "text"],
-          ["cta", "CTA", "text"],
-          ["slug", "Slug (optional)", "text"],
+          ["title", "Title"],
+          ["brand", "Brand"],
+          ["hook", "Hook"],
+          ["cta", "CTA"],
+          ["slug", "Slug (optional)"],
         ] as const
-      ).map(([key, label, type]) => (
+      ).map(([key, label]) => (
         <label key={key} className="block text-sm">
           <span className="text-muted">{label}</span>
-          <input
-            type={type}
+          <AutoResizeTextarea
             value={form[key]}
             onChange={(event) =>
               setForm((current) => ({ ...current, [key]: event.target.value }))
@@ -672,13 +732,15 @@ export function VideoForm({
               return;
             }
             setError(null);
+            setThumbnailHint(null);
+            thumbnailExtractGenRef.current += 1;
             setVideoFile(file);
             if (file) {
               readVideoDuration(file);
+              void captureThumbnailFromVideo(file);
               void startVideoUpload(file);
             } else {
               videoUploadGenRef.current += 1;
-              thumbnailExtractGenRef.current += 1;
               setVideoUpload(idleMediaUpload());
             }
           }}
@@ -692,6 +754,8 @@ export function VideoForm({
                   setVideoUpload(idleMediaUpload());
                   setThumbnailFile(null);
                   setThumbnailUpload(idleMediaUpload());
+                  setThumbnailHint(null);
+                  setCapturingThumbnail(false);
                   setError(null);
                   if (videoInputRef.current) videoInputRef.current.value = "";
                 }
@@ -699,7 +763,7 @@ export function VideoForm({
           }
         />
         {initial?.videoPath && !videoFile && !isMediaUploadBusy(videoUpload) && (
-          <p className="inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">
+          <p className="flex max-w-full items-start gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium break-words text-ink">
             <span aria-hidden>🌸</span>
             {isVercelBlobUrl(initial.videoPath)
               ? "Stored on the old host — re-upload to keep this video cheap to play"
@@ -721,10 +785,12 @@ export function VideoForm({
           previewType="image"
           required={!initial && !thumbnailFile}
           buttonLabel={initial?.thumbnailPath ? "Swap thumbnail" : "Add a thumbnail"}
-          hint="Auto-captured from your video — or upload your own PNG, JPEG, or WebP"
+          hint="Auto-captured from the first frame — or upload your own PNG, JPEG, or WebP"
           disabled={isMediaUploadBusy(thumbnailUpload)}
           onChange={(file) => {
             thumbnailExtractGenRef.current += 1;
+            setCapturingThumbnail(false);
+            setThumbnailHint(null);
             setThumbnailFile(file);
             if (file) {
               void startThumbnailUpload(file);
@@ -740,15 +806,22 @@ export function VideoForm({
                   thumbnailUploadGenRef.current += 1;
                   setThumbnailFile(null);
                   setThumbnailUpload(idleMediaUpload());
+                  setThumbnailHint(null);
+                  setCapturingThumbnail(false);
                   setError(null);
                 }
               : undefined
           }
         />
+        {thumbnailHint && (
+          <p className="rounded-xl bg-blush/15 px-3 py-2 text-xs text-brown">
+            {thumbnailHint}
+          </p>
+        )}
         {initial?.thumbnailPath &&
           !thumbnailFile &&
           !isMediaUploadBusy(thumbnailUpload) && (
-            <p className="inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">
+            <p className="flex max-w-full items-start gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium break-words text-ink">
               <span aria-hidden>🌸</span>
               Live on your site
             </p>
@@ -789,20 +862,14 @@ export function VideoForm({
         disabled={uploadBusy || saveBlocked}
         className="w-full shadow-md shadow-forest/15 sm:max-w-xs"
       >
-        {saving
-          ? saveMessage
-          : saveBlocked
-            ? "Waiting for uploads…"
-            : initial
-              ? "Save video"
-              : "Add video"}
+        {submitLabel}
       </AnimatedButton>
     </>
   );
 
   if (layout === "panel" && embedded) {
     return (
-      <div className="space-y-4">
+      <div className="min-w-0 space-y-4">
         {fields}
         <div className="border-t border-brown/10 pt-4">{saveFooter}</div>
       </div>
@@ -811,16 +878,16 @@ export function VideoForm({
 
   if (layout === "panel") {
     return (
-      <div className="flex min-h-0 flex-1 flex-col">
-        <div className="shrink-0 border-b border-brown/10 px-4 pb-4 sm:px-6">
-          <div className="flex items-start justify-between gap-3">
-            <div>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="min-w-0 shrink-0 border-b border-brown/10 px-3 pb-4 sm:px-6">
+          <div className="flex min-w-0 items-start justify-between gap-3">
+            <div className="min-w-0">
               <h3 className="font-display text-lg text-brown">
                 {initial ? "Edit video" : "Add video"}
               </h3>
               <p className="mt-1 text-sm text-muted">
                 {initial?.title ??
-                  "Pick your video and thumbnail first — they upload while you fill in the details."}
+                  "Pick a video — we'll grab a thumbnail from the first frame."}
               </p>
             </div>
             {onCancel && (
@@ -835,11 +902,11 @@ export function VideoForm({
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-5">
+        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 py-4 sm:px-6 sm:py-5">
           {fields}
         </div>
 
-        <div className="shrink-0 border-t border-brown/10 bg-paper px-4 py-3 sm:px-6">
+        <div className="min-w-0 shrink-0 border-t border-brown/10 bg-paper px-3 py-3 sm:px-6">
           {saveFooter}
         </div>
       </div>
@@ -856,7 +923,7 @@ export function VideoForm({
     >
       <h2 className="font-display text-xl text-brown">Add New Video</h2>
       <p className="mt-1 text-sm text-muted">
-        Files upload as soon as you pick them. Save when both are ready.
+        Pick a video and we'll capture a thumbnail from the first frame. Save when it's ready.
       </p>
 
       <div className="mt-6">{fields}</div>
@@ -869,11 +936,7 @@ export function VideoForm({
 
       <div className="mt-6 flex flex-wrap gap-3">
         <AnimatedButton type="submit" disabled={uploadBusy || saveBlocked}>
-          {saving
-            ? saveMessage
-            : saveBlocked
-              ? "Waiting for uploads…"
-              : "Add Video"}
+          {submitLabel}
         </AnimatedButton>
       </div>
     </form>

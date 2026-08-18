@@ -158,72 +158,73 @@ export function AdminModePanel() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12 }}
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
-            className="fixed inset-3 z-[70] flex flex-col overflow-hidden rounded-2xl border border-brown/15 bg-paper shadow-2xl sm:inset-4 md:inset-6 lg:inset-8"
+            className="admin-editor-frame pointer-events-none fixed inset-0 z-[70] flex min-h-0 min-w-0 flex-col"
           >
-            <div className="flex shrink-0 items-center justify-between gap-4 border-b border-brown/10 px-4 py-3 sm:px-6">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex gap-1 rounded-full bg-cream p-1">
+            <div className="pointer-events-auto flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col overflow-hidden rounded-2xl border border-brown/15 bg-paper shadow-2xl">
+              <div className="flex min-w-0 shrink-0 flex-col gap-2 border-b border-brown/10 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
+                <div className="flex min-w-0 items-center justify-between gap-2 sm:contents">
+                  <div className="flex shrink-0 gap-1 rounded-full bg-cream p-1">
+                    <button
+                      type="button"
+                      onClick={() => trySetTab("content")}
+                      className={`rounded-full px-3 py-1.5 text-sm font-medium transition sm:px-4 sm:py-2 ${
+                        activeTab === "content"
+                          ? "bg-forest text-paper"
+                          : "text-ink hover:bg-lavender/25"
+                      }`}
+                    >
+                      Site
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => trySetTab("portfolio")}
+                      className={`rounded-full px-3 py-1.5 text-sm font-medium transition sm:px-4 sm:py-2 ${
+                        activeTab === "portfolio"
+                          ? "bg-forest text-paper"
+                          : "text-ink hover:bg-lavender/25"
+                      }`}
+                    >
+                      Videos
+                    </button>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => trySetTab("content")}
-                    className={`rounded-full px-3 py-1.5 text-sm font-medium transition sm:px-4 sm:py-2 ${
-                      activeTab === "content"
-                        ? "bg-forest text-paper"
-                        : "text-ink hover:bg-lavender/25"
-                    }`}
+                    onClick={tryClosePanel}
+                    className="shrink-0 rounded-full border border-brown/20 px-3 py-1.5 text-sm text-brown hover:bg-cream sm:order-last"
                   >
-                    Site
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => trySetTab("portfolio")}
-                    className={`rounded-full px-3 py-1.5 text-sm font-medium transition sm:px-4 sm:py-2 ${
-                      activeTab === "portfolio"
-                        ? "bg-forest text-paper"
-                        : "text-ink hover:bg-lavender/25"
-                    }`}
-                  >
-                    Videos
+                    Close
                   </button>
                 </div>
                 <h2
                   id="admin-editor-title"
-                  className="truncate font-display text-xl text-brown sm:text-2xl"
+                  className="min-w-0 truncate font-display text-lg text-brown sm:flex-1 sm:text-2xl"
                 >
                   Edit portfolio
                 </h2>
               </div>
 
-              <button
-                type="button"
-                onClick={tryClosePanel}
-                className="shrink-0 rounded-full border border-brown/20 px-3 py-1.5 text-sm text-brown hover:bg-cream"
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="min-h-0 flex-1 overflow-hidden">
-              {activeTab === "content" ? (
-                <div className="flex h-full min-h-0 flex-col">
-                  <SiteEditorForm
-                    portfolioVideos={videos}
-                    portfolioVideosLoaded={videosLoaded}
-                  />
-                </div>
-              ) : (
-                <div className="flex h-full min-h-0 flex-col">
-                  {videosLoaded ? (
-                    <AdminDashboard
-                      initialVideos={videos}
-                      onVideosChange={setVideos}
-                      onUploadBusyChange={setPortfolioUploadBusy}
+              <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
+                {activeTab === "content" ? (
+                  <div className="flex h-full min-h-0 min-w-0 flex-col">
+                    <SiteEditorForm
+                      portfolioVideos={videos}
+                      portfolioVideosLoaded={videosLoaded}
                     />
-                  ) : (
-                    <p className="py-6 text-sm text-muted">Loading videos…</p>
-                  )}
-                </div>
-              )}
+                  </div>
+                ) : (
+                  <div className="flex h-full min-h-0 min-w-0 flex-col">
+                    {videosLoaded ? (
+                      <AdminDashboard
+                        initialVideos={videos}
+                        onVideosChange={setVideos}
+                        onUploadBusyChange={setPortfolioUploadBusy}
+                      />
+                    ) : (
+                      <p className="px-4 py-6 text-sm text-muted">Loading videos…</p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </motion.div>
         </>

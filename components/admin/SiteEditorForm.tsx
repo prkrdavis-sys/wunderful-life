@@ -28,6 +28,7 @@ import {
   useAdminView,
   type SiteEditorSection,
 } from "@/components/admin/AdminViewProvider";
+import { AutoResizeTextarea } from "@/components/admin/AutoResizeTextarea";
 
 type SiteEditorFormProps = {
   onSaved?: (site: SiteContent) => void;
@@ -51,7 +52,7 @@ const SECTIONS: { id: SiteEditorSection; label: string }[] = [
 ];
 
 const inputClass =
-  "mt-1 w-full rounded-xl border border-brown/20 bg-white px-3 py-2 text-brown";
+  "mt-1 w-full min-w-0 rounded-xl border border-brown/20 bg-white px-3 py-2.5 leading-normal text-base text-brown";
 
 const cardClass = "space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4";
 
@@ -732,7 +733,7 @@ export function SiteEditorForm({
           />
         )}
         {videoPath && !busy && (
-          <p className="inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">
+          <p className="flex max-w-full items-start gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium break-words text-ink">
             <span aria-hidden>🌸</span>
             {isVercelBlobUrl(videoPath)
               ? "Stored on the old host — re-upload to keep this video cheap to play"
@@ -744,12 +745,12 @@ export function SiteEditorForm({
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col md:flex-row">
       <nav
         aria-label="Site content sections"
-        className="shrink-0 border-b border-brown/10 bg-cream/40 md:w-52 md:border-r md:border-b-0 lg:w-56"
+        className="max-w-full shrink-0 border-b border-brown/10 bg-cream/40 md:w-52 md:max-w-none md:border-r md:border-b-0 lg:w-56"
       >
-        <div className="flex gap-1 overflow-x-auto px-3 py-2 md:flex-col md:gap-0.5 md:overflow-visible md:px-3 md:py-4">
+        <div className="flex max-w-full gap-1 overflow-x-auto overscroll-x-contain px-3 py-2 md:flex-col md:gap-0.5 md:overflow-visible md:px-3 md:py-4">
           {SECTIONS.map((item) => (
             <button
               key={item.id}
@@ -775,7 +776,7 @@ export function SiteEditorForm({
       </nav>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-5">
+        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 py-4 sm:px-6 sm:py-5">
           {activeSection === "profile" && (
             <section className="space-y-4">
               <div>
@@ -784,10 +785,10 @@ export function SiteEditorForm({
                   How Emily appears in the hero and across the site.
                 </p>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid min-w-0 gap-4 sm:grid-cols-2">
                 <label className="block text-sm sm:col-span-2">
                   <span className="text-muted">Full name</span>
-                  <input
+                  <AutoResizeTextarea
                     value={form.fullName}
                     onChange={(event) =>
                       setForm((current) => ({
@@ -800,7 +801,7 @@ export function SiteEditorForm({
                 </label>
                 <label className="block text-sm">
                   <span className="text-muted">First name</span>
-                  <input
+                  <AutoResizeTextarea
                     value={form.name}
                     onChange={(event) =>
                       setForm((current) => ({
@@ -813,7 +814,7 @@ export function SiteEditorForm({
                 </label>
                 <label className="block text-sm">
                   <span className="text-muted">Brand</span>
-                  <input
+                  <AutoResizeTextarea
                     value={form.brand}
                     onChange={(event) =>
                       setForm((current) => ({
@@ -829,7 +830,7 @@ export function SiteEditorForm({
                     Tagline (used for search/social previews — the hero shows the
                     Hero subtitle instead)
                   </span>
-                  <textarea
+                  <AutoResizeTextarea
                     value={form.tagline}
                     onChange={(event) =>
                       setForm((current) => ({
@@ -857,7 +858,7 @@ export function SiteEditorForm({
 
               <label className="block max-w-2xl text-sm">
                 <span className="text-muted">Subtitle (cursive line)</span>
-                <textarea
+                <AutoResizeTextarea
                   value={form.hero.subtitle}
                   onChange={(event) =>
                     setForm((current) => ({
@@ -923,7 +924,7 @@ export function SiteEditorForm({
                 />
               </label>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid min-w-0 gap-4 sm:grid-cols-2">
                 {form.statsBanner.items.map((stat, index) => (
                   <div key={stat.id} className={cardClass}>
                     <RowControls
@@ -957,7 +958,7 @@ export function SiteEditorForm({
                     />
                     <label className="block text-sm">
                       <span className="text-muted">Figure (cursive)</span>
-                      <input
+                      <AutoResizeTextarea
                         value={stat.value}
                         onChange={(event) =>
                           setForm((current) => {
@@ -978,7 +979,7 @@ export function SiteEditorForm({
                     </label>
                     <label className="block text-sm">
                       <span className="text-muted">Label</span>
-                      <input
+                      <AutoResizeTextarea
                         value={stat.label}
                         onChange={(event) =>
                           setForm((current) => {
@@ -1029,7 +1030,7 @@ export function SiteEditorForm({
               </div>
               <label className="block text-sm">
                 <span className="text-muted">Section headline</span>
-                <input
+                <AutoResizeTextarea
                   value={form.about.headline}
                   onChange={(event) =>
                     setForm((current) => ({
@@ -1044,7 +1045,7 @@ export function SiteEditorForm({
                 {form.about.paragraphs.map((paragraph, index) => (
                   <label key={`paragraph-${index}`} className="block text-sm">
                     <span className="text-muted">Paragraph {index + 1}</span>
-                    <textarea
+                    <AutoResizeTextarea
                       value={paragraph}
                       onChange={(event) =>
                         setForm((current) => {
@@ -1057,7 +1058,7 @@ export function SiteEditorForm({
                         })
                       }
                       rows={8}
-                      className={`${inputClass} min-h-40 resize-y`}
+                      className={inputClass}
                     />
                   </label>
                 ))}
@@ -1084,7 +1085,7 @@ export function SiteEditorForm({
                     </p>
                     <label className="block text-sm">
                       <span className="text-muted">Caption</span>
-                      <input
+                      <AutoResizeTextarea
                         value={photo.caption}
                         onChange={(event) =>
                           setForm((current) => {
@@ -1144,7 +1145,7 @@ export function SiteEditorForm({
                         }
                       />
                       {photo.imagePath && (
-                        <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">
+                        <p className="mt-2 flex max-w-full items-start gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium break-words text-ink">
                           <span aria-hidden>🌸</span>
                           Live on your site
                         </p>
@@ -1229,7 +1230,7 @@ export function SiteEditorForm({
                     </ul>
                     <div className="flex flex-wrap items-center gap-2">
                       {featuredPortfolioVideos.length > 0 ? (
-                        <p className="inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">
+                        <p className="flex max-w-full items-start gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium break-words text-ink">
                           <span aria-hidden>🌸</span>
                           {featuredPortfolioVideos.length} live on your site
                         </p>
@@ -1255,7 +1256,7 @@ export function SiteEditorForm({
 
               <label className="block max-w-2xl text-sm">
                 <span className="text-muted">Section title (cursive)</span>
-                <input
+                <AutoResizeTextarea
                   value={form.work.heading}
                   onChange={(event) =>
                     setForm((current) => ({
@@ -1283,7 +1284,7 @@ export function SiteEditorForm({
 
               <label className="block max-w-2xl text-sm">
                 <span className="text-muted">Centre label (cursive)</span>
-                <input
+                <AutoResizeTextarea
                   value={form.photography.label}
                   onChange={(event) =>
                     setForm((current) => ({
@@ -1298,7 +1299,7 @@ export function SiteEditorForm({
                 />
               </label>
 
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {form.photography.photos.map((photo, index) => (
                   <div
                     key={photo.id}
@@ -1348,7 +1349,7 @@ export function SiteEditorForm({
                     )}
                     <label className="block text-sm">
                       <span className="text-muted">Alt text</span>
-                      <input
+                      <AutoResizeTextarea
                         value={photo.alt}
                         onChange={(event) =>
                           setForm((current) => {
@@ -1416,7 +1417,7 @@ export function SiteEditorForm({
                             }
                           />
                           {photo.imagePath && (
-                            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">
+                            <p className="mt-2 flex max-w-full items-start gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium break-words text-ink">
                               <span aria-hidden>🌸</span>
                               Live on your site
                             </p>
@@ -1496,7 +1497,7 @@ export function SiteEditorForm({
 
               <label className="block max-w-2xl text-sm">
                 <span className="text-muted">Banner heading (cursive)</span>
-                <input
+                <AutoResizeTextarea
                   value={form.brands.heading}
                   onChange={(event) =>
                     setForm((current) => ({
@@ -1508,7 +1509,7 @@ export function SiteEditorForm({
                 />
               </label>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid min-w-0 gap-4 sm:grid-cols-2">
                 {form.brands.items.map((brand, index) => (
                   <div key={brand.id} className={cardClass}>
                     <RowControls
@@ -1538,7 +1539,7 @@ export function SiteEditorForm({
                     />
                     <label className="block text-sm">
                       <span className="text-muted">Brand name</span>
-                      <input
+                      <AutoResizeTextarea
                         value={brand.name}
                         onChange={(event) =>
                           setForm((current) => {
@@ -1558,7 +1559,7 @@ export function SiteEditorForm({
                     </label>
                     <label className="block text-sm">
                       <span className="text-muted">Link (optional)</span>
-                      <input
+                      <AutoResizeTextarea
                         value={brand.url ?? ""}
                         placeholder="https://"
                         onChange={(event) =>
@@ -1603,7 +1604,7 @@ export function SiteEditorForm({
                             }
                           />
                           {brand.logoPath && (
-                            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium text-ink">
+                            <p className="mt-2 flex max-w-full items-start gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium break-words text-ink">
                               <span aria-hidden>🌸</span>
                               Live on your site
                             </p>
@@ -1648,7 +1649,7 @@ export function SiteEditorForm({
               </div>
               <label className="block max-w-2xl text-sm">
                 <span className="text-muted">Section headline</span>
-                <input
+                <AutoResizeTextarea
                   value={form.whatIsUgc.heading}
                   onChange={(event) =>
                     setForm((current) => ({
@@ -1664,7 +1665,7 @@ export function SiteEditorForm({
               </label>
               <label className="block max-w-2xl text-sm">
                 <span className="text-muted">Definition</span>
-                <textarea
+                <AutoResizeTextarea
                   value={form.whatIsUgc.body}
                   onChange={(event) =>
                     setForm((current) => ({
@@ -1676,12 +1677,12 @@ export function SiteEditorForm({
                     }))
                   }
                   rows={7}
-                  className={`${inputClass} min-h-36 resize-y`}
+                  className={inputClass}
                 />
               </label>
               <label className="block max-w-2xl text-sm">
                 <span className="text-muted">Eyebrow</span>
-                <input
+                <AutoResizeTextarea
                   value={form.ugcBenefits.eyebrow}
                   onChange={(event) =>
                     setForm((current) => ({
@@ -1700,7 +1701,7 @@ export function SiteEditorForm({
                 <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
                   Proof stats (circles)
                 </p>
-                <div className="mt-3 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="mt-3 grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   {form.ugcBenefits.stats.map((stat, index) => (
                     <div key={stat.id} className={cardClass}>
                       <RowControls
@@ -1734,7 +1735,7 @@ export function SiteEditorForm({
                       />
                       <label className="block text-sm">
                         <span className="text-muted">Figure</span>
-                        <input
+                        <AutoResizeTextarea
                           value={stat.value}
                           onChange={(event) =>
                             setForm((current) => {
@@ -1754,7 +1755,7 @@ export function SiteEditorForm({
                       </label>
                       <label className="block text-sm">
                         <span className="text-muted">Label</span>
-                        <textarea
+                        <AutoResizeTextarea
                           value={stat.label}
                           onChange={(event) =>
                             setForm((current) => {
@@ -1802,7 +1803,7 @@ export function SiteEditorForm({
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="block text-sm">
                     <span className="text-muted">Label</span>
-                    <input
+                    <AutoResizeTextarea
                       value={form.ugcBenefits.calloutLabel}
                       onChange={(event) =>
                         setForm((current) => ({
@@ -1818,7 +1819,7 @@ export function SiteEditorForm({
                   </label>
                   <label className="block text-sm">
                     <span className="text-muted">Figure</span>
-                    <input
+                    <AutoResizeTextarea
                       value={form.ugcBenefits.calloutValue}
                       onChange={(event) =>
                         setForm((current) => ({
@@ -1835,7 +1836,7 @@ export function SiteEditorForm({
                 </div>
                 <label className="block text-sm">
                   <span className="text-muted">Supporting copy</span>
-                  <textarea
+                  <AutoResizeTextarea
                     value={form.ugcBenefits.calloutBody}
                     onChange={(event) =>
                       setForm((current) => ({
@@ -1858,7 +1859,7 @@ export function SiteEditorForm({
                 </p>
                 <label className="block text-sm">
                   <span className="text-muted">Card heading</span>
-                  <input
+                  <AutoResizeTextarea
                     value={form.ugcBenefits.benefitsHeading}
                     onChange={(event) =>
                       setForm((current) => ({
@@ -1876,7 +1877,7 @@ export function SiteEditorForm({
                   <div key={`benefit-${index}`} className="flex items-end gap-2">
                     <label className="block flex-1 text-sm">
                       <span className="text-muted">Benefit {index + 1}</span>
-                      <input
+                      <AutoResizeTextarea
                         value={benefit}
                         onChange={(event) =>
                           setForm((current) => {
@@ -1946,7 +1947,7 @@ export function SiteEditorForm({
                     </p>
                     <label className="block text-sm">
                       <span className="text-muted">Title</span>
-                      <input
+                      <AutoResizeTextarea
                         value={service.title}
                         onChange={(event) =>
                           setForm((current) => {
@@ -1963,7 +1964,7 @@ export function SiteEditorForm({
                     </label>
                     <label className="block text-sm">
                       <span className="text-muted">Description</span>
-                      <textarea
+                      <AutoResizeTextarea
                         value={service.description}
                         onChange={(event) =>
                           setForm((current) => {
@@ -2020,7 +2021,7 @@ export function SiteEditorForm({
               </label>
               <label className="block max-w-2xl text-sm">
                 <span className="text-muted">Section headline</span>
-                <input
+                <AutoResizeTextarea
                   value={form.testimonials.heading}
                   onChange={(event) =>
                     setForm((current) => ({
@@ -2036,7 +2037,7 @@ export function SiteEditorForm({
               </label>
               <label className="block max-w-2xl text-sm">
                 <span className="text-muted">Intro</span>
-                <textarea
+                <AutoResizeTextarea
                   value={form.testimonials.intro}
                   onChange={(event) =>
                     setForm((current) => ({
@@ -2062,7 +2063,7 @@ export function SiteEditorForm({
                     </p>
                     <label className="block text-sm">
                       <span className="text-muted">Quote</span>
-                      <textarea
+                      <AutoResizeTextarea
                         value={testimonial.quote}
                         onChange={(event) =>
                           setForm((current) => {
@@ -2086,7 +2087,7 @@ export function SiteEditorForm({
                     </label>
                     <label className="block text-sm">
                       <span className="text-muted">Name</span>
-                      <input
+                      <AutoResizeTextarea
                         value={testimonial.name}
                         onChange={(event) =>
                           setForm((current) => {
@@ -2109,7 +2110,7 @@ export function SiteEditorForm({
                     </label>
                     <label className="block text-sm">
                       <span className="text-muted">Role or context</span>
-                      <input
+                      <AutoResizeTextarea
                         value={testimonial.role}
                         onChange={(event) =>
                           setForm((current) => {
@@ -2147,7 +2148,7 @@ export function SiteEditorForm({
               </div>
               <label className="block max-w-2xl text-sm">
                 <span className="text-muted">Headline (cursive)</span>
-                <input
+                <AutoResizeTextarea
                   value={form.closingCta.headline}
                   onChange={(event) =>
                     setForm((current) => ({
@@ -2163,7 +2164,7 @@ export function SiteEditorForm({
               </label>
               <label className="block max-w-2xl text-sm">
                 <span className="text-muted">Message</span>
-                <textarea
+                <AutoResizeTextarea
                   value={form.closingCta.body}
                   onChange={(event) =>
                     setForm((current) => ({
@@ -2175,7 +2176,7 @@ export function SiteEditorForm({
                     }))
                   }
                   rows={6}
-                  className={`${inputClass} min-h-32 resize-y`}
+                  className={inputClass}
                 />
               </label>
 
@@ -2196,7 +2197,7 @@ export function SiteEditorForm({
                   <span className="text-muted">
                     Email button text (what visitors see on the pill)
                   </span>
-                  <input
+                  <AutoResizeTextarea
                     value={form.closingCta.emailLabel}
                     onChange={(event) =>
                       setForm((current) => ({
@@ -2212,7 +2213,7 @@ export function SiteEditorForm({
                 </label>
                 <label className="block text-sm">
                   <span className="text-muted">Instagram URL</span>
-                  <input
+                  <AutoResizeTextarea
                     value={form.social.instagram}
                     onChange={(event) =>
                       setForm((current) => ({
@@ -2228,7 +2229,7 @@ export function SiteEditorForm({
                 </label>
                 <label className="block text-sm">
                   <span className="text-muted">Email link</span>
-                  <input
+                  <AutoResizeTextarea
                     value={form.social.email}
                     onChange={(event) =>
                       setForm((current) => ({
@@ -2244,7 +2245,7 @@ export function SiteEditorForm({
           )}
         </div>
 
-        <div className="shrink-0 border-t border-brown/10 bg-paper px-4 py-3 sm:px-6">
+        <div className="min-w-0 shrink-0 border-t border-brown/10 bg-paper px-3 py-3 sm:px-6">
           {error && (
             <p className="mb-2 rounded-xl bg-blush/15 px-4 py-2 text-sm text-brown">
               {error}

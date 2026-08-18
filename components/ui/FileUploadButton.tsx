@@ -92,7 +92,7 @@ export function FileUploadButton({
   const showRemove = Boolean(onRemove) && (hasSelection || hasPreview);
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative min-w-0 max-w-full ${className}`}>
       <input
         ref={inputRef}
         id={id}
@@ -113,7 +113,7 @@ export function FileUploadButton({
             : { scale: 1.015, y: -2, transition: { type: "spring", stiffness: 420, damping: 22 } }
         }
         whileTap={disabled ? undefined : { scale: 0.985 }}
-        className={`group relative flex w-full cursor-pointer items-center gap-3 overflow-hidden rounded-2xl border-2 px-4 py-3.5 transition-shadow ${
+        className={`group relative flex w-full min-w-0 max-w-full cursor-pointer items-center gap-2 overflow-hidden rounded-2xl border-2 px-3 py-3.5 transition-shadow sm:gap-3 sm:px-4 ${
           hasSelection || hasPreview
             ? "border-blush/50 bg-gradient-to-br from-blush/20 via-lavender/25 to-paper shadow-md shadow-blush/10"
             : "border-dashed border-blush/35 bg-gradient-to-br from-blush/10 via-lavender/15 to-cream/60 shadow-sm hover:border-blush-deep/45 hover:shadow-md hover:shadow-blush/15"
