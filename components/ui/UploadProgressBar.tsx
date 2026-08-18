@@ -15,9 +15,9 @@ export function UploadProgressBar({
 
   return (
     <div className="min-w-0 space-y-1.5">
-      <div className="flex min-w-0 items-start justify-between gap-3 text-sm">
-        <span className="shrink-0 font-medium text-brown">{label}</span>
-        <span className="min-w-0 break-words text-right text-muted">{message}</span>
+      <div className="min-w-0 text-sm">
+        <span className="font-medium text-brown">{label}</span>
+        <p className="min-w-0 text-pretty break-words text-muted">{message}</p>
       </div>
       <div
         className="h-2 overflow-hidden rounded-full bg-lavender/30"

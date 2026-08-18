@@ -1,4 +1,6 @@
+import { randomUUID } from "crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { isMediaUploadDir, type MediaUploadDir } from "./media-upload";
 import { StorageError } from "./types";
 
 const MEDIA_BUCKET = "site-media";
@@ -32,6 +34,59 @@ function getMediaStorage(): SupabaseClient {
   return createClient(normalizeSupabaseUrl(rawUrl), serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
+}
+
+function extensionFromFilename(filename: string): string {
+  const dotIndex = filename.lastIndexOf(".");
+  if (dotIndex <= 0) return "";
+  const ext = filename.slice(dotIndex).toLowerCase();
+  if (!/^\.[a-z0-9]{1,8}$/.test(ext)) return "";
+  return ext;
+}
+
+function defaultExtensionForDir(dir: MediaUploadDir): string {
+  switch (dir) {
+    case "videos":
+    case "hero":
+    case "cta":
+      return ".mp4";
+    case "thumbnails":
+    case "about-photos":
+    case "home-grid-photos":
+    case "brand-logos":
+      return ".jpg";
+    default: {
+      const _exhaustive: never = dir;
+      return _exhaustive;
+    }
+  }
+}
+
+export async function createSignedPublicMediaUpload(
+  dir: MediaUploadDir,
+  originalName: string,
+): Promise<{ uploadUrl: string; publicUrl: string; path: string }> {
+  if (!isMediaUploadDir(dir)) {
+    throw new StorageError("That upload folder is not allowed.", 400);
+  }
+
+  const ext = extensionFromFilename(originalName) || defaultExtensionForDir(dir);
+  const pathname = `${dir}/${randomUUID()}${ext}`;
+  const storage = getMediaStorage().storage.from(MEDIA_BUCKET);
+  const { data, error } = await storage.createSignedUploadUrl(pathname);
+
+  if (error || !data?.signedUrl) {
+    throw new StorageError(
+      `Could not start media upload: ${error?.message ?? "unknown error"}`,
+      503,
+    );
+  }
+
+  return {
+    uploadUrl: data.signedUrl,
+    publicUrl: storage.getPublicUrl(pathname).data.publicUrl,
+    path: pathname,
+  };
 }
 
 export async function uploadPublicMedia(

@@ -63,8 +63,33 @@ html {
   text-size-adjust: 100%;
 }
 
-/* Keep the admin editor inside the visual viewport, including iOS safe areas. */
+/*
+ * Viewport-sized clip for the admin editor. Padding lives on the inner
+ * frame so a 100%-wide child cannot sit in the left gutter and spill off
+ * the right edge (a common iOS Safari / flex bug).
+ */
+.admin-editor-shell {
+  box-sizing: border-box;
+  width: auto;
+  max-width: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: pan-y;
+  contain: inline-size paint;
+}
+
+html.admin-editor-open,
+html.admin-editor-open body {
+  overflow: hidden;
+  max-width: 100%;
+  overscroll-behavior: none;
+}
+
 .admin-editor-frame {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
   padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));

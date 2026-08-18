@@ -11,6 +11,7 @@ import { reorderVideos as applyOrder, sortVideos } from "@/lib/videos/sort";
 import { uniqueSlug } from "@/lib/videos/slugify";
 import {
   isAcceptedVideoFile,
+  MAX_VIDEO_BYTES,
   videoContentTypeFromFilename,
   videoUploadErrorMessage,
 } from "@/lib/videos/upload";
@@ -31,8 +32,6 @@ const DATA_PATH = path.join(process.cwd(), "data", "videos.json");
 const UPLOADS_ROOT = path.join(process.cwd(), "public", "uploads");
 const VIDEO_DIR = path.join(UPLOADS_ROOT, "videos");
 const THUMB_DIR = path.join(UPLOADS_ROOT, "thumbnails");
-
-const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
 function normalizeVideo(video: PortfolioVideo): PortfolioVideo {
   return {

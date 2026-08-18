@@ -118,20 +118,26 @@ export function AdminModePanel() {
     const { style: bodyStyle } = document.body;
 
     htmlStyle.overflow = "hidden";
+    htmlStyle.overscrollBehavior = "none";
+    document.documentElement.classList.add("admin-editor-open");
     bodyStyle.position = "fixed";
     bodyStyle.top = `-${scrollY}px`;
     bodyStyle.left = "0";
     bodyStyle.right = "0";
-    bodyStyle.width = "100%";
+    bodyStyle.width = "auto";
+    bodyStyle.maxWidth = "100%";
     bodyStyle.overflow = "hidden";
 
     return () => {
       htmlStyle.overflow = "";
+      htmlStyle.overscrollBehavior = "";
+      document.documentElement.classList.remove("admin-editor-open");
       bodyStyle.position = "";
       bodyStyle.top = "";
       bodyStyle.left = "";
       bodyStyle.right = "";
       bodyStyle.width = "";
+      bodyStyle.maxWidth = "";
       bodyStyle.overflow = "";
       window.scrollTo(0, scrollY);
     };
@@ -158,10 +164,11 @@ export function AdminModePanel() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12 }}
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
-            className="admin-editor-frame pointer-events-none fixed inset-0 z-[70] flex min-h-0 min-w-0 flex-col"
+            className="admin-editor-shell pointer-events-none fixed inset-0 z-[70]"
           >
-            <div className="pointer-events-auto flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col overflow-hidden rounded-2xl border border-brown/15 bg-paper shadow-2xl">
-              <div className="flex min-w-0 shrink-0 flex-col gap-2 border-b border-brown/10 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
+            <div className="admin-editor-frame flex h-full min-h-0 min-w-0 flex-col">
+              <div className="pointer-events-auto flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-brown/15 bg-paper shadow-2xl">
+                <div className="flex min-w-0 shrink-0 flex-col gap-2 border-b border-brown/10 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
                 <div className="flex min-w-0 items-center justify-between gap-2 sm:contents">
                   <div className="flex shrink-0 gap-1 rounded-full bg-cream p-1">
                     <button
@@ -226,6 +233,7 @@ export function AdminModePanel() {
                 )}
               </div>
             </div>
+          </div>
           </motion.div>
         </>
       )}

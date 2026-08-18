@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
-
-const DIRECT_UPLOAD_LIMIT_BYTES = 50 * 1024 * 1024;
+import { hasSupabaseMediaConfig } from "@/lib/storage/supabase-media";
+import { MAX_VIDEO_BYTES } from "@/lib/videos/upload";
 
 export async function GET(request: Request) {
   const { origin } = new URL(request.url);
 
   return NextResponse.json({
-    // Files now go through the authenticated API and are persisted to
-    // Supabase Storage. Never issue Vercel Blob client-upload tokens.
-    clientUpload: false,
+    // When Supabase is configured, the browser uploads straight to Storage
+    // so large clips never pass through the Vercel 4.5MB request cap.
+    clientUpload: hasSupabaseMediaConfig(),
     handleUploadUrl: `${origin}/api/videos/upload`,
-    directUploadLimitBytes: DIRECT_UPLOAD_LIMIT_BYTES,
+    directUploadLimitBytes: MAX_VIDEO_BYTES,
   });
 }

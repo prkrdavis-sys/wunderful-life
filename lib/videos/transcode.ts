@@ -1,3 +1,5 @@
+import { MAX_VIDEO_BYTES } from "@/lib/videos/upload";
+
 const FFMPEG_UMD =
   "https://unpkg.com/@ffmpeg/ffmpeg@0.12.15/dist/umd/ffmpeg.js";
 const FFMPEG_CORE_BASE =
@@ -5,6 +7,8 @@ const FFMPEG_CORE_BASE =
 
 const FFMPEG_LOAD_TIMEOUT_MS = 60_000;
 const FFMPEG_CONVERT_TIMEOUT_MS = 180_000;
+const BROWSER_RECORD_TIMEOUT_MS = 180_000;
+const MAX_SOURCE_VIDEO_BYTES = 250 * 1024 * 1024;
 
 type FFmpegInstance = {
   loaded: boolean;
@@ -313,6 +317,281 @@ function progressMessage(profile: VideoUploadProfile): string {
   }
 }
 
+function bitrateForProfile(profile: VideoUploadProfile): number {
+  switch (profile) {
+    case "hero":
+      return 800_000;
+    case "cta":
+      return 1_200_000;
+    case "portfolio":
+      return 2_000_000;
+    default: {
+      const _exhaustive: never = profile;
+      return _exhaustive;
+    }
+  }
+}
+
+function prefersBrowserRecorder(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  if (/iP(hone|ad|od)/.test(ua)) return true;
+  return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+}
+
+function pickRecorderMimeType(includeAudio: boolean): string {
+  if (typeof MediaRecorder === "undefined") return "";
+
+  const withAudio = [
+    "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+    "video/mp4",
+    "video/webm;codecs=vp9,opus",
+    "video/webm;codecs=vp8,opus",
+    "video/webm",
+  ];
+  const videoOnly = [
+    "video/mp4;codecs=avc1.42E01E",
+    "video/mp4",
+    "video/webm;codecs=vp9",
+    "video/webm;codecs=vp8",
+    "video/webm",
+  ];
+
+  for (const type of includeAudio ? withAudio : videoOnly) {
+    if (MediaRecorder.isTypeSupported(type)) return type;
+  }
+  return "";
+}
+
+type CapturableVideo = HTMLVideoElement & {
+  captureStream?: (frameRate?: number) => MediaStream;
+  mozCaptureStream?: (frameRate?: number) => MediaStream;
+};
+
+function waitForVideoEvent(
+  video: HTMLVideoElement,
+  event: "loadeddata" | "seeked" | "ended",
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const onSuccess = () => {
+      cleanup();
+      resolve();
+    };
+    const onError = () => {
+      cleanup();
+      reject(new Error("Could not load this video to compress it."));
+    };
+    const cleanup = () => {
+      video.removeEventListener(event, onSuccess);
+      video.removeEventListener("error", onError);
+    };
+    video.addEventListener(event, onSuccess);
+    video.addEventListener("error", onError);
+    if (event === "loadeddata" && video.readyState >= 2) {
+      cleanup();
+      resolve();
+    }
+  });
+}
+
+function extensionForRecorderMime(mimeType: string): { ext: string; type: string } {
+  if (mimeType.startsWith("video/mp4")) {
+    return { ext: ".mp4", type: "video/mp4" };
+  }
+  return { ext: ".webm", type: "video/webm" };
+}
+
+function stopStream(stream: MediaStream | null) {
+  if (!stream) return;
+  for (const track of stream.getTracks()) {
+    track.stop();
+  }
+}
+
+async function transcodeWithMediaRecorder(
+  file: File,
+  profile: VideoUploadProfile,
+  onProgress?: (message: string) => void,
+): Promise<File> {
+  if (typeof document === "undefined" || typeof MediaRecorder === "undefined") {
+    throw new Error("This browser cannot compress video.");
+  }
+
+  const settings = settingsForProfile(profile);
+  const mimeType = pickRecorderMimeType(!settings.stripAudio);
+
+  onProgress?.("Compressing video in this browser…");
+
+  const objectUrl = URL.createObjectURL(file);
+  const video = document.createElement("video") as CapturableVideo;
+  const canvas = document.createElement("canvas");
+  let canvasStream: MediaStream | null = null;
+  let mixedStream: MediaStream | null = null;
+
+  video.muted = true;
+  video.defaultMuted = true;
+  video.playsInline = true;
+  video.setAttribute("playsinline", "true");
+  video.setAttribute("webkit-playsinline", "true");
+  video.preload = "auto";
+  video.controls = false;
+  video.style.position = "fixed";
+  video.style.left = "-9999px";
+  video.style.width = "2px";
+  video.style.height = "2px";
+  video.style.opacity = "0";
+  video.style.pointerEvents = "none";
+  document.body.appendChild(video);
+  video.src = objectUrl;
+  video.load();
+  const playPromise = video.play();
+
+  try {
+    return await withTimeout(
+      (async () => {
+        await Promise.race([
+          waitForVideoEvent(video, "loadeddata"),
+          playPromise.then(
+            () => undefined,
+            () => undefined,
+          ),
+        ]);
+
+        if (video.paused) {
+          await video.play();
+        }
+
+        const srcW = video.videoWidth;
+        const srcH = video.videoHeight;
+        if (!srcW || !srcH) {
+          throw new Error("Could not read this video to compress it.");
+        }
+
+        const scale = Math.min(1, settings.maxEdge / Math.max(srcW, srcH));
+        const width = Math.max(2, Math.round((srcW * scale) / 2) * 2);
+        const height = Math.max(2, Math.round((srcH * scale) / 2) * 2);
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d", { alpha: false });
+        if (!context) {
+          throw new Error("Could not compress this video.");
+        }
+
+        context.drawImage(video, 0, 0, width, height);
+
+        if (!settings.stripAudio) {
+          video.muted = false;
+        }
+
+        canvasStream = canvas.captureStream(30);
+        mixedStream = new MediaStream(canvasStream.getVideoTracks());
+        if (!settings.stripAudio) {
+          const captured =
+            video.captureStream?.(30) ?? video.mozCaptureStream?.(30) ?? null;
+          for (const track of captured?.getAudioTracks() ?? []) {
+            mixedStream.addTrack(track);
+          }
+        }
+
+        const recorder = new MediaRecorder(mixedStream, {
+          ...(mimeType ? { mimeType } : {}),
+          videoBitsPerSecond: bitrateForProfile(profile),
+          ...(settings.stripAudio ? {} : { audioBitsPerSecond: 96_000 }),
+        });
+
+        const chunks: Blob[] = [];
+        recorder.addEventListener("dataavailable", (event) => {
+          if (event.data.size > 0) chunks.push(event.data);
+        });
+
+        const stopped = new Promise<void>((resolve, reject) => {
+          recorder.addEventListener("stop", () => resolve(), { once: true });
+          recorder.addEventListener(
+            "error",
+            () => reject(new Error("Could not compress this video.")),
+            { once: true },
+          );
+        });
+
+        const duration = Number.isFinite(video.duration) ? video.duration : 0;
+        const clipDuration =
+          settings.maxDurationSec !== null
+            ? Math.min(settings.maxDurationSec, duration || settings.maxDurationSec)
+            : duration;
+        const timeoutMs =
+          clipDuration > 0
+            ? Math.min(
+                BROWSER_RECORD_TIMEOUT_MS,
+                Math.max(45_000, clipDuration * 3000 + 15_000),
+              )
+            : BROWSER_RECORD_TIMEOUT_MS;
+
+        if (video.currentTime > 0.05) {
+          const seeked = waitForVideoEvent(video, "seeked");
+          video.currentTime = 0;
+          await seeked;
+        }
+
+        recorder.start(250);
+        await video.play();
+
+        const draw = () => {
+          if (recorder.state !== "recording") return;
+          context.drawImage(video, 0, 0, width, height);
+          if (
+            video.ended ||
+            (settings.maxDurationSec !== null &&
+              video.currentTime >= settings.maxDurationSec)
+          ) {
+            video.pause();
+            if (recorder.state === "recording") recorder.stop();
+            return;
+          }
+          if (!video.paused && !video.ended) {
+            requestAnimationFrame(draw);
+          }
+        };
+
+        const onEnded = () => {
+          if (recorder.state === "recording") recorder.stop();
+        };
+        video.addEventListener("ended", onEnded, { once: true });
+        requestAnimationFrame(draw);
+
+        try {
+          await withTimeout(stopped, timeoutMs, "Video compression timed out.");
+        } finally {
+          video.removeEventListener("ended", onEnded);
+          if (recorder.state === "recording") recorder.stop();
+        }
+
+        const outputMime = recorder.mimeType || mimeType || "video/mp4";
+        const blob = new Blob(chunks, { type: outputMime.split(";")[0] });
+        if (blob.size === 0) {
+          throw new Error("Could not compress this video.");
+        }
+
+        const { ext, type } = extensionForRecorderMime(outputMime);
+        const baseName = file.name.replace(/\.[^.]+$/i, "") || "video";
+        return new File([blob], `${baseName}${ext}`, {
+          type,
+          lastModified: Date.now(),
+        });
+      })(),
+      BROWSER_RECORD_TIMEOUT_MS,
+      "Video compression timed out.",
+    );
+  } finally {
+    video.pause();
+    stopStream(mixedStream);
+    stopStream(canvasStream);
+    video.removeAttribute("src");
+    video.load();
+    video.remove();
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 async function transcodeToMp4(
   file: File,
   profile: VideoUploadProfile,
@@ -463,6 +742,12 @@ export async function prepareVideoForWebUpload(
   onProgress?: (message: string) => void,
   profile: VideoUploadProfile = "portfolio",
 ): Promise<File> {
+  if (file.size > MAX_SOURCE_VIDEO_BYTES) {
+    throw new Error(
+      "That file is too large to compress in the browser. Export a smaller MP4 from Photos and try again.",
+    );
+  }
+
   if (!needsWebTranscode(file, profile)) {
     if (
       profile === "hero" &&
@@ -479,23 +764,40 @@ export async function prepareVideoForWebUpload(
     return file;
   }
 
-  try {
-    const compressed = await transcodeToMp4(file, profile, onProgress);
-    if (isAlreadyMp4(file) && compressed.size >= file.size) {
-      if (profile === "hero" && !(await mp4HasFastStart(file))) {
-        try {
-          return await remuxMp4FastStart(file, onProgress);
-        } catch (error) {
-          console.warn("Fast-start remux skipped:", error);
-          return file;
-        }
-      }
-      return file;
+  const compress = async (): Promise<File> => {
+    if (prefersBrowserRecorder()) {
+      return transcodeWithMediaRecorder(file, profile, onProgress);
     }
-    return compressed;
-  } catch (error) {
-    console.warn("Client video transcode skipped:", error);
-    onProgress?.("Uploading original video…");
-    return file;
+
+    try {
+      return await transcodeToMp4(file, profile, onProgress);
+    } catch (error) {
+      console.warn("Client video transcode failed, trying browser recorder:", error);
+      return transcodeWithMediaRecorder(file, profile, onProgress);
+    }
+  };
+
+  const compressed = await compress();
+  if (isAlreadyMp4(file) && compressed.size >= file.size) {
+    if (profile === "hero" && !(await mp4HasFastStart(file))) {
+      try {
+        return await remuxMp4FastStart(file, onProgress);
+      } catch (error) {
+        console.warn("Fast-start remux skipped:", error);
+        return assertUploadableVideo(file);
+      }
+    }
+    return assertUploadableVideo(file);
   }
+
+  return assertUploadableVideo(compressed);
+}
+
+function assertUploadableVideo(file: File): File {
+  if (file.size > MAX_VIDEO_BYTES) {
+    throw new Error(
+      "That clip is still too large after compression. Export a shorter 720p or 1080p MP4 from Photos and try again.",
+    );
+  }
+  return file;
 }

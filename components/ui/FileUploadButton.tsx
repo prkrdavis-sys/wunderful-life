@@ -110,7 +110,7 @@ export function FileUploadButton({
         whileHover={
           disabled
             ? undefined
-            : { scale: 1.015, y: -2, transition: { type: "spring", stiffness: 420, damping: 22 } }
+            : { y: -1, transition: { type: "spring", stiffness: 420, damping: 22 } }
         }
         whileTap={disabled ? undefined : { scale: 0.985 }}
         className={`group relative flex w-full min-w-0 max-w-full cursor-pointer items-center gap-2 overflow-hidden rounded-2xl border-2 px-3 py-3.5 transition-shadow sm:gap-3 sm:px-4 ${
@@ -163,7 +163,7 @@ export function FileUploadButton({
             <span className="mt-0.5 block text-xs text-ink/75">{displayHint}</span>
           )}
           {(hasSelection || hasPreview) && selectedName && (
-            <span className="mt-1 inline-flex max-w-full items-center gap-1 truncate rounded-full bg-white/70 px-2 py-0.5 text-xs font-medium text-blush-deep">
+            <span className="mt-1 flex min-w-0 max-w-full items-center gap-1 overflow-hidden rounded-full bg-white/70 px-2 py-0.5 text-xs font-medium text-ellipsis whitespace-nowrap text-blush-deep">
               <span aria-hidden>💕</span>
               {friendlyFileName(selectedName)}
             </span>

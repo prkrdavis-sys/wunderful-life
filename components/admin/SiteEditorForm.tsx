@@ -1,6 +1,5 @@
 "use client";
 
-import { upload } from "@vercel/blob/client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CollagePhotoShape, SiteContent } from "@/lib/site/types";
 import type { PortfolioVideo } from "@/lib/videos/types";
@@ -8,15 +7,14 @@ import {
   isAcceptedVideoFile,
   VIDEO_FILE_ACCEPT,
   VIDEO_UPLOAD_HELP,
-  videoContentTypeFromFilename,
   videoUploadErrorMessage,
 } from "@/lib/videos/upload";
 import { needsWebTranscode, prepareVideoForWebUpload } from "@/lib/videos/transcode";
 import { extractVideoFrame } from "@/lib/videos/extractThumbnail";
 import { isVercelBlobUrl } from "@/lib/storage/blob";
+import { uploadMediaToStorage } from "@/lib/storage/client-upload";
+import type { MediaUploadDir } from "@/lib/storage/media-upload";
 import {
-  photoBlobPathname,
-  photoContentType,
   preparePhotoForUpload,
   readUploadJson,
 } from "@/lib/site/photos";
@@ -332,6 +330,14 @@ export function SiteEditorForm({
     });
 
     try {
+      const preparedPromise = prepareVideoForWebUpload(
+        file,
+        (progressMessage) => {
+          if (generation !== videoUploadGenRef.current[slot]) return;
+          patchSlotUpload(slot, { status: "preparing", message: progressMessage });
+        },
+        slot,
+      );
       const configResponse = await fetch("/api/videos/config");
       const config = (await configResponse.json()) as {
         clientUpload: boolean;
@@ -340,16 +346,7 @@ export function SiteEditorForm({
       if (!configResponse.ok) {
         throw new Error("Could not load upload settings.");
       }
-      if (generation !== videoUploadGenRef.current[slot]) return;
-
-      const prepared = await prepareVideoForWebUpload(
-        file,
-        (progressMessage) => {
-          if (generation !== videoUploadGenRef.current[slot]) return;
-          patchSlotUpload(slot, { status: "preparing", message: progressMessage });
-        },
-        slot,
-      );
+      const prepared = await preparedPromise;
       if (generation !== videoUploadGenRef.current[slot]) return;
 
       let posterFile: File | null = null;
@@ -378,42 +375,29 @@ export function SiteEditorForm({
           message: `Uploading ${noun}… 0%`,
         });
 
-        const ext = prepared.name.slice(prepared.name.lastIndexOf(".")) || ".mp4";
-        const contentType =
-          prepared.type || videoContentTypeFromFilename(prepared.name);
-        const blob = await upload(
-          `${slot}/${slot}-${crypto.randomUUID()}${ext}`,
+        const videoUrl = await uploadMediaToStorage(
           prepared,
-          {
-            access: "public",
-            handleUploadUrl: config.handleUploadUrl,
-            multipart: true,
-            ...(contentType ? { contentType } : {}),
-            onUploadProgress: (event) => {
-              if (generation !== videoUploadGenRef.current[slot]) return;
-              const rounded = Math.round(event.percentage);
-              patchSlotUpload(slot, {
-                status: "uploading",
-                progress: rounded,
-                message: `Uploading ${noun}… ${rounded}%`,
-              });
-            },
+          slot,
+          config.handleUploadUrl,
+          (percentage) => {
+            if (generation !== videoUploadGenRef.current[slot]) return;
+            patchSlotUpload(slot, {
+              status: "uploading",
+              progress: percentage,
+              message: `Uploading ${noun}… ${percentage}%`,
+            });
           },
         );
         if (generation !== videoUploadGenRef.current[slot]) return;
-        payload.set("videoUrl", blob.url);
+        payload.set("videoUrl", videoUrl);
         if (posterFile) {
-          const posterBlob = await upload(
-            `${slot}/${slot}-poster-${crypto.randomUUID()}.jpg`,
+          const posterUrl = await uploadMediaToStorage(
             posterFile,
-            {
-              access: "public",
-              handleUploadUrl: config.handleUploadUrl,
-              contentType: posterFile.type || "image/jpeg",
-            },
+            slot,
+            config.handleUploadUrl,
           );
           if (generation !== videoUploadGenRef.current[slot]) return;
-          payload.set("posterUrl", posterBlob.url);
+          payload.set("posterUrl", posterUrl);
         }
       } else {
         setSlotUpload(slot, {
@@ -508,11 +492,11 @@ export function SiteEditorForm({
     brandLogo: "/api/site/brand-logos",
   } as const;
 
-  const PHOTO_FOLDERS = {
+  const PHOTO_FOLDERS: Record<keyof typeof PHOTO_ENDPOINTS, MediaUploadDir> = {
     about: "about-photos",
     collage: "home-grid-photos",
     brandLogo: "brand-logos",
-  } as const;
+  };
 
   const uploadPhoto = async (
     photoId: string,
@@ -542,17 +526,12 @@ export function SiteEditorForm({
       }
 
       if (config.clientUpload) {
-        const contentType = photoContentType(prepared);
-        const blob = await upload(
-          photoBlobPathname(PHOTO_FOLDERS[kind], `${photoId}-${crypto.randomUUID()}`, prepared),
+        const imageUrl = await uploadMediaToStorage(
           prepared,
-          {
-            access: "public",
-            handleUploadUrl: config.handleUploadUrl,
-            ...(contentType ? { contentType } : {}),
-          },
+          PHOTO_FOLDERS[kind],
+          config.handleUploadUrl,
         );
-        payload.set("imageUrl", blob.url);
+        payload.set("imageUrl", imageUrl);
       } else {
         payload.set("photo", prepared);
       }

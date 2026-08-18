@@ -108,7 +108,7 @@ export function AdminDashboard({
         aria-label="Video sections"
         className="max-w-full shrink-0 border-b border-brown/10 bg-cream/40 md:w-52 md:max-w-none md:border-r md:border-b-0 lg:w-56"
       >
-        <div className="flex max-w-full gap-1 overflow-x-auto overscroll-x-contain px-3 py-2 md:flex-col md:gap-0.5 md:overflow-visible md:px-3 md:py-4">
+        <div className="flex max-w-full flex-wrap gap-1 px-3 py-2 md:flex-col md:flex-nowrap md:gap-0.5 md:px-3 md:py-4">
           {SECTIONS.map((item) => (
             <button
               key={item.id}

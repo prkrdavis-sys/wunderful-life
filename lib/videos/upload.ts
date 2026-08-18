@@ -33,6 +33,9 @@ export const VIDEO_FILE_ACCEPT = [
 export const VIDEO_UPLOAD_HELP =
   "MP4, MOV, and M4V supported. Videos are compressed in the browser so they stay small on the free plan.";
 
+/** After compression, keep clips under this size so storage and playback stay cheap. */
+export const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+
 export function videoUploadErrorMessage(): string {
   return "Please upload an MP4, MOV, M4V, or WebM video (Apple Photos and iPhone videos are supported).";
 }

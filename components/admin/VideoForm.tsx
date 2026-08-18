@@ -1,16 +1,14 @@
 "use client";
 
-import { upload } from "@vercel/blob/client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Platform, PortfolioVideo } from "@/lib/videos/types";
 import { PLATFORMS } from "@/lib/videos/types";
 import { slugify } from "@/lib/videos/slugify";
 import {
   isAcceptedVideoFile,
-  uploadFilename,
+  MAX_VIDEO_BYTES,
   VIDEO_FILE_ACCEPT,
   VIDEO_UPLOAD_HELP,
-  videoContentTypeFromFilename,
   videoUploadErrorMessage,
 } from "@/lib/videos/upload";
 import { extractVideoFrame } from "@/lib/videos/extractThumbnail";
@@ -19,6 +17,7 @@ import {
   needsWebTranscode,
   prepareVideoForWebUpload,
 } from "@/lib/videos/transcode";
+import { uploadMediaToStorage } from "@/lib/storage/client-upload";
 import { isVercelBlobUrl } from "@/lib/storage/blob";
 import { AutoResizeTextarea } from "@/components/admin/AutoResizeTextarea";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
@@ -79,14 +78,6 @@ async function readJsonResponse<T>(response: Response): Promise<T> {
   }
 }
 
-function uploadContentType(file: File, dir: "videos" | "thumbnails"): string | undefined {
-  if (file.type) return file.type;
-  if (dir === "videos") {
-    return videoContentTypeFromFilename(file.name);
-  }
-  return undefined;
-}
-
 function toErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message) return error.message;
   if (typeof error === "string" && error.trim()) return error;
@@ -143,21 +134,7 @@ async function uploadAsset(
   handleUploadUrl: string,
   onProgress?: (percentage: number) => void,
 ): Promise<string> {
-  const pathname = uploadFilename(dir, file.name, crypto.randomUUID());
-  const contentType = uploadContentType(file, dir);
-
-  const result = await upload(pathname, file, {
-    access: "public",
-    handleUploadUrl,
-    multipart: dir === "videos",
-    ...(contentType ? { contentType } : {}),
-    onUploadProgress: onProgress
-      ? (event) => {
-          onProgress(event.percentage);
-        }
-      : undefined,
-  });
-  return result.url;
+  return uploadMediaToStorage(file, dir, handleUploadUrl, onProgress);
 }
 
 const emptyForm = {
@@ -419,10 +396,7 @@ export function VideoForm({
       });
 
       try {
-        const config = await getUploadConfig();
-        if (generation !== videoUploadGenRef.current) return;
-
-        const prepared = await prepareVideoForWebUpload(
+        const preparedPromise = prepareVideoForWebUpload(
           file,
           (progressMessage) => {
             if (generation !== videoUploadGenRef.current) return;
@@ -434,8 +408,15 @@ export function VideoForm({
           },
           "portfolio",
         );
-
+        const config = await getUploadConfig();
+        const prepared = await preparedPromise;
         if (generation !== videoUploadGenRef.current) return;
+
+        if (prepared.size > MAX_VIDEO_BYTES) {
+          throw new Error(
+            "That clip is still too large after compression. Export a shorter 720p or 1080p MP4 from Photos and try again.",
+          );
+        }
 
         setVideoFile(prepared);
         if (!thumbnailFileRef.current) {
