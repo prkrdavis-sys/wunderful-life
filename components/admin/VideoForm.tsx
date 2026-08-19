@@ -181,6 +181,7 @@ export function VideoForm({
   const [message, setMessage] = useState<string | null>(null);
   const [capturingThumbnail, setCapturingThumbnail] = useState(false);
   const [thumbnailHint, setThumbnailHint] = useState<string | null>(null);
+  const [videoHint, setVideoHint] = useState<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const uploadConfigRef = useRef<UploadConfig | null>(null);
   const videoUploadGenRef = useRef(0);
@@ -384,6 +385,7 @@ export function VideoForm({
     async (file: File) => {
       const generation = ++videoUploadGenRef.current;
 
+      setVideoHint(null);
       setVideoUpload({
         status: "preparing",
         progress: 0,
@@ -396,9 +398,9 @@ export function VideoForm({
       });
 
       try {
-        const preparedPromise = prepareVideoForWebUpload(
-          file,
-          (progressMessage) => {
+        const preparedPromise = prepareVideoForWebUpload(file, {
+          profile: "portfolio",
+          onProgress: (progressMessage) => {
             if (generation !== videoUploadGenRef.current) return;
             setVideoUpload((current) => ({
               ...current,
@@ -406,8 +408,11 @@ export function VideoForm({
               message: progressMessage,
             }));
           },
-          "portfolio",
-        );
+          onNotice: (notice) => {
+            if (generation !== videoUploadGenRef.current) return;
+            setVideoHint(notice);
+          },
+        });
         const config = await getUploadConfig();
         const prepared = await preparedPromise;
         if (generation !== videoUploadGenRef.current) return;
@@ -575,6 +580,7 @@ export function VideoForm({
         setVideoUpload(idleMediaUpload());
         setThumbnailUpload(idleMediaUpload());
         setThumbnailHint(null);
+        setVideoHint(null);
         setCapturingThumbnail(false);
         if (videoInputRef.current) videoInputRef.current.value = "";
         setMessage("Saved.");
@@ -590,6 +596,7 @@ export function VideoForm({
         setVideoUpload(idleMediaUpload());
         setThumbnailUpload(idleMediaUpload());
         setThumbnailHint(null);
+        setVideoHint(null);
         setCapturingThumbnail(false);
         if (videoInputRef.current) videoInputRef.current.value = "";
       }
@@ -609,6 +616,11 @@ export function VideoForm({
           progress={videoUpload.progress}
           indeterminate={videoUpload.status === "preparing"}
         />
+      )}
+      {videoHint && (
+        <p className="rounded-xl bg-blush/15 px-3 py-2 text-xs text-brown">
+          {videoHint}
+        </p>
       )}
       {(capturingThumbnail ||
         (thumbnailFile && thumbnailUpload.status !== "idle")) && (

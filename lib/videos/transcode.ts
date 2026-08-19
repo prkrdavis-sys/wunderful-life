@@ -394,6 +394,41 @@ function waitForVideoEvent(
   });
 }
 
+function isAutoplayBlocked(error: unknown): boolean {
+  return error instanceof DOMException && error.name === "NotAllowedError";
+}
+
+/**
+ * Browsers reject `play()` on an element that is not muted unless the call
+ * happens inside a user gesture. Compression runs long after the file picker
+ * closed, so the element must stay muted for the whole recording.
+ */
+async function playMutedForCapture(video: HTMLVideoElement): Promise<void> {
+  video.muted = true;
+  video.defaultMuted = true;
+  try {
+    await video.play();
+  } catch (error) {
+    if (isAutoplayBlocked(error)) {
+      throw new Error("This browser blocked video playback while compressing.");
+    }
+    throw error;
+  }
+}
+
+function captureAudioTracks(video: CapturableVideo): MediaStreamTrack[] {
+  // A muted element still exposes its audio through captureStream, which is how
+  // sound survives compression without triggering the autoplay policy.
+  try {
+    const captured =
+      video.captureStream?.(30) ?? video.mozCaptureStream?.(30) ?? null;
+    return captured?.getAudioTracks() ?? [];
+  } catch (error) {
+    console.warn("Could not capture audio while compressing:", error);
+    return [];
+  }
+}
+
 function extensionForRecorderMime(mimeType: string): { ext: string; type: string } {
   if (mimeType.startsWith("video/mp4")) {
     return { ext: ".mp4", type: "video/mp4" };
@@ -458,7 +493,7 @@ async function transcodeWithMediaRecorder(
         ]);
 
         if (video.paused) {
-          await video.play();
+          await playMutedForCapture(video);
         }
 
         const srcW = video.videoWidth;
@@ -479,24 +514,18 @@ async function transcodeWithMediaRecorder(
 
         context.drawImage(video, 0, 0, width, height);
 
-        if (!settings.stripAudio) {
-          video.muted = false;
-        }
-
         canvasStream = canvas.captureStream(30);
         mixedStream = new MediaStream(canvasStream.getVideoTracks());
-        if (!settings.stripAudio) {
-          const captured =
-            video.captureStream?.(30) ?? video.mozCaptureStream?.(30) ?? null;
-          for (const track of captured?.getAudioTracks() ?? []) {
-            mixedStream.addTrack(track);
-          }
+        const audioTracks = settings.stripAudio ? [] : captureAudioTracks(video);
+        for (const track of audioTracks) {
+          mixedStream.addTrack(track);
         }
 
+        const hasAudio = audioTracks.length > 0;
         const recorder = new MediaRecorder(mixedStream, {
           ...(mimeType ? { mimeType } : {}),
           videoBitsPerSecond: bitrateForProfile(profile),
-          ...(settings.stripAudio ? {} : { audioBitsPerSecond: 96_000 }),
+          ...(hasAudio ? { audioBitsPerSecond: 96_000 } : {}),
         });
 
         const chunks: Blob[] = [];
@@ -533,7 +562,7 @@ async function transcodeWithMediaRecorder(
         }
 
         recorder.start(250);
-        await video.play();
+        await playMutedForCapture(video);
 
         const draw = () => {
           if (recorder.state !== "recording") return;
@@ -737,10 +766,41 @@ export async function extractThumbnailWithFfmpeg(file: File): Promise<File> {
   }
 }
 
+export type PrepareVideoOptions = {
+  onProgress?: (message: string) => void;
+  /** Called when the clip is uploaded uncompressed because compression failed. */
+  onNotice?: (message: string) => void;
+  profile?: VideoUploadProfile;
+};
+
+/**
+ * Browser compression is a best-effort optimization, not a requirement. When
+ * every strategy fails we still upload the original clip so a save is never
+ * blocked by a codec or autoplay quirk in the admin's browser.
+ */
 export async function prepareVideoForWebUpload(
   file: File,
+  options: PrepareVideoOptions = {},
+): Promise<File> {
+  const { onProgress, onNotice, profile = "portfolio" } = options;
+
+  try {
+    return await compressForWebUpload(file, profile, onProgress);
+  } catch (error) {
+    if (file.size > MAX_VIDEO_BYTES) throw error;
+
+    console.warn("Falling back to the original video file:", error);
+    onNotice?.(
+      "Couldn't compress this clip in the browser, so the original was uploaded. It will play fine but may load more slowly.",
+    );
+    return file;
+  }
+}
+
+async function compressForWebUpload(
+  file: File,
+  profile: VideoUploadProfile,
   onProgress?: (message: string) => void,
-  profile: VideoUploadProfile = "portfolio",
 ): Promise<File> {
   if (file.size > MAX_SOURCE_VIDEO_BYTES) {
     throw new Error(

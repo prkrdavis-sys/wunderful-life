@@ -67,18 +67,25 @@ async function readVideosFromLocalFile(): Promise<PortfolioVideo[]> {
   }
 }
 
+/**
+ * The library plus the store version it was read at. `version` is null only
+ * when the local JSON file is the real store (development without Supabase).
+ */
+type LibrarySnapshot = {
+  videos: PortfolioVideo[];
+  version: number | null;
+};
+
+/**
+ * Read for display only. The bundled catalog is a read-only uptime fallback,
+ * so a storage outage never renders as an empty library. Never feed the result
+ * back into a write: it may be a stale snapshot.
+ */
 async function readVideosFile(): Promise<PortfolioVideo[]> {
   if (hasSiteDatabaseConfig()) {
     try {
-      const stored = await readStoredPortfolioLibrary();
-      if (stored) return normalizeVideos(stored.videos);
-
-      const initialVideos = await readVideosFromLocalFile();
-      const initialized = await initializeStoredPortfolioLibrary(initialVideos);
-      return normalizeVideos(initialized.videos);
+      return (await readLibraryForWrite()).videos;
     } catch {
-      // The bundled catalog is a read-only uptime fallback. Storage outages
-      // must never be interpreted as an empty or deleted video library.
       return readVideosFromLocalFile();
     }
   }
@@ -86,16 +93,49 @@ async function readVideosFile(): Promise<PortfolioVideo[]> {
   return readVideosFromLocalFile();
 }
 
-async function writeVideosFile(videos: PortfolioVideo[]) {
+/**
+ * Read for read-modify-write. Propagates storage failures instead of falling
+ * back, so a transient outage can never overwrite the live library with the
+ * bundled catalog.
+ */
+async function readLibraryForWrite(): Promise<LibrarySnapshot> {
+  if (!hasSiteDatabaseConfig()) {
+    return { videos: await readVideosFromLocalFile(), version: null };
+  }
+
+  const stored = await readStoredPortfolioLibrary();
+  if (stored) {
+    return { videos: normalizeVideos(stored.videos), version: stored.version };
+  }
+
+  const initialized = await initializeStoredPortfolioLibrary(
+    await readVideosFromLocalFile(),
+  );
+  return {
+    videos: normalizeVideos(initialized.videos),
+    version: initialized.version,
+  };
+}
+
+/**
+ * Persist a library that was derived from `readLibraryForWrite`. The version
+ * comes from that same read so a concurrent save is rejected instead of
+ * silently discarding the other edit.
+ */
+async function writeVideosFile(
+  videos: PortfolioVideo[],
+  expectedVersion: number | null,
+) {
   const normalized = sortVideos(normalizeVideos(videos));
 
   if (hasSiteDatabaseConfig()) {
-    const stored = await readStoredPortfolioLibrary();
-    if (stored) {
-      await saveStoredPortfolioLibrary(normalized, stored.version);
-    } else {
-      await initializeStoredPortfolioLibrary(normalized);
+    if (expectedVersion === null) {
+      throw new StorageError(
+        "The video library could not be read before saving. Reload and try again.",
+        503,
+      );
     }
+    await saveStoredPortfolioLibrary(normalized, expectedVersion);
     return;
   }
 
@@ -202,7 +242,7 @@ export async function createVideo(input: VideoCreateInput, files?: UploadFiles) 
   await ensureUploadDirs();
 
   try {
-    const videos = await readVideosFile();
+    const { videos, version } = await readLibraryForWrite();
     const existingSlugs = videos.map((video) => video.slug);
 
     let thumbnailPath = isRemoteAssetUrl(files?.thumbnailUrl)
@@ -245,7 +285,7 @@ export async function createVideo(input: VideoCreateInput, files?: UploadFiles) 
     };
 
     videos.push(video);
-    await writeVideosFile(videos);
+    await writeVideosFile(videos, version);
     return video;
   } catch (error) {
     await rollbackClientUploads(files);
@@ -260,29 +300,34 @@ export async function updateVideo(
 ) {
   assertCanPersistUploads();
   await ensureUploadDirs();
-  const videos = await readVideosFile();
+  const { videos, version } = await readLibraryForWrite();
   const index = videos.findIndex((video) => video.id === id);
   if (index === -1) return null;
 
   const current = videos[index];
   let thumbnailPath = current.thumbnailPath;
   let videoPath = current.videoPath;
+  // Replaced media is removed only after the new paths are saved, so a failed
+  // save never leaves the entry pointing at a deleted file.
+  const replacedPaths: string[] = [];
 
   if (isRemoteAssetUrl(files?.thumbnailUrl)) {
-    await deleteStoredFile(current.thumbnailPath);
     thumbnailPath = files.thumbnailUrl;
   } else if (files?.thumbnail) {
-    await deleteStoredFile(current.thumbnailPath);
     thumbnailPath = await saveUploadFile(files.thumbnail, "thumbnails");
+  }
+  if (thumbnailPath !== current.thumbnailPath) {
+    replacedPaths.push(current.thumbnailPath);
   }
 
   if (isRemoteAssetUrl(files?.videoUrl)) {
-    await deleteStoredFile(current.videoPath);
     videoPath = files.videoUrl;
   } else if (files?.video) {
     validateVideoFile(files.video);
-    await deleteStoredFile(current.videoPath);
     videoPath = await saveUploadFile(files.video, "videos");
+  }
+  if (videoPath !== current.videoPath) {
+    replacedPaths.push(current.videoPath);
   }
 
   const existingSlugs = videos
@@ -310,27 +355,32 @@ export async function updateVideo(
   };
 
   videos[index] = updated;
-  await writeVideosFile(videos);
+  await writeVideosFile(videos, version);
+  await Promise.all(replacedPaths.map((stale) => deleteStoredFile(stale)));
   return updated;
 }
 
 export async function deleteVideo(id: string) {
-  const videos = await readVideosFile();
+  const { videos, version } = await readLibraryForWrite();
   const index = videos.findIndex((video) => video.id === id);
   if (index === -1) return false;
 
   const [removed] = videos.splice(index, 1);
-  await deleteStoredFile(removed.thumbnailPath);
-  await deleteStoredFile(removed.videoPath);
   await writeVideosFile(
     videos.map((video, idx) => ({ ...video, sortOrder: idx })),
+    version,
   );
+
+  // Only discard the media once the metadata removal is durable, so a failed
+  // save never leaves an entry pointing at files that no longer exist.
+  await deleteStoredFile(removed.thumbnailPath);
+  await deleteStoredFile(removed.videoPath);
   return true;
 }
 
 export async function reorderVideos(orderedIds: string[]) {
-  const videos = await readVideosFile();
+  const { videos, version } = await readLibraryForWrite();
   const reordered = applyOrder(videos, orderedIds);
-  await writeVideosFile(reordered);
+  await writeVideosFile(reordered, version);
   return reordered;
 }

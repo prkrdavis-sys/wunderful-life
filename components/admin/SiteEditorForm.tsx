@@ -330,14 +330,13 @@ export function SiteEditorForm({
     });
 
     try {
-      const preparedPromise = prepareVideoForWebUpload(
-        file,
-        (progressMessage) => {
+      const preparedPromise = prepareVideoForWebUpload(file, {
+        profile: slot,
+        onProgress: (progressMessage) => {
           if (generation !== videoUploadGenRef.current[slot]) return;
           patchSlotUpload(slot, { status: "preparing", message: progressMessage });
         },
-        slot,
-      );
+      });
       const configResponse = await fetch("/api/videos/config");
       const config = (await configResponse.json()) as {
         clientUpload: boolean;
