@@ -152,12 +152,13 @@ function settingsForProfile(profile: VideoUploadProfile): CompressSettings {
         skipIfMp4UnderBytes: 1_200_000,
       };
     case "cta":
+      // 1920 long-edge = 1080p for 9:16. 720 was 406×720 on portrait clips.
       return {
-        maxEdge: 720,
-        crf: 30,
+        maxEdge: 1920,
+        crf: 23,
         stripAudio: false,
         maxDurationSec: null,
-        skipIfMp4UnderBytes: 2_000_000,
+        skipIfMp4UnderBytes: 12_000_000,
       };
     case "portfolio":
       return {
@@ -307,7 +308,7 @@ function progressMessage(profile: VideoUploadProfile): string {
     case "hero":
       return "Compressing background video (short, muted, 720p)…";
     case "cta":
-      return "Compressing looping video for the web…";
+      return "Compressing looping video (1080p)…";
     case "portfolio":
       return "Compressing video for the web…";
     default: {
@@ -322,7 +323,7 @@ function bitrateForProfile(profile: VideoUploadProfile): number {
     case "hero":
       return 800_000;
     case "cta":
-      return 1_200_000;
+      return 5_000_000;
     case "portfolio":
       return 2_000_000;
     default: {

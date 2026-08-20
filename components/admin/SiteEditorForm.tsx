@@ -243,9 +243,17 @@ const idleVideoUpload = (): VideoUploadState => ({
   message: "",
 });
 
-const SLOT_COPY: Record<VideoSlot, { noun: string; endpoint: string }> = {
-  hero: { noun: "hero video", endpoint: "/api/site/hero-video" },
-  cta: { noun: "CTA video", endpoint: "/api/site/cta-video" },
+const SLOT_COPY: Record<VideoSlot, { noun: string; endpoint: string; hint: string }> = {
+  hero: {
+    noun: "hero video",
+    endpoint: "/api/site/hero-video",
+    hint: VIDEO_UPLOAD_HELP,
+  },
+  cta: {
+    noun: "CTA video",
+    endpoint: "/api/site/cta-video",
+    hint: "Upload the original 1080p or 4K clip from Photos — not a compressed copy. It stays sharp for the web.",
+  },
 };
 
 function videoDisplayName(path: string): string {
@@ -753,7 +761,7 @@ export function SiteEditorForm({
     const state = videoUploads[slot];
     const busy = isBusy(state);
     const inputRef = slot === "hero" ? heroVideoInputRef : ctaVideoInputRef;
-    const { noun } = SLOT_COPY[slot];
+    const { noun, hint } = SLOT_COPY[slot];
 
     return (
       <>
@@ -761,7 +769,7 @@ export function SiteEditorForm({
           kind="video"
           inputRef={inputRef}
           accept={VIDEO_FILE_ACCEPT}
-          hint={VIDEO_UPLOAD_HELP}
+          hint={hint}
           selectedName={
             videoFiles[slot]?.name ??
             (videoPath ? videoDisplayName(videoPath) : null)
@@ -2240,8 +2248,9 @@ export function SiteEditorForm({
                 </p>
                 <p className="text-sm text-muted">
                   Plays muted on a loop next to the headline. Visitors can unmute
-                  it. Goes live as soon as you pick a file — no need to press
-                  &ldquo;Save site content&rdquo;.
+                  it. Use the original 1080p (or higher) file so it does not look
+                  pixelated. Goes live as soon as you pick a file — no need to
+                  press &ldquo;Save site content&rdquo;.
                 </p>
                 {renderVideoUpload("cta", form.closingCta.videoPath)}
               </div>
