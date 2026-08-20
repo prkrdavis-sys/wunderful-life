@@ -160,20 +160,22 @@ export function VideoList({ videos, onEdit, onChange }: VideoListProps) {
                 alt={video.title}
                 videoSrc={video.videoPath}
               />
-              <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-1 p-2">
+              <div className="absolute inset-x-0 top-0 flex flex-wrap items-start justify-between gap-1 p-2">
                 <span className="rounded-md bg-brown/55 px-1.5 py-0.5 font-label text-[10px] font-semibold tracking-wider text-paper uppercase backdrop-blur-sm">
                   #{index + 1}
                 </span>
                 <PlatformChip platform={video.platform} />
               </div>
-              {video.featured && (
-                <span className="absolute bottom-2 left-2 rounded-full bg-forest px-2 py-0.5 text-[10px] font-semibold text-paper">
-                  In carousel
+              <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-end gap-1 p-2">
+                {video.featured && (
+                  <span className="mr-auto rounded-full bg-forest px-2 py-0.5 text-[10px] font-semibold text-paper">
+                    In carousel
+                  </span>
+                )}
+                <span className="rounded-md bg-brown/55 px-1.5 py-0.5 text-[10px] font-medium text-paper backdrop-blur-sm">
+                  {formatDuration(video.durationSec)}
                 </span>
-              )}
-              <span className="absolute right-2 bottom-2 rounded-md bg-brown/55 px-1.5 py-0.5 text-[10px] font-medium text-paper backdrop-blur-sm">
-                {formatDuration(video.durationSec)}
-              </span>
+              </div>
             </button>
 
             <div className="flex min-h-0 flex-1 flex-col gap-2 p-3">

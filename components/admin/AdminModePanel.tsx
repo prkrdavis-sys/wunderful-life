@@ -170,8 +170,8 @@ export function AdminModePanel() {
           >
             <div className="admin-editor-frame flex h-full min-h-0 min-w-0 flex-col">
               <div className="pointer-events-auto flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-brown/15 bg-paper shadow-2xl">
-                <div className="flex min-w-0 shrink-0 flex-col gap-2 border-b border-brown/10 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
-                <div className="flex min-w-0 items-center justify-between gap-2 sm:contents">
+                <div className="flex min-w-0 shrink-0 flex-col gap-3 border-b border-brown/10 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
+                <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:contents">
                   <div className="flex shrink-0 gap-1 rounded-full bg-cream p-1">
                     <button
                       type="button"

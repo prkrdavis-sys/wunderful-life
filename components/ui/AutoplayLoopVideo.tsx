@@ -51,33 +51,52 @@ export function AutoplayLoopVideo({
     setAppliedPoster(poster);
     setPlaying(false);
     setHasFrame(Boolean(poster));
+  }
+
+  useEffect(() => {
     decodeFailedRef.current = false;
     playInFlightRef.current = false;
-  }
+  }, [src, poster]);
 
   useEffect(() => {
     const node = containerRef.current;
     if (!node) return;
 
+    // Eager (hero) starts as in-view so play() is not gated on the first
+    // IntersectionObserver tick. Safari/Chrome often report "hidden" or wait
+    // until a scroll before delivering that callback.
+    if (eager) {
+      inViewRef.current = true;
+    }
+
+    let confirmedVisible = false;
     const observer = new IntersectionObserver(
       (entries) => {
         const isVisible = entries.some((entry) => entry.isIntersecting);
-        inViewRef.current = isVisible;
-        setInView(isVisible);
-        if (!isVisible) {
-          videoRef.current?.pause();
-          setPlaying(false);
-        } else if (!decodeFailedRef.current) {
-          void videoRef.current?.play().catch(() => {
-            if (isQuickTimeVideoPath(src)) {
-              decodeFailedRef.current = true;
-            }
-          });
+        if (isVisible) {
+          confirmedVisible = true;
+          inViewRef.current = true;
+          setInView(true);
+          if (!decodeFailedRef.current) {
+            void videoRef.current?.play().catch(() => {
+              if (isQuickTimeVideoPath(src)) {
+                decodeFailedRef.current = true;
+              }
+            });
+          }
+          return;
         }
+        if (!confirmedVisible) {
+          return;
+        }
+        inViewRef.current = false;
+        setInView(false);
+        videoRef.current?.pause();
+        setPlaying(false);
       },
       {
-        rootMargin: eager ? "400px" : "80px",
-        threshold: 0.01,
+        rootMargin: eager ? "200px" : "80px",
+        threshold: 0,
       },
     );
     observer.observe(node);
@@ -91,6 +110,11 @@ export function AutoplayLoopVideo({
     video.muted = muted;
     video.defaultMuted = muted;
     video.playsInline = true;
+    if (muted) {
+      video.setAttribute("muted", "");
+    } else {
+      video.removeAttribute("muted");
+    }
     video.setAttribute("playsinline", "true");
     video.setAttribute("webkit-playsinline", "true");
     video.setAttribute("x-webkit-airplay", "deny");
@@ -114,10 +138,15 @@ export function AutoplayLoopVideo({
       }
     };
 
+    const canAttemptPlay = () =>
+      inViewRef.current &&
+      !decodeFailedRef.current &&
+      document.visibilityState !== "hidden";
+
     const tryPlay = () => {
-      if (!inViewRef.current) return;
-      if (decodeFailedRef.current) return;
+      if (!canAttemptPlay()) return;
       if (!video.paused || playInFlightRef.current) return;
+      video.muted = muted;
       playInFlightRef.current = true;
       void video
         .play()
@@ -142,7 +171,7 @@ export function AutoplayLoopVideo({
 
     const onPause = () => {
       captureFrame();
-      if (inViewRef.current && !decodeFailedRef.current) {
+      if (canAttemptPlay()) {
         tryPlay();
         return;
       }
@@ -156,6 +185,7 @@ export function AutoplayLoopVideo({
     };
 
     tryPlay();
+    const playAfterLayout = window.requestAnimationFrame(tryPlay);
     video.addEventListener("loadeddata", onLoaded);
     video.addEventListener("loadedmetadata", captureFrame);
     video.addEventListener("canplay", tryPlay);
@@ -168,11 +198,10 @@ export function AutoplayLoopVideo({
     video.addEventListener("seeked", captureFrame);
     video.addEventListener("error", onError);
     document.addEventListener("visibilitychange", tryPlay);
-    if (!isQuickTime) {
-      document.addEventListener("pointerdown", tryPlay);
-    }
+    window.addEventListener("pageshow", tryPlay);
 
     return () => {
+      window.cancelAnimationFrame(playAfterLayout);
       video.removeEventListener("loadeddata", onLoaded);
       video.removeEventListener("loadedmetadata", captureFrame);
       video.removeEventListener("canplay", tryPlay);
@@ -183,7 +212,7 @@ export function AutoplayLoopVideo({
       video.removeEventListener("seeked", captureFrame);
       video.removeEventListener("error", onError);
       document.removeEventListener("visibilitychange", tryPlay);
-      document.removeEventListener("pointerdown", tryPlay);
+      window.removeEventListener("pageshow", tryPlay);
     };
   }, [activeSrc, hasPoster, isQuickTime, muted]);
 
@@ -213,7 +242,7 @@ export function AutoplayLoopVideo({
         tabIndex={tabIndex}
         aria-hidden={ariaHidden}
         className={[
-          "autoplay-loop-video pointer-events-none",
+          "autoplay-loop-video pointer-events-none relative z-[1]",
           playing ? "opacity-100" : "opacity-0",
           className,
         ]
@@ -228,7 +257,7 @@ export function AutoplayLoopVideo({
           alt=""
           aria-hidden
           fetchPriority={eager ? "high" : "auto"}
-          className={`pointer-events-none absolute inset-0 z-[1] h-full w-full object-cover ${
+          className={`pointer-events-none absolute inset-0 z-[2] h-full w-full object-cover ${
             showCover ? "opacity-100" : "opacity-0"
           }`}
         />
@@ -237,7 +266,7 @@ export function AutoplayLoopVideo({
         <canvas
           ref={canvasRef}
           aria-hidden
-          className={`pointer-events-none absolute inset-0 z-[1] h-full w-full object-cover ${
+          className={`pointer-events-none absolute inset-0 z-[2] h-full w-full object-cover ${
             showCover && hasFrame ? "opacity-100" : "opacity-0"
           }`}
         />

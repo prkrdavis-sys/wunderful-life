@@ -90,9 +90,10 @@ export function FileUploadButton({
   const hasPreview = Boolean(previewUrl);
   // Keep remove available during busy uploads so a selection can be cancelled.
   const showRemove = Boolean(onRemove) && (hasSelection || hasPreview);
+  const selected = hasSelection || hasPreview;
 
   return (
-    <div className={`relative min-w-0 max-w-full ${className}`}>
+    <div className={`min-w-0 max-w-full ${className}`}>
       <input
         ref={inputRef}
         id={id}
@@ -105,92 +106,102 @@ export function FileUploadButton({
           onChange(event.target.files?.[0] ?? null);
         }}
       />
-      <motion.label
-        htmlFor={id}
-        whileHover={
-          disabled
-            ? undefined
-            : { y: -1, transition: { type: "spring", stiffness: 420, damping: 22 } }
-        }
-        whileTap={disabled ? undefined : { scale: 0.985 }}
-        className={`group relative flex w-full min-w-0 max-w-full cursor-pointer items-center gap-2 overflow-hidden rounded-2xl border-2 px-3 py-3.5 transition-shadow sm:gap-3 sm:px-4 ${
-          hasSelection || hasPreview
+      <div
+        className={`group flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-2 rounded-2xl border-2 px-3 py-3 sm:gap-x-3 sm:px-4 sm:py-3.5 ${
+          selected
             ? "border-blush/50 bg-gradient-to-br from-blush/20 via-lavender/25 to-paper shadow-md shadow-blush/10"
             : "border-dashed border-blush/35 bg-gradient-to-br from-blush/10 via-lavender/15 to-cream/60 shadow-sm hover:border-blush-deep/45 hover:shadow-md hover:shadow-blush/15"
-        } ${disabled ? "cursor-not-allowed opacity-50" : ""} ${showRemove ? "pr-12" : ""}`}
+        }`}
       >
-        {hasPreview ? (
-          <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-brown/10 shadow-inner ring-2 ring-blush/25">
-            {previewType === "video" ? (
-              <video
-                src={
-                  previewUrl
-                    ? previewUrl.includes("#")
-                      ? previewUrl
-                      : `${previewUrl}#t=0.001`
-                    : undefined
-                }
-                muted
-                playsInline
-                preload="metadata"
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              // eslint-disable-next-line @next/next/no-img-element -- blob/local preview URLs
-              <img
-                src={previewUrl ?? undefined}
-                alt=""
-                className="h-full w-full object-cover"
-              />
+        <motion.label
+          htmlFor={id}
+          whileHover={
+            disabled
+              ? undefined
+              : { y: -1, transition: { type: "spring", stiffness: 420, damping: 22 } }
+          }
+          whileTap={disabled ? undefined : { scale: 0.985 }}
+          className={`flex min-w-[min(100%,11rem)] flex-1 cursor-pointer items-center gap-2 sm:gap-3 ${
+            disabled ? "cursor-not-allowed opacity-50" : ""
+          }`}
+        >
+          {hasPreview ? (
+            <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-brown/10 shadow-inner ring-2 ring-blush/25">
+              {previewType === "video" ? (
+                <video
+                  src={
+                    previewUrl
+                      ? previewUrl.includes("#")
+                        ? previewUrl
+                        : `${previewUrl}#t=0.001`
+                      : undefined
+                  }
+                  muted
+                  playsInline
+                  preload="metadata"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element -- blob/local preview URLs
+                <img
+                  src={previewUrl ?? undefined}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              )}
+            </span>
+          ) : (
+            <motion.span
+              aria-hidden
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/90 text-xl shadow-inner ring-2 ring-blush/20"
+              animate={disabled ? undefined : { rotate: hasSelection ? 0 : [0, -6, 6, 0] }}
+              transition={{ duration: 0.5, repeat: hasSelection ? 0 : Infinity, repeatDelay: 4 }}
+            >
+              {defaults.emoji}
+            </motion.span>
+          )}
+
+          <span className="min-w-0 flex-1 text-left">
+            <span className="font-display block truncate text-sm font-semibold tracking-wide text-forest">
+              {selected ? defaults.selectedLabel : label}
+            </span>
+            {displayHint && !selected && (
+              <span className="mt-0.5 block text-xs text-ink/75">{displayHint}</span>
+            )}
+            {selected && selectedName && (
+              <span className="mt-1 flex min-w-0 max-w-full items-center gap-1 overflow-hidden rounded-full bg-white/70 px-2 py-0.5 text-xs font-medium text-ellipsis whitespace-nowrap text-blush-deep">
+                <span aria-hidden>💕</span>
+                {friendlyFileName(selectedName)}
+              </span>
             )}
           </span>
-        ) : (
-          <motion.span
-            aria-hidden
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/90 text-xl shadow-inner ring-2 ring-blush/20"
-            animate={disabled ? undefined : { rotate: hasSelection ? 0 : [0, -6, 6, 0] }}
-            transition={{ duration: 0.5, repeat: hasSelection ? 0 : Infinity, repeatDelay: 4 }}
+        </motion.label>
+
+        <div className="ml-auto flex shrink-0 items-center gap-2.5 sm:gap-3">
+          <label
+            htmlFor={id}
+            aria-hidden="true"
+            className={`shrink-0 whitespace-nowrap rounded-full bg-forest/90 px-2.5 py-1.5 font-label text-[10px] font-semibold tracking-[0.14em] text-paper uppercase opacity-90 transition group-hover:bg-forest sm:px-3 ${
+              disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+            }`}
           >
-            {defaults.emoji}
-          </motion.span>
-        )}
-
-        <span className="min-w-0 flex-1 text-left">
-          <span className="font-display block text-sm font-semibold tracking-wide text-forest">
-            {hasSelection || hasPreview ? defaults.selectedLabel : label}
-          </span>
-          {displayHint && !hasSelection && !hasPreview && (
-            <span className="mt-0.5 block text-xs text-ink/75">{displayHint}</span>
+            {selected ? "Swap" : "Browse"}
+          </label>
+          {showRemove && (
+            <button
+              type="button"
+              onClick={() => {
+                clearFileInput(inputRef);
+                onRemove?.();
+              }}
+              aria-label="Remove upload"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-brown/20 bg-white text-lg leading-none text-brown shadow-sm transition hover:border-blush-deep/50 hover:bg-blush/20 hover:text-blush-deep sm:h-10 sm:w-10"
+            >
+              <span aria-hidden>×</span>
+            </button>
           )}
-          {(hasSelection || hasPreview) && selectedName && (
-            <span className="mt-1 flex min-w-0 max-w-full items-center gap-1 overflow-hidden rounded-full bg-white/70 px-2 py-0.5 text-xs font-medium text-ellipsis whitespace-nowrap text-blush-deep">
-              <span aria-hidden>💕</span>
-              {friendlyFileName(selectedName)}
-            </span>
-          )}
-        </span>
-
-        <span
-          aria-hidden
-          className="shrink-0 rounded-full bg-forest/90 px-3 py-1.5 font-label text-[10px] font-semibold tracking-[0.14em] text-paper uppercase opacity-90 transition group-hover:bg-forest"
-        >
-          {hasSelection || hasPreview ? "Swap" : "Browse"}
-        </span>
-      </motion.label>
-
-      {showRemove && (
-        <button
-          type="button"
-          onClick={() => {
-            clearFileInput(inputRef);
-            onRemove?.();
-          }}
-          aria-label="Remove upload"
-          className="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-brown/20 bg-white/95 text-lg leading-none text-brown shadow-sm transition hover:border-blush-deep/50 hover:bg-blush/20 hover:text-blush-deep"
-        >
-          <span aria-hidden>×</span>
-        </button>
-      )}
+        </div>
+      </div>
     </div>
   );
 }
