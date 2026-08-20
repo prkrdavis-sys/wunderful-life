@@ -65,11 +65,13 @@ export function AdminModePanel() {
 
   const tryClosePanel = () => {
     if (!confirmLeaveDuringUpload(portfolioUploadBusy)) return;
+    setPortfolioUploadBusy(false);
     setPanelOpen(false);
   };
 
   const trySetTab = (next: AdminPanelTab) => {
     if (!confirmLeaveDuringUpload(portfolioUploadBusy)) return;
+    if (next !== "portfolio") setPortfolioUploadBusy(false);
     setEditorSection(null);
     clearEditorFocus();
     clearPreferredTab();

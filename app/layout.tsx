@@ -15,7 +15,10 @@ import { SiteHeaderHeightSync } from "@/components/layout/SiteHeaderHeightSync";
 import { AppProviders } from "@/components/layout/AppProviders";
 import { ADMIN_COOKIE, canAccessAdmin, isAdminAuthRequired } from "@/lib/auth";
 import { getSiteContentRecord } from "@/lib/site";
-import { videoContentTypeFromPath } from "@/lib/videos/upload";
+import {
+  isQuickTimeVideoPath,
+  videoContentTypeFromPath,
+} from "@/lib/videos/upload";
 import "./globals.css";
 
 function preloadCrossOrigin(url: string): "anonymous" | undefined {
@@ -114,7 +117,7 @@ export default async function RootLayout({
       lang="en"
       className={`${bricolage.variable} ${dmSans.variable} ${fraunces.variable} ${instrumentSans.variable} ${niconne.variable} h-full scroll-smooth`}
     >
-      {site.hero.videoPath ? (
+      {site.hero.videoPath && !isQuickTimeVideoPath(site.hero.videoPath) ? (
         <link
           rel="preload"
           as="video"

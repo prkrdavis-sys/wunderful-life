@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   MAX_COLLAGE_TILES,
+  type AboutPhoto,
   type CollagePhotoShape,
   type SiteContent,
 } from "@/lib/site/types";
@@ -37,6 +38,9 @@ type SiteEditorFormProps = {
   portfolioVideos?: PortfolioVideo[];
   portfolioVideosLoaded?: boolean;
 };
+
+/** First two `about.photos` sit in About; the rest are the "A little more" gallery. */
+const ABOUT_INTRO_PHOTO_COUNT = 2;
 
 const SECTIONS: { id: SiteEditorSection; label: string }[] = [
   { id: "profile", label: "Profile" },
@@ -143,6 +147,85 @@ function AddRowButton({
     >
       + {label}
     </button>
+  );
+}
+
+function withAboutPhoto(
+  site: SiteContent,
+  index: number,
+  patch: Partial<Pick<AboutPhoto, "caption" | "rotate">>,
+): SiteContent {
+  const current = site.about.photos[index];
+  if (!current) return site;
+  const photos = [...site.about.photos];
+  photos[index] = { ...current, ...patch };
+  return {
+    ...site,
+    about: { ...site.about, photos },
+  };
+}
+
+function AboutPhotoEditorCard({
+  photo,
+  heading,
+  loading,
+  onCaptionChange,
+  onRotateChange,
+  onUpload,
+  onRemove,
+}: {
+  photo: AboutPhoto;
+  heading: string;
+  loading: boolean;
+  onCaptionChange: (caption: string) => void;
+  onRotateChange: (rotate: number) => void;
+  onUpload: (file: File) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4">
+      <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+        {heading}
+      </p>
+      <label className="block text-sm">
+        <span className="text-muted">Caption</span>
+        <AutoResizeTextarea
+          value={photo.caption}
+          onChange={(event) => onCaptionChange(event.target.value)}
+          className={inputClass}
+        />
+      </label>
+      <label className="block text-sm">
+        <span className="text-muted">Rotate (deg)</span>
+        <input
+          type="number"
+          value={photo.rotate}
+          onChange={(event) => onRotateChange(Number(event.target.value))}
+          className={inputClass}
+        />
+      </label>
+      <div className="block text-sm">
+        <span className="text-muted">Photo</span>
+        <FileUploadButton
+          className="mt-1"
+          kind="photo"
+          accept="image/*"
+          selectedName={photo.imagePath}
+          previewUrl={photo.imagePath}
+          disabled={loading}
+          onChange={(file) => {
+            if (file) onUpload(file);
+          }}
+          onRemove={photo.imagePath ? onRemove : undefined}
+        />
+        {photo.imagePath && (
+          <p className="mt-2 flex max-w-full items-start gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium break-words text-ink">
+            <span aria-hidden>🌸</span>
+            Live on your site
+          </p>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -1043,6 +1126,40 @@ export function SiteEditorForm({
                   </label>
                 ))}
               </div>
+              <div>
+                <h3 className="font-display text-lg text-brown">About photos</h3>
+                <p className="mt-1 text-sm text-muted">
+                  Main portrait and accent photo for the About section.
+                </p>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-2">
+                {form.about.photos
+                  .slice(0, ABOUT_INTRO_PHOTO_COUNT)
+                  .map((photo, index) => (
+                    <AboutPhotoEditorCard
+                      key={photo.id}
+                      photo={photo}
+                      heading={index === 0 ? "Main photo" : "Accent photo"}
+                      loading={loading}
+                      onCaptionChange={(caption) =>
+                        setForm((current) =>
+                          withAboutPhoto(current, index, { caption }),
+                        )
+                      }
+                      onRotateChange={(rotate) =>
+                        setForm((current) =>
+                          withAboutPhoto(current, index, { rotate }),
+                        )
+                      }
+                      onUpload={(file) => {
+                        void uploadPhoto(photo.id, file);
+                      }}
+                      onRemove={() => {
+                        void removePhoto(photo.id);
+                      }}
+                    />
+                  ))}
+              </div>
             </section>
           )}
 
@@ -1051,89 +1168,45 @@ export function SiteEditorForm({
               <div>
                 <h3 className="font-display text-lg text-brown">A little more</h3>
                 <p className="mt-1 text-sm text-muted">
-                  Upload images, captions, and rotation for each photo.
+                  Gallery photos below About. Upload images, captions, and
+                  rotation for each photo.
                 </p>
               </div>
-              <div className="grid gap-4 lg:grid-cols-2">
-                {form.about.photos.map((photo, index) => (
-                  <div
-                    key={photo.id}
-                    className="space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4"
-                  >
-                    <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
-                      Photo {index + 1}
-                    </p>
-                    <label className="block text-sm">
-                      <span className="text-muted">Caption</span>
-                      <AutoResizeTextarea
-                        value={photo.caption}
-                        onChange={(event) =>
-                          setForm((current) => {
-                            const photos = [...current.about.photos];
-                            photos[index] = {
-                              ...photos[index],
-                              caption: event.target.value,
-                            };
-                            return {
-                              ...current,
-                              about: { ...current.about, photos },
-                            };
-                          })
-                        }
-                        className={inputClass}
-                      />
-                    </label>
-                    <label className="block text-sm">
-                      <span className="text-muted">Rotate (deg)</span>
-                      <input
-                        type="number"
-                        value={photo.rotate}
-                        onChange={(event) =>
-                          setForm((current) => {
-                            const photos = [...current.about.photos];
-                            photos[index] = {
-                              ...photos[index],
-                              rotate: Number(event.target.value),
-                            };
-                            return {
-                              ...current,
-                              about: { ...current.about, photos },
-                            };
-                          })
-                        }
-                        className={inputClass}
-                      />
-                    </label>
-                    <div className="block text-sm">
-                      <span className="text-muted">Photo</span>
-                      <FileUploadButton
-                        className="mt-1"
-                        kind="photo"
-                        accept="image/*"
-                        selectedName={photo.imagePath}
-                        previewUrl={photo.imagePath}
-                        disabled={loading}
-                        onChange={(file) => {
-                          if (file) void uploadPhoto(photo.id, file);
-                        }}
-                        onRemove={
-                          photo.imagePath
-                            ? () => {
-                                void removePhoto(photo.id);
-                              }
-                            : undefined
-                        }
-                      />
-                      {photo.imagePath && (
-                        <p className="mt-2 flex max-w-full items-start gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium break-words text-ink">
-                          <span aria-hidden>🌸</span>
-                          Live on your site
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {form.about.photos.length <= ABOUT_INTRO_PHOTO_COUNT ? (
+                <p className="text-sm text-muted">No gallery photos yet.</p>
+              ) : (
+                <div className="grid gap-4 lg:grid-cols-2">
+                  {form.about.photos
+                    .slice(ABOUT_INTRO_PHOTO_COUNT)
+                    .map((photo, sliceIndex) => {
+                      const index = sliceIndex + ABOUT_INTRO_PHOTO_COUNT;
+                      return (
+                        <AboutPhotoEditorCard
+                          key={photo.id}
+                          photo={photo}
+                          heading={`Photo ${sliceIndex + 1}`}
+                          loading={loading}
+                          onCaptionChange={(caption) =>
+                            setForm((current) =>
+                              withAboutPhoto(current, index, { caption }),
+                            )
+                          }
+                          onRotateChange={(rotate) =>
+                            setForm((current) =>
+                              withAboutPhoto(current, index, { rotate }),
+                            )
+                          }
+                          onUpload={(file) => {
+                            void uploadPhoto(photo.id, file);
+                          }}
+                          onRemove={() => {
+                            void removePhoto(photo.id);
+                          }}
+                        />
+                      );
+                    })}
+                </div>
+              )}
             </section>
           )}
 
@@ -1142,8 +1215,9 @@ export function SiteEditorForm({
               <div>
                 <h3 className="font-display text-lg text-brown">Videos section</h3>
                 <p className="mt-1 text-sm text-muted">
-                  Phone carousel clips live in the Videos tab. Feature a video to
-                  put it on the landing marquee. Below, edit the cursive section
+                  Phone carousel clips live in the Videos tab. Mark a video
+                  “Show in carousel” to feature it there. If none are marked,
+                  every uploaded clip appears. Below, edit the cursive section
                   title.
                 </p>
               </div>
@@ -1155,7 +1229,7 @@ export function SiteEditorForm({
                       Carousel videos
                     </p>
                     <p className="mt-1 text-sm text-muted">
-                      Currently featured on the phone marquee
+                      Currently shown in the phone carousel
                     </p>
                   </div>
                   <button
@@ -1198,7 +1272,7 @@ export function SiteEditorForm({
                             />
                             {video.featured && (
                               <span className="absolute bottom-1.5 left-1.5 rounded-full bg-forest px-1.5 py-0.5 text-[10px] font-semibold text-paper">
-                                Featured
+                                In carousel
                               </span>
                             )}
                           </div>
@@ -1216,8 +1290,8 @@ export function SiteEditorForm({
                         </p>
                       ) : (
                         <p className="text-xs text-muted">
-                          No videos are featured yet — showing all{" "}
-                          {portfolioVideos.length} as a fallback on the marquee.
+                          No videos are marked for the carousel yet — showing
+                          all {portfolioVideos.length} as a fallback.
                         </p>
                       )}
                       {featuredPortfolioVideos.length === 0 && (

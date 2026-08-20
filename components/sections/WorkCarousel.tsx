@@ -21,6 +21,8 @@ export function WorkCarousel({ featuredVideos }: WorkCarouselProps) {
   const site = useSiteContent();
   const visibleVideos = uniqueVideosById(featuredVideos);
 
+  if (visibleVideos.length === 0) return null;
+
   return (
     <>
       <ScallopedBanner
@@ -35,7 +37,7 @@ export function WorkCarousel({ featuredVideos }: WorkCarouselProps) {
         </SectionReveal>
       </ScallopedBanner>
 
-      <div className="relative overflow-hidden pt-10 pb-16 sm:pt-12 sm:pb-20">
+      <div className="relative min-h-[28rem] overflow-hidden pt-10 pb-16 sm:min-h-[32rem] sm:pt-12 sm:pb-20">
         <SectionSurface tone="sage" motifs="scatter" />
         <SectionButterfly flight="workBand" />
         <SectionButterfly flight="workMarquee" />

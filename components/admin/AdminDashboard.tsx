@@ -40,6 +40,10 @@ export function AdminDashboard({
     onUploadBusyChange?.(uploadBusy);
   }, [onUploadBusyChange, uploadBusy]);
 
+  useEffect(() => {
+    return () => onUploadBusyChange?.(false);
+  }, [onUploadBusyChange]);
+
   const commitVideos = useCallback(
     (next: PortfolioVideo[]) => {
       const sorted = sortVideos(uniqueVideosById(next));
@@ -60,6 +64,7 @@ export function AdminDashboard({
   };
 
   const handleSuccess = (video: PortfolioVideo) => {
+    setUploadBusy(false);
     setVideos((current) => {
       const next = sortVideos(
         uniqueVideosById(

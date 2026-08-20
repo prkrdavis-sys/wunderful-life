@@ -218,22 +218,6 @@ body {
   }
 }
 
-/* Frosted plate used for the photography label in the scalloped banner. */
-.frosted-panel {
-  background: rgb(255 253 249 / 0.58);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
-  box-shadow:
-    0 14px 44px rgb(61 55 46 / 0.18),
-    inset 0 1px 0 rgb(255 255 255 / 0.8);
-}
-
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .frosted-panel {
-    background: rgb(255 253 249 / 0.9);
-  }
-}
-
 .scalloped-banner-surface {
   --scallop-diameter: 72px;
   --scallop-height: calc(var(--scallop-diameter) / 2);
@@ -434,6 +418,20 @@ body {
   to {
     transform: translateX(-100%);
   }
+}
+
+@keyframes play-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.play-pulse {
+  animation: play-pulse 2.2s ease-in-out infinite;
 }
 
 @keyframes blob-float {

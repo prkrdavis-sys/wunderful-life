@@ -84,6 +84,11 @@ export function videoContentTypeFromPath(path: string): string {
   return videoContentTypeFromFilename(pathname) ?? "video/mp4";
 }
 
+/** Chrome stalls hard on document-preloaded QuickTime; keep the poster instead. */
+export function isQuickTimeVideoPath(path: string): boolean {
+  return videoContentTypeFromPath(path) === "video/quicktime";
+}
+
 export function uploadFilename(
   dir: "videos" | "thumbnails",
   originalName: string,

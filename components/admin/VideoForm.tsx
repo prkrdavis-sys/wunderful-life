@@ -207,7 +207,7 @@ export function VideoForm({
     (initial?.thumbnailPath ? assetDisplayName(initial.thumbnailPath) : null);
 
   const uploadBusy =
-    saving || isMediaUploadBusy(videoUpload) || isMediaUploadBusy(thumbnailUpload);
+    isMediaUploadBusy(videoUpload) || isMediaUploadBusy(thumbnailUpload);
 
   useEffect(() => {
     onUploadBusyChange?.(uploadBusy);
@@ -832,7 +832,7 @@ export function VideoForm({
           }
           className="h-4 w-4 rounded border-brown/30"
         />
-        <span className="text-muted">Featured on landing marquee</span>
+        <span className="text-muted">Show in carousel</span>
       </label>
     </div>
   );
@@ -852,7 +852,7 @@ export function VideoForm({
 
       <AnimatedButton
         onClick={() => void save()}
-        disabled={uploadBusy || saveBlocked}
+        disabled={saving || uploadBusy || saveBlocked}
         className="w-full shadow-md shadow-forest/15 sm:max-w-xs"
       >
         {submitLabel}
@@ -928,7 +928,7 @@ export function VideoForm({
       )}
 
       <div className="mt-6 flex flex-wrap gap-3">
-        <AnimatedButton type="submit" disabled={uploadBusy || saveBlocked}>
+        <AnimatedButton type="submit" disabled={saving || uploadBusy || saveBlocked}>
           {submitLabel}
         </AnimatedButton>
       </div>

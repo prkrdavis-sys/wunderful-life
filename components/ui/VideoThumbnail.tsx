@@ -95,6 +95,7 @@ export function VideoThumbnail({
       fill
       className={className}
       sizes={sizes}
+      decoding="async"
       unoptimized={src.endsWith(".svg")}
       onError={() => setFailed(true)}
     />

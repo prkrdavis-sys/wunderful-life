@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { isQuickTimeVideoPath } from "@/lib/videos/upload";
 
 type AutoplayLoopVideoProps = {
   src: string;
@@ -32,6 +33,8 @@ export function AutoplayLoopVideo({
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const inViewRef = useRef(eager);
+  const decodeFailedRef = useRef(false);
+  const playInFlightRef = useRef(false);
   const [inView, setInView] = useState(eager);
   const [muted, setMuted] = useState(mutedProp);
   const [playing, setPlaying] = useState(false);
@@ -40,12 +43,16 @@ export function AutoplayLoopVideo({
   const [appliedPoster, setAppliedPoster] = useState(poster);
   const activeSrc = eager || inView ? src : null;
   const showCover = !playing;
+  const hasPoster = Boolean(poster);
+  const isQuickTime = isQuickTimeVideoPath(src);
 
   if (src !== appliedSrc || poster !== appliedPoster) {
     setAppliedSrc(src);
     setAppliedPoster(poster);
     setPlaying(false);
     setHasFrame(Boolean(poster));
+    decodeFailedRef.current = false;
+    playInFlightRef.current = false;
   }
 
   useEffect(() => {
@@ -60,8 +67,12 @@ export function AutoplayLoopVideo({
         if (!isVisible) {
           videoRef.current?.pause();
           setPlaying(false);
-        } else {
-          void videoRef.current?.play().catch(() => undefined);
+        } else if (!decodeFailedRef.current) {
+          void videoRef.current?.play().catch(() => {
+            if (isQuickTimeVideoPath(src)) {
+              decodeFailedRef.current = true;
+            }
+          });
         }
       },
       {
@@ -71,7 +82,7 @@ export function AutoplayLoopVideo({
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [eager]);
+  }, [eager, src]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -86,6 +97,7 @@ export function AutoplayLoopVideo({
     video.disablePictureInPicture = true;
 
     const captureFrame = () => {
+      if (hasPoster) return;
       const canvas = canvasRef.current;
       if (!canvas || video.videoWidth === 0) return;
       if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
@@ -104,7 +116,21 @@ export function AutoplayLoopVideo({
 
     const tryPlay = () => {
       if (!inViewRef.current) return;
-      if (video.paused) void video.play().catch(() => undefined);
+      if (decodeFailedRef.current) return;
+      if (!video.paused || playInFlightRef.current) return;
+      playInFlightRef.current = true;
+      void video
+        .play()
+        .then(() => {
+          playInFlightRef.current = false;
+        })
+        .catch(() => {
+          playInFlightRef.current = false;
+          if (isQuickTime) {
+            decodeFailedRef.current = true;
+          }
+          setPlaying(false);
+        });
     };
 
     const onLoaded = () => {
@@ -116,10 +142,16 @@ export function AutoplayLoopVideo({
 
     const onPause = () => {
       captureFrame();
-      if (inViewRef.current) {
-        void video.play().catch(() => setPlaying(false));
+      if (inViewRef.current && !decodeFailedRef.current) {
+        tryPlay();
         return;
       }
+      setPlaying(false);
+    };
+
+    const onError = () => {
+      decodeFailedRef.current = true;
+      playInFlightRef.current = false;
       setPlaying(false);
     };
 
@@ -127,13 +159,18 @@ export function AutoplayLoopVideo({
     video.addEventListener("loadeddata", onLoaded);
     video.addEventListener("loadedmetadata", captureFrame);
     video.addEventListener("canplay", tryPlay);
-    video.addEventListener("canplaythrough", tryPlay);
+    if (!isQuickTime) {
+      video.addEventListener("canplaythrough", tryPlay);
+    }
     video.addEventListener("playing", onPlaying);
     video.addEventListener("pause", onPause);
     video.addEventListener("waiting", captureFrame);
     video.addEventListener("seeked", captureFrame);
+    video.addEventListener("error", onError);
     document.addEventListener("visibilitychange", tryPlay);
-    document.addEventListener("pointerdown", tryPlay);
+    if (!isQuickTime) {
+      document.addEventListener("pointerdown", tryPlay);
+    }
 
     return () => {
       video.removeEventListener("loadeddata", onLoaded);
@@ -144,10 +181,11 @@ export function AutoplayLoopVideo({
       video.removeEventListener("pause", onPause);
       video.removeEventListener("waiting", captureFrame);
       video.removeEventListener("seeked", captureFrame);
+      video.removeEventListener("error", onError);
       document.removeEventListener("visibilitychange", tryPlay);
       document.removeEventListener("pointerdown", tryPlay);
     };
-  }, [activeSrc, muted]);
+  }, [activeSrc, hasPoster, isQuickTime, muted]);
 
   return (
     <div
@@ -159,13 +197,14 @@ export function AutoplayLoopVideo({
       <video
         ref={videoRef}
         src={activeSrc ?? undefined}
-        autoPlay
+        autoPlay={!isQuickTime}
         muted={muted}
         loop
         playsInline
-        preload="auto"
+        preload="metadata"
+        poster={poster}
         {...{
-          fetchPriority: eager ? "high" : "auto",
+          fetchPriority: eager && !isQuickTime ? "high" : "auto",
         }}
         controlsList="nodownload nofullscreen noremoteplayback"
         disablePictureInPicture
@@ -194,13 +233,15 @@ export function AutoplayLoopVideo({
           }`}
         />
       ) : null}
-      <canvas
-        ref={canvasRef}
-        aria-hidden
-        className={`pointer-events-none absolute inset-0 z-[1] h-full w-full object-cover ${
-          showCover && hasFrame && !poster ? "opacity-100" : "opacity-0"
-        }`}
-      />
+      {!hasPoster ? (
+        <canvas
+          ref={canvasRef}
+          aria-hidden
+          className={`pointer-events-none absolute inset-0 z-[1] h-full w-full object-cover ${
+            showCover && hasFrame ? "opacity-100" : "opacity-0"
+          }`}
+        />
+      ) : null}
       {showMuteToggle ? (
         <button
           type="button"
@@ -210,6 +251,7 @@ export function AutoplayLoopVideo({
             setMuted(nextMuted);
             if (video) {
               video.muted = nextMuted;
+              decodeFailedRef.current = false;
               void video.play().catch(() => undefined);
             }
           }}

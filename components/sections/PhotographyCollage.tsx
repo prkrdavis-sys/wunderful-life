@@ -6,7 +6,7 @@ import { useAdminView } from "@/components/admin/AdminViewProvider";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { ScallopedBanner } from "@/components/ui/ScallopedBanner";
 import { SectionSurface } from "@/components/ui/SectionSurface";
-import { StaggerChildren, StaggerItem } from "@/components/ui/motion";
+import { SectionReveal, StaggerChildren, StaggerItem } from "@/components/ui/motion";
 import type { CollagePhotoShape } from "@/lib/site/types";
 
 /** Row/column spans that give the collage its irregular, scrapbook rhythm. */
@@ -29,16 +29,19 @@ export function PhotographyCollage() {
       aria-labelledby="photography-heading"
       className="scroll-section-anchor relative"
     >
-      <ScallopedBanner className="pb-4 sm:pb-6">
+      <ScallopedBanner
+        className="pb-4 sm:pb-6"
+        contentClassName="py-12 text-center sm:py-16"
+      >
         <AdminEditButton section="photography" label="Edit photos" tone="light" />
-        <div className="flex justify-center">
-          <p
+        <SectionReveal className="relative z-10 mx-auto max-w-4xl">
+          <h2
             id="photography-heading"
-            className="frosted-panel rounded-2xl border border-white/60 px-8 py-3 font-script text-3xl text-forest sm:px-12 sm:py-4 sm:text-5xl"
+            className="font-script text-4xl leading-tight text-paper sm:text-6xl"
           >
             {site.photography.label}
-          </p>
-        </div>
+          </h2>
+        </SectionReveal>
       </ScallopedBanner>
 
       <div className="relative overflow-hidden px-4 pt-20 pb-16 sm:px-6 sm:pt-24 sm:pb-20">

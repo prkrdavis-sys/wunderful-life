@@ -2,7 +2,7 @@
 
 import { DeviceMockup, iPhone15Pro } from "@mockifydev/react";
 import { motion } from "framer-motion";
-import type { ReactNode } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 
 const PHONE_COLORS = [
   "Natural Titanium",
@@ -35,10 +35,21 @@ export function PhoneFrame({
   isActive = false,
   className = "",
 }: PhoneFrameProps) {
+  const frameRef = useRef<HTMLDivElement>(null);
   const color = PHONE_COLORS[accentIndex % PHONE_COLORS.length];
+
+  useLayoutEffect(() => {
+    const root = frameRef.current;
+    if (!root) return;
+    for (const img of root.querySelectorAll("img")) {
+      img.decoding = "async";
+      img.loading = "lazy";
+    }
+  }, [color, size]);
 
   return (
     <motion.div
+      ref={frameRef}
       style={{ rotate: tilt }}
       animate={{ scale: isActive ? 1.05 : 1 }}
       transition={{ type: "spring", stiffness: 260, damping: 22 }}

@@ -27,6 +27,8 @@ const INTERACTIVE_SELECTOR = "a, video, input, textarea, select, label";
 const ESTIMATED_SLIDE_WIDTH = 250;
 /** Keep at least this many slides so short lists still feel like a marquee. */
 const MIN_MARQUEE_SLIDES = 8;
+/** Cap duplicated slides so we do not mount a dozen giant phone frames. */
+const MAX_MARQUEE_SLIDES = 10;
 /** Track should span this many viewport widths for seamless loop scrolling. */
 const VIEWPORT_COVERAGE = 2.25;
 const AUTO_SCROLL_SPEED = 0.45;
@@ -35,7 +37,10 @@ function slidesNeededForWidth(viewportWidth: number): number {
   const fromViewport = Math.ceil(
     (Math.max(viewportWidth, 320) * VIEWPORT_COVERAGE) / ESTIMATED_SLIDE_WIDTH,
   );
-  return Math.max(MIN_MARQUEE_SLIDES, fromViewport);
+  return Math.min(
+    MAX_MARQUEE_SLIDES,
+    Math.max(MIN_MARQUEE_SLIDES, fromViewport),
+  );
 }
 
 function buildMarqueeSlides(
@@ -43,8 +48,15 @@ function buildMarqueeSlides(
   minSlides: number,
 ): PortfolioVideo[] {
   if (videos.length === 0) return [];
-  const repeats = Math.ceil(minSlides / videos.length);
-  return Array.from({ length: repeats }, () => videos).flat();
+  if (videos.length >= MAX_MARQUEE_SLIDES) return videos;
+  const target = Math.min(
+    MAX_MARQUEE_SLIDES,
+    Math.max(minSlides, MIN_MARQUEE_SLIDES, videos.length),
+  );
+  const repeats = Math.ceil(target / videos.length);
+  return Array.from({ length: repeats }, () => videos)
+    .flat()
+    .slice(0, Math.max(target, videos.length));
 }
 
 function PhoneSlide({
@@ -82,6 +94,7 @@ export function PhoneMarquee({
 }: PhoneMarqueeProps) {
   const [activeSlideKey, setActiveSlideKey] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [marqueeInView, setMarqueeInView] = useState(false);
   // Desktop-first default so the first paint already overflows wide viewports.
   const [minSlides, setMinSlides] = useState(() => slidesNeededForWidth(1440));
   const { viewMode } = useAdminView();
@@ -103,7 +116,7 @@ export function PhoneMarquee({
       AutoScroll({
         speed: AUTO_SCROLL_SPEED,
         direction: "forward",
-        playOnInit: true,
+        playOnInit: false,
         startDelay: 0,
         stopOnInteraction: false,
         stopOnMouseEnter: false,
@@ -145,6 +158,20 @@ export function PhoneMarquee({
   }, [emblaApi]);
 
   useEffect(() => {
+    const node = emblaApi?.rootNode();
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setMarqueeInView(entries.some((entry) => entry.isIntersecting));
+      },
+      { rootMargin: "80px", threshold: 0.01 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [emblaApi]);
+
+  useEffect(() => {
     if (!emblaApi) return;
     emblaApi.reInit();
   }, [emblaApi, marqueeSlides.length]);
@@ -153,13 +180,13 @@ export function PhoneMarquee({
     const autoScroll = emblaApi?.plugins()?.autoScroll;
     if (!autoScroll) return;
 
-    const shouldPause = Boolean(activeSlideKey) || isHovered;
+    const shouldPause = Boolean(activeSlideKey) || isHovered || !marqueeInView;
     if (shouldPause) {
       autoScroll.stop();
     } else {
       autoScroll.play();
     }
-  }, [emblaApi, activeSlideKey, isHovered]);
+  }, [emblaApi, activeSlideKey, isHovered, marqueeInView]);
 
   useEffect(() => {
     syncAutoScroll();
@@ -184,13 +211,13 @@ export function PhoneMarquee({
     if (viewMode !== "admin") return null;
     return (
       <p className={`text-center ${emptyClassName}`}>
-        No featured work yet — add videos in Admin.
+        No carousel videos yet — add videos in Admin.
       </p>
     );
   }
 
   return (
-    <div className="relative py-4">
+    <div className="relative min-h-[24rem] py-4 sm:min-h-[28rem]">
       <div
         ref={setViewportRef}
         className="cursor-grab select-none overflow-hidden px-4 active:cursor-grabbing"

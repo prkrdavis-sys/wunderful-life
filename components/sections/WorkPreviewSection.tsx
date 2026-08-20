@@ -7,6 +7,8 @@ type WorkPreviewSectionProps = {
 };
 
 export function WorkPreviewSection({ videos }: WorkPreviewSectionProps) {
+  if (videos.length === 0) return null;
+
   const featured = filterVideos(videos, { featured: true });
 
   return (

@@ -119,15 +119,11 @@ export function PhoneVideoPlayer({
                   sizes="(max-width: 768px) 160px, 260px"
                 />
                 <div className="absolute inset-0 bg-brown/10 transition group-hover:bg-brown/5" />
-                <motion.div
-                  className="absolute inset-0 flex items-center justify-center"
-                  animate={{ scale: [1, 1.08, 1] }}
-                  transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
-                >
+                <div className="play-pulse absolute inset-0 flex items-center justify-center">
                   <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-brown shadow-lg">
                     ▶
                   </span>
-                </motion.div>
+                </div>
               </motion.button>
             ) : (
               <motion.div

@@ -130,7 +130,7 @@ export function VideoList({ videos, onEdit, onChange }: VideoListProps) {
         {featuredCount > 0 && (
           <>
             {" "}
-            · {featuredCount} featured on marquee
+            · {featuredCount} shown in carousel
           </>
         )}
         <span className="hidden sm:inline"> · drag cards to reorder</span>
@@ -168,7 +168,7 @@ export function VideoList({ videos, onEdit, onChange }: VideoListProps) {
               </div>
               {video.featured && (
                 <span className="absolute bottom-2 left-2 rounded-full bg-forest px-2 py-0.5 text-[10px] font-semibold text-paper">
-                  Featured
+                  In carousel
                 </span>
               )}
               <span className="absolute right-2 bottom-2 rounded-md bg-brown/55 px-1.5 py-0.5 text-[10px] font-medium text-paper backdrop-blur-sm">
@@ -210,7 +210,7 @@ export function VideoList({ videos, onEdit, onChange }: VideoListProps) {
                   onClick={() => void toggleFeatured(video)}
                   className="rounded-lg px-2 py-1 text-xs font-medium text-ink transition hover:bg-white/80 disabled:opacity-50"
                 >
-                  {video.featured ? "Unfeature" : "Feature"}
+                  {video.featured ? "Hide from carousel" : "Show in carousel"}
                 </button>
                 <button
                   type="button"
