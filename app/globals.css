@@ -143,6 +143,29 @@ body {
   font-family: var(--font-body), system-ui, sans-serif;
 }
 
+/*
+ * Keep looping videos on a GPU layer at device resolution. Parent transforms,
+ * overflow:hidden, and border-radius otherwise rasterize them at 1× CSS pixels
+ * on retina. The player also sizes the <video> at devicePixelRatio.
+ */
+.autoplay-loop-clip {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.autoplay-loop-video,
+.hero-bg-video {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
 /* Decorative loop videos: never show native play chrome, even while buffering. */
 .autoplay-loop-video::-webkit-media-controls,
 .autoplay-loop-video::-webkit-media-controls-enclosure,

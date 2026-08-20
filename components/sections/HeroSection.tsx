@@ -23,7 +23,7 @@ function HeroBackgroundVideo({
         eager
         aria-hidden
         tabIndex={-1}
-        className="hero-bg-video pointer-events-none h-full w-full object-cover"
+        className="hero-bg-video pointer-events-none object-cover"
       />
       <div
         aria-hidden
@@ -42,11 +42,14 @@ export function HeroSection() {
 
   return (
     <section className="relative flex min-h-[85svh] flex-col overflow-hidden px-4 py-16 sm:px-6 sm:py-20">
+      <PlantSectionBackground
+        wallpaper={wallpaper}
+        overlay={hasVideo ? "none" : overlay}
+        priority={!hasVideo}
+      />
       {hasVideo && videoPath ? (
         <HeroBackgroundVideo src={videoPath} poster={site.hero.posterPath} />
-      ) : (
-        <PlantSectionBackground wallpaper={wallpaper} overlay={overlay} priority />
-      )}
+      ) : null}
 
       <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col items-center text-center">
         <div className="flex flex-1 flex-col items-center justify-center">

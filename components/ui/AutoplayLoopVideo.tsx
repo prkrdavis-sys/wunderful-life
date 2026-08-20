@@ -19,6 +19,47 @@ function isRemoteMediaUrl(src: string): boolean {
   return src.startsWith("https://") || src.startsWith("http://");
 }
 
+/**
+ * Chrome/Safari often decode <video> at CSS pixels, not device pixels, so a
+ * 1080p clip in a 400px box looks 1x-soft on retina. Size the element at DPR
+ * and scale it back so the decoder sees the extra pixels.
+ */
+function fitVideoToDisplaySize(
+  video: HTMLVideoElement,
+  container: HTMLElement,
+) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const width = container.clientWidth;
+  const height = container.clientHeight;
+  if (width < 2 || height < 2) return;
+
+  video.style.width = `${Math.round(width * dpr)}px`;
+  video.style.height = `${Math.round(height * dpr)}px`;
+  video.style.maxWidth = "none";
+  video.style.maxHeight = "none";
+  video.style.objectFit = "cover";
+  video.style.transformOrigin = "0 0";
+  video.style.transform =
+    dpr === 1 ? "translateZ(0)" : `scale(${1 / dpr}) translateZ(0)`;
+}
+
+function primeInlineAutoplay(video: HTMLVideoElement, muted: boolean) {
+  video.muted = muted;
+  video.defaultMuted = muted;
+  video.playsInline = true;
+  video.autoplay = true;
+  if (muted) {
+    video.setAttribute("muted", "");
+  } else {
+    video.removeAttribute("muted");
+  }
+  video.setAttribute("autoplay", "");
+  video.setAttribute("playsinline", "true");
+  video.setAttribute("webkit-playsinline", "true");
+  video.setAttribute("x-webkit-airplay", "deny");
+  video.disablePictureInPicture = true;
+}
+
 export function AutoplayLoopVideo({
   src,
   poster,
@@ -77,12 +118,10 @@ export function AutoplayLoopVideo({
           confirmedVisible = true;
           inViewRef.current = true;
           setInView(true);
-          if (!decodeFailedRef.current) {
-            void videoRef.current?.play().catch(() => {
-              if (isQuickTimeVideoPath(src)) {
-                decodeFailedRef.current = true;
-              }
-            });
+          const video = videoRef.current;
+          if (video && !decodeFailedRef.current) {
+            primeInlineAutoplay(video, muted);
+            void video.play().catch(() => undefined);
           }
           return;
         }
@@ -101,37 +140,36 @@ export function AutoplayLoopVideo({
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [eager, src]);
+  }, [eager, muted, src]);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !activeSrc) return;
 
-    video.muted = muted;
-    video.defaultMuted = muted;
-    video.playsInline = true;
-    if (muted) {
-      video.setAttribute("muted", "");
-    } else {
-      video.removeAttribute("muted");
-    }
-    video.setAttribute("playsinline", "true");
-    video.setAttribute("webkit-playsinline", "true");
-    video.setAttribute("x-webkit-airplay", "deny");
-    video.disablePictureInPicture = true;
+    primeInlineAutoplay(video, muted);
 
     const captureFrame = () => {
       if (hasPoster) return;
       const canvas = canvasRef.current;
+      const container = containerRef.current;
       if (!canvas || video.videoWidth === 0) return;
-      if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, 3);
+      const drawWidth = Math.max(
+        video.videoWidth,
+        Math.round((container?.clientWidth || video.videoWidth) * dpr),
+      );
+      const drawHeight = Math.max(
+        video.videoHeight,
+        Math.round((container?.clientHeight || video.videoHeight) * dpr),
+      );
+      if (canvas.width !== drawWidth || canvas.height !== drawHeight) {
+        canvas.width = drawWidth;
+        canvas.height = drawHeight;
       }
       const context = canvas.getContext("2d");
       if (!context) return;
       try {
-        context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+        context.drawImage(video, 0, 0, drawWidth, drawHeight);
         setHasFrame(true);
       } catch {
         // Cross-origin frames can fail; CSS still hides native play chrome.
@@ -146,7 +184,7 @@ export function AutoplayLoopVideo({
     const tryPlay = () => {
       if (!canAttemptPlay()) return;
       if (!video.paused || playInFlightRef.current) return;
-      video.muted = muted;
+      primeInlineAutoplay(video, muted);
       playInFlightRef.current = true;
       void video
         .play()
@@ -155,9 +193,6 @@ export function AutoplayLoopVideo({
         })
         .catch(() => {
           playInFlightRef.current = false;
-          if (isQuickTime) {
-            decodeFailedRef.current = true;
-          }
           setPlaying(false);
         });
     };
@@ -187,7 +222,7 @@ export function AutoplayLoopVideo({
     tryPlay();
     const playAfterLayout = window.requestAnimationFrame(tryPlay);
     video.addEventListener("loadeddata", onLoaded);
-    video.addEventListener("loadedmetadata", captureFrame);
+    video.addEventListener("loadedmetadata", onLoaded);
     video.addEventListener("canplay", tryPlay);
     if (!isQuickTime) {
       video.addEventListener("canplaythrough", tryPlay);
@@ -196,44 +231,70 @@ export function AutoplayLoopVideo({
     video.addEventListener("pause", onPause);
     video.addEventListener("waiting", captureFrame);
     video.addEventListener("seeked", captureFrame);
+    video.addEventListener("stalled", tryPlay);
     video.addEventListener("error", onError);
     document.addEventListener("visibilitychange", tryPlay);
     window.addEventListener("pageshow", tryPlay);
+    window.addEventListener("touchstart", tryPlay, { passive: true });
+    window.addEventListener("pointerdown", tryPlay);
+    window.addEventListener("scroll", tryPlay, { passive: true });
 
     return () => {
       window.cancelAnimationFrame(playAfterLayout);
       video.removeEventListener("loadeddata", onLoaded);
-      video.removeEventListener("loadedmetadata", captureFrame);
+      video.removeEventListener("loadedmetadata", onLoaded);
       video.removeEventListener("canplay", tryPlay);
       video.removeEventListener("canplaythrough", tryPlay);
       video.removeEventListener("playing", onPlaying);
       video.removeEventListener("pause", onPause);
       video.removeEventListener("waiting", captureFrame);
       video.removeEventListener("seeked", captureFrame);
+      video.removeEventListener("stalled", tryPlay);
       video.removeEventListener("error", onError);
       document.removeEventListener("visibilitychange", tryPlay);
       window.removeEventListener("pageshow", tryPlay);
+      window.removeEventListener("touchstart", tryPlay);
+      window.removeEventListener("pointerdown", tryPlay);
+      window.removeEventListener("scroll", tryPlay);
     };
   }, [activeSrc, hasPoster, isQuickTime, muted]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    const video = videoRef.current;
+    if (!container || !video) return;
+
+    const apply = () => fitVideoToDisplaySize(video, container);
+    apply();
+    const frame = window.requestAnimationFrame(apply);
+    const observer = new ResizeObserver(apply);
+    observer.observe(container);
+    window.addEventListener("resize", apply);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("resize", apply);
+    };
+  }, [activeSrc]);
 
   return (
     <div
       ref={containerRef}
-      className={`absolute inset-0 h-full w-full overflow-hidden ${
+      className={`autoplay-loop-clip absolute inset-0 h-full w-full overflow-hidden ${
         eager ? "bg-black" : ""
       }`}
     >
       <video
         ref={videoRef}
         src={activeSrc ?? undefined}
-        autoPlay={!isQuickTime}
+        autoPlay
         muted={muted}
         loop
         playsInline
-        preload="metadata"
+        preload={eager ? "auto" : "metadata"}
         poster={poster}
         {...{
-          fetchPriority: eager && !isQuickTime ? "high" : "auto",
+          fetchPriority: eager ? "high" : "auto",
         }}
         controlsList="nodownload nofullscreen noremoteplayback"
         disablePictureInPicture
@@ -242,8 +303,10 @@ export function AutoplayLoopVideo({
         tabIndex={tabIndex}
         aria-hidden={ariaHidden}
         className={[
-          "autoplay-loop-video pointer-events-none relative z-[1]",
-          playing ? "opacity-100" : "opacity-0",
+          "autoplay-loop-video pointer-events-none absolute top-0 left-0 z-[1] object-cover",
+          // iOS Safari will not decode a fully transparent <video>, so keep a
+          // sliver of opacity until playback starts (poster/wallpaper cover it).
+          playing ? "opacity-100" : "opacity-[0.01]",
           className,
         ]
           .filter(Boolean)
@@ -279,7 +342,7 @@ export function AutoplayLoopVideo({
             const nextMuted = !muted;
             setMuted(nextMuted);
             if (video) {
-              video.muted = nextMuted;
+              primeInlineAutoplay(video, nextMuted);
               decodeFailedRef.current = false;
               void video.play().catch(() => undefined);
             }

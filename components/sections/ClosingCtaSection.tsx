@@ -42,12 +42,12 @@ function CtaVideo({ videoPath }: { videoPath?: string }) {
   }
 
   return (
-    <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[2rem] border border-white/70 shadow-xl">
+    <div className="autoplay-loop-clip relative aspect-[4/5] w-full overflow-hidden rounded-[2rem] border border-white/70 shadow-xl">
       <AutoplayLoopVideo
         src={videoPath}
         muted
         showMuteToggle
-        className="h-full w-full object-cover"
+        className="object-cover"
       />
     </div>
   );
@@ -69,9 +69,9 @@ export function ClosingCtaSection() {
       <AdminEditButton section="cta" label="Edit CTA" />
 
       <div className="relative z-10 mx-auto grid max-w-5xl items-center gap-10 sm:gap-14 lg:grid-cols-[0.85fr_1.15fr]">
-        <SectionReveal className="mx-auto w-full max-w-xs lg:max-w-none">
+        <div className="mx-auto w-full max-w-xs lg:max-w-none">
           <CtaVideo videoPath={closingCta.videoPath} />
-        </SectionReveal>
+        </div>
 
         <SectionReveal delay={0.12} className="text-center lg:text-left">
           <h2

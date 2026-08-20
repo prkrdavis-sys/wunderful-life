@@ -134,7 +134,8 @@ function loadFfmpegScript(): Promise<void> {
 export type VideoUploadProfile = "portfolio" | "hero" | "cta";
 
 type CompressSettings = {
-  maxEdge: number;
+  /** Short edge, i.e. true 720p / 1080p. Long-edge 720 made portrait clips 406×720. */
+  maxShortEdge: number;
   crf: number;
   stripAudio: boolean;
   maxDurationSec: number | null;
@@ -145,16 +146,15 @@ function settingsForProfile(profile: VideoUploadProfile): CompressSettings {
   switch (profile) {
     case "hero":
       return {
-        maxEdge: 720,
-        crf: 32,
+        maxShortEdge: 1080,
+        crf: 23,
         stripAudio: true,
         maxDurationSec: 8,
-        skipIfMp4UnderBytes: 1_200_000,
+        skipIfMp4UnderBytes: 8_000_000,
       };
     case "cta":
-      // 1920 long-edge = 1080p for 9:16. 720 was 406×720 on portrait clips.
       return {
-        maxEdge: 1920,
+        maxShortEdge: 1080,
         crf: 23,
         stripAudio: false,
         maxDurationSec: null,
@@ -162,8 +162,8 @@ function settingsForProfile(profile: VideoUploadProfile): CompressSettings {
       };
     case "portfolio":
       return {
-        maxEdge: 1280,
-        crf: 28,
+        maxShortEdge: 720,
+        crf: 26,
         stripAudio: false,
         maxDurationSec: null,
         skipIfMp4UnderBytes: 5_000_000,
@@ -264,8 +264,12 @@ async function getFFmpeg(): Promise<FFmpegInstance> {
   return loadPromise;
 }
 
-function scaleFilter(maxEdge: number): string {
-  return `scale='if(gte(iw,ih),min(iw,${maxEdge}),-2)':'if(gt(ih,iw),min(ih,${maxEdge}),-2)',scale=trunc(iw/2)*2:trunc(ih/2)*2`;
+function scaleToShortEdge(maxShortEdge: number): string {
+  return `scale='if(gte(iw,ih),-2,min(iw,${maxShortEdge}))':'if(gt(ih,iw),-2,min(ih,${maxShortEdge}))',scale=trunc(iw/2)*2:trunc(ih/2)*2`;
+}
+
+function scaleToLongEdge(maxLongEdge: number): string {
+  return `scale='if(gte(iw,ih),min(iw,${maxLongEdge}),-2)':'if(gt(ih,iw),min(ih,${maxLongEdge}),-2)',scale=trunc(iw/2)*2:trunc(ih/2)*2`;
 }
 
 function ffmpegArgs(
@@ -288,7 +292,7 @@ function ffmpegArgs(
     "-crf",
     String(settings.crf),
     "-vf",
-    scaleFilter(settings.maxEdge),
+    scaleToShortEdge(settings.maxShortEdge),
     "-pix_fmt",
     "yuv420p",
     "-movflags",
@@ -306,7 +310,7 @@ function ffmpegArgs(
 function progressMessage(profile: VideoUploadProfile): string {
   switch (profile) {
     case "hero":
-      return "Compressing background video (short, muted, 720p)…";
+      return "Compressing background video (1080p, muted)…";
     case "cta":
       return "Compressing looping video (1080p)…";
     case "portfolio":
@@ -321,11 +325,11 @@ function progressMessage(profile: VideoUploadProfile): string {
 function bitrateForProfile(profile: VideoUploadProfile): number {
   switch (profile) {
     case "hero":
-      return 800_000;
+      return 4_500_000;
     case "cta":
       return 5_000_000;
     case "portfolio":
-      return 2_000_000;
+      return 2_500_000;
     default: {
       const _exhaustive: never = profile;
       return _exhaustive;
@@ -503,7 +507,7 @@ async function transcodeWithMediaRecorder(
           throw new Error("Could not read this video to compress it.");
         }
 
-        const scale = Math.min(1, settings.maxEdge / Math.max(srcW, srcH));
+        const scale = Math.min(1, settings.maxShortEdge / Math.min(srcW, srcH));
         const width = Math.max(2, Math.round((srcW * scale) / 2) * 2);
         const height = Math.max(2, Math.round((srcH * scale) / 2) * 2);
         canvas.width = width;
@@ -727,7 +731,7 @@ export async function extractThumbnailWithFfmpeg(file: File): Promise<File> {
         "-q:v",
         "5",
         "-vf",
-        scaleFilter(720),
+        scaleToLongEdge(720),
         outputName,
       ]),
       FFMPEG_THUMBNAIL_TIMEOUT_MS,
@@ -777,7 +781,8 @@ export type PrepareVideoOptions = {
 /**
  * Browser compression is a best-effort optimization, not a requirement. When
  * every strategy fails we still upload the original clip so a save is never
- * blocked by a codec or autoplay quirk in the admin's browser.
+ * blocked by a codec or autoplay quirk in the admin's browser — except the
+ * hero, which must be a real MP4 or phones just show a black frame.
  */
 export async function prepareVideoForWebUpload(
   file: File,
@@ -789,6 +794,15 @@ export async function prepareVideoForWebUpload(
     return await compressForWebUpload(file, profile, onProgress);
   } catch (error) {
     if (file.size > MAX_VIDEO_BYTES) throw error;
+
+    if (profile === "hero" && !isAlreadyMp4(file)) {
+      throw new Error(
+        toErrorMessage(
+          error,
+          "This clip could not be converted for phones. Export an MP4 from Photos and try again.",
+        ),
+      );
+    }
 
     console.warn("Falling back to the original video file:", error);
     onNotice?.(

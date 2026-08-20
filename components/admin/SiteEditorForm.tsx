@@ -11,7 +11,6 @@ import type { PortfolioVideo } from "@/lib/videos/types";
 import {
   isAcceptedVideoFile,
   VIDEO_FILE_ACCEPT,
-  VIDEO_UPLOAD_HELP,
   videoUploadErrorMessage,
 } from "@/lib/videos/upload";
 import { needsWebTranscode, prepareVideoForWebUpload } from "@/lib/videos/transcode";
@@ -247,7 +246,7 @@ const SLOT_COPY: Record<VideoSlot, { noun: string; endpoint: string; hint: strin
   hero: {
     noun: "hero video",
     endpoint: "/api/site/hero-video",
-    hint: VIDEO_UPLOAD_HELP,
+    hint: "Upload the original 1080p or 4K clip from Photos — not a compressed copy. It stays sharp for the full-width hero.",
   },
   cta: {
     noun: "CTA video",
@@ -952,8 +951,9 @@ export function SiteEditorForm({
                 </p>
                 <p className="text-sm text-muted">
                   Goes live as soon as you pick a file — no need to press
-                  &ldquo;Save site content&rdquo;. Replaces the current video.
-                  Without a video, the hero shows the plant wallpaper.
+                  &ldquo;Save site content&rdquo;. Use the original 1080p (or
+                  higher) file so it stays sharp across the hero. Without a
+                  video, the hero shows the plant wallpaper.
                 </p>
                 {renderVideoUpload("hero", form.hero.videoPath)}
               </div>
