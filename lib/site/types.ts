@@ -15,6 +15,9 @@ export type AboutPhoto = {
 /** Tile in the photography collage. `shape` drives its span in the masonry. */
 export type CollagePhotoShape = "square" | "tall" | "wide";
 
+/** Hard cap for collage tiles in the editor and on save. */
+export const MAX_COLLAGE_TILES = 20;
+
 export type CollagePhoto = {
   id: string;
   alt: string;

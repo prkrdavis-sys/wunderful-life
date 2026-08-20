@@ -3,7 +3,8 @@
 import Image from "next/image";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
-import { ScallopedBanner } from "@/components/ui/ScallopedBanner";
+import { SectionButterfly } from "@/components/ui/ButterflyFlight";
+import { DecorMotifs } from "@/components/ui/DecorMotifs";
 import { SectionReveal } from "@/components/ui/motion";
 import type { BrandItem } from "@/lib/site/types";
 
@@ -22,7 +23,7 @@ function BrandMark({ brand }: { brand: BrandItem }) {
   }
 
   return (
-    <span className="font-label text-sm font-bold tracking-[0.06em] text-paper/90 sm:text-base">
+    <span className="font-label text-sm font-bold tracking-[0.06em] text-forest sm:text-base">
       {brand.name}
     </span>
   );
@@ -36,18 +37,35 @@ export function BrandsBanner() {
   if (!isAdminView && (!visible || items.length === 0)) return null;
 
   return (
-    <section id="brands" className="scroll-section-anchor relative">
-      <ScallopedBanner className="pb-4 sm:pb-6">
-        <AdminEditButton section="brands" label="Edit brands" tone="light" />
-        <SectionReveal className="text-center">
-          <h2 className="font-script text-3xl text-paper sm:text-5xl">{heading}</h2>
+    <section
+      id="brands"
+      aria-labelledby="brands-heading"
+      className="ugc-brands-section scroll-section-anchor relative overflow-hidden px-4 py-16 sm:px-6 sm:py-24"
+    >
+      <DecorMotifs preset="scatter" tone="paper" />
+      <AdminEditButton section="brands" label="Edit brands" tone="light" />
+      <SectionButterfly flight="brandsBand" />
 
-          {items.length === 0 ? (
-            <p className="mt-5 font-label text-sm text-paper/70">
-              No brands yet — add some in the site editor.
-            </p>
-          ) : (
-            <ul className="mx-auto mt-6 flex max-w-4xl flex-wrap items-center justify-center gap-x-10 gap-y-5 sm:mt-8 sm:justify-between">
+      <div className="relative z-10 mx-auto max-w-6xl">
+        <SectionReveal className="mx-auto max-w-2xl text-center">
+          <h2
+            id="brands-heading"
+            className="font-serif text-4xl tracking-tight text-paper sm:text-6xl"
+          >
+            {heading}
+          </h2>
+        </SectionReveal>
+
+        {items.length === 0 ? (
+          <p className="mt-8 text-center font-label text-sm text-paper/70">
+            No brands yet — add some in the site editor.
+          </p>
+        ) : (
+          <SectionReveal
+            delay={0.12}
+            className="ugc-benefits-card mx-auto mt-10 max-w-4xl rounded-[2rem] border border-paper/40 p-6 text-ink shadow-xl sm:mt-12 sm:p-8"
+          >
+            <ul className="flex flex-wrap items-center justify-center gap-x-10 gap-y-5 sm:justify-between">
               {items.map((brand) => (
                 <li key={brand.id} className="flex items-center">
                   {brand.url ? (
@@ -65,15 +83,15 @@ export function BrandsBanner() {
                 </li>
               ))}
             </ul>
-          )}
-        </SectionReveal>
-      </ScallopedBanner>
+          </SectionReveal>
+        )}
 
-      {isAdminView && !visible && (
-        <p className="bg-honey/30 py-2 text-center font-label text-xs tracking-[0.14em] text-brown uppercase">
-          Brands banner hidden from visitors
-        </p>
-      )}
+        {isAdminView && !visible && (
+          <p className="mt-8 text-center font-label text-xs tracking-[0.14em] text-paper/80 uppercase">
+            Brands section hidden from visitors
+          </p>
+        )}
+      </div>
     </section>
   );
 }

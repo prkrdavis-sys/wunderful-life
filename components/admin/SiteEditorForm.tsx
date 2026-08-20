@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { CollagePhotoShape, SiteContent } from "@/lib/site/types";
+import {
+  MAX_COLLAGE_TILES,
+  type CollagePhotoShape,
+  type SiteContent,
+} from "@/lib/site/types";
 import type { PortfolioVideo } from "@/lib/videos/types";
 import {
   isAcceptedVideoFile,
@@ -56,8 +60,6 @@ const cardClass = "space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4"
 
 const smallButtonClass =
   "rounded-lg border border-brown/25 bg-white px-2 py-1 text-xs font-medium text-brown transition hover:border-forest/45 hover:text-forest disabled:cursor-not-allowed disabled:opacity-40";
-
-const MAX_COLLAGE_TILES = 10;
 
 /** Move an item within a list, returning a new array. */
 function moveItem<T>(items: T[], index: number, delta: number): T[] {
@@ -1255,13 +1257,13 @@ export function SiteEditorForm({
                   Photography collage
                 </h3>
                 <p className="mt-1 text-sm text-muted">
-                  The scrapbook grid with the frosted label in the middle. Shape
-                  controls how much room each tile takes.
+                  The scrapbook grid under the scalloped photography banner.
+                  Shape controls how much room each tile takes.
                 </p>
               </div>
 
               <label className="block max-w-2xl text-sm">
-                <span className="text-muted">Centre label (cursive)</span>
+                <span className="text-muted">Banner label</span>
                 <AutoResizeTextarea
                   value={form.photography.label}
                   onChange={(event) =>
@@ -1412,7 +1414,7 @@ export function SiteEditorForm({
               </div>
 
               <AddRowButton
-                label="Add tile"
+                label={`Add tile (${form.photography.photos.length} of ${MAX_COLLAGE_TILES})`}
                 disabled={form.photography.photos.length >= MAX_COLLAGE_TILES}
                 onClick={() =>
                   setForm((current) => {
@@ -1443,18 +1445,18 @@ export function SiteEditorForm({
             <section className="space-y-4">
               <div>
                 <h3 className="font-display text-lg text-brown">
-                  Brands banner
+                  Brands I've worked with
                 </h3>
                 <p className="mt-1 text-sm text-muted">
-                  The scalloped band after Why UGC. Upload a logo, or leave it
-                  empty to show the brand name as text.
+                  The brand list that sits under What Is UGC. Upload a logo, or
+                  leave it empty to show the brand name as text.
                 </p>
               </div>
 
               <label className="flex max-w-2xl items-center justify-between gap-4 rounded-2xl border border-brown/15 bg-cream/55 p-4 text-sm">
                 <span>
                   <span className="block font-semibold text-brown">
-                    Show the brands banner
+                    Show the brands section
                   </span>
                   <span className="mt-1 block text-muted">
                     Admin view still previews it while hidden.
@@ -1474,7 +1476,7 @@ export function SiteEditorForm({
               </label>
 
               <label className="block max-w-2xl text-sm">
-                <span className="text-muted">Banner heading (cursive)</span>
+                <span className="text-muted">Section headline</span>
                 <AutoResizeTextarea
                   value={form.brands.heading}
                   onChange={(event) =>

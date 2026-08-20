@@ -1,11 +1,12 @@
-import type {
-  AboutPhoto,
-  BrandItem,
-  CollagePhoto,
-  CollagePhotoShape,
-  GridPhoto,
-  SiteContent,
-  StatItem,
+import {
+  MAX_COLLAGE_TILES,
+  type AboutPhoto,
+  type BrandItem,
+  type CollagePhoto,
+  type CollagePhotoShape,
+  type GridPhoto,
+  type SiteContent,
+  type StatItem,
 } from "@/lib/site/types";
 
 const DEFAULT_CTA_HEADLINE = "Let's work together";
@@ -279,17 +280,20 @@ function normalizeCollagePhotos(
           ...(photo.imagePath ? { imagePath: photo.imagePath } : {}),
         };
       })
-      .filter((photo): photo is CollagePhoto => photo !== null);
+      .filter((photo): photo is CollagePhoto => photo !== null)
+      .slice(0, MAX_COLLAGE_TILES);
   }
 
   // Migration: carry the old 8-slot home grid (and any uploads) into the collage.
   if (Array.isArray(legacyGrid) && legacyGrid.length > 0) {
-    return legacyGrid.map((photo, index) => ({
-      id: text(photo.id, `collage-${index + 1}`),
-      alt: text(photo.alt, `Photography collage image ${index + 1}`),
-      shape: COLLAGE_SHAPE_CYCLE[index % COLLAGE_SHAPE_CYCLE.length],
-      ...(photo.imagePath ? { imagePath: photo.imagePath } : {}),
-    }));
+    return legacyGrid
+      .map((photo, index) => ({
+        id: text(photo.id, `collage-${index + 1}`),
+        alt: text(photo.alt, `Photography collage image ${index + 1}`),
+        shape: COLLAGE_SHAPE_CYCLE[index % COLLAGE_SHAPE_CYCLE.length],
+        ...(photo.imagePath ? { imagePath: photo.imagePath } : {}),
+      }))
+      .slice(0, MAX_COLLAGE_TILES);
   }
 
   return DEFAULT_COLLAGE_PHOTOS;

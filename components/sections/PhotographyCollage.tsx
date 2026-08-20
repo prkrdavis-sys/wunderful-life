@@ -4,6 +4,7 @@ import Image from "next/image";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
+import { ScallopedBanner } from "@/components/ui/ScallopedBanner";
 import { SectionSurface } from "@/components/ui/SectionSurface";
 import { StaggerChildren, StaggerItem } from "@/components/ui/motion";
 import type { CollagePhotoShape } from "@/lib/site/types";
@@ -26,15 +27,26 @@ export function PhotographyCollage() {
     <section
       id="photography"
       aria-labelledby="photography-heading"
-      className="scroll-section-anchor relative overflow-hidden px-4 py-16 sm:px-6 sm:py-20"
+      className="scroll-section-anchor relative"
     >
-      <SectionSurface tone="blush" motifs="right" />
-      <SectionButterfly flight="photography" />
-      <SectionButterfly flight="photographyLow" />
-      <AdminEditButton section="photography" label="Edit photos" />
+      <ScallopedBanner className="pb-4 sm:pb-6">
+        <AdminEditButton section="photography" label="Edit photos" tone="light" />
+        <div className="flex justify-center">
+          <p
+            id="photography-heading"
+            className="frosted-panel rounded-2xl border border-white/60 px-8 py-3 font-script text-3xl text-forest sm:px-12 sm:py-4 sm:text-5xl"
+          >
+            {site.photography.label}
+          </p>
+        </div>
+      </ScallopedBanner>
 
-      <div className="relative z-10 mx-auto max-w-5xl">
-        <div className="relative">
+      <div className="relative overflow-hidden px-4 pt-20 pb-16 sm:px-6 sm:pt-24 sm:pb-20">
+        <SectionSurface tone="blush" motifs="right" />
+        <SectionButterfly flight="photography" />
+        <SectionButterfly flight="photographyLow" />
+
+        <div className="relative z-10 mx-auto max-w-5xl">
           {/* Dense flow backfills the holes that tall/wide tiles leave behind. */}
           <StaggerChildren className="grid auto-rows-[minmax(0,7rem)] grid-flow-row-dense grid-cols-3 gap-2 sm:auto-rows-[minmax(0,9rem)] sm:grid-cols-4 sm:gap-3">
             {photos.map((photo) => {
@@ -93,15 +105,6 @@ export function PhotographyCollage() {
               );
             })}
           </StaggerChildren>
-
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <p
-              id="photography-heading"
-              className="frosted-panel rounded-2xl border border-white/60 px-8 py-3 font-script text-3xl text-forest sm:px-12 sm:py-4 sm:text-5xl"
-            >
-              {site.photography.label}
-            </p>
-          </div>
         </div>
       </div>
     </section>
