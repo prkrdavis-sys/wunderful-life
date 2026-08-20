@@ -181,8 +181,8 @@ export function FileUploadButton({
           <label
             htmlFor={id}
             aria-hidden="true"
-            className={`shrink-0 whitespace-nowrap rounded-full bg-forest/90 px-2.5 py-1.5 font-label text-[10px] font-semibold tracking-[0.14em] text-paper uppercase opacity-90 transition group-hover:bg-forest sm:px-3 ${
-              disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+            className={`shrink-0 whitespace-nowrap rounded-full bg-forest/90 px-2.5 py-1.5 font-label text-[10px] font-semibold tracking-[0.14em] text-paper uppercase transition group-hover:bg-forest sm:px-3 ${
+              disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer opacity-90"
             }`}
           >
             {selected ? "Swap" : "Browse"}

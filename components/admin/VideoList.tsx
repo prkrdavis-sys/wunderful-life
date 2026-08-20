@@ -196,13 +196,13 @@ export function VideoList({ videos, onEdit, onChange }: VideoListProps) {
               </button>
 
               <div
-                className="mt-auto flex flex-wrap gap-1 border-t border-brown/10 pt-2"
+                className="mt-auto flex flex-wrap gap-2 border-t border-brown/10 pt-2"
                 onMouseDown={(event) => event.stopPropagation()}
               >
                 <button
                   type="button"
                   onClick={() => onEdit(video)}
-                  className="rounded-lg px-2 py-1 text-xs font-medium text-forest transition hover:bg-white/80"
+                  className="rounded-lg px-2 py-1 text-xs font-medium whitespace-nowrap text-forest transition hover:bg-white/80"
                 >
                   Edit
                 </button>
@@ -210,7 +210,7 @@ export function VideoList({ videos, onEdit, onChange }: VideoListProps) {
                   type="button"
                   disabled={busyId === video.id}
                   onClick={() => void toggleFeatured(video)}
-                  className="rounded-lg px-2 py-1 text-xs font-medium text-ink transition hover:bg-white/80 disabled:opacity-50"
+                  className="rounded-lg px-2 py-1 text-xs font-medium whitespace-nowrap text-ink transition hover:bg-white/80 disabled:opacity-50"
                 >
                   {video.featured ? "Hide from carousel" : "Show in carousel"}
                 </button>
@@ -218,7 +218,7 @@ export function VideoList({ videos, onEdit, onChange }: VideoListProps) {
                   type="button"
                   disabled={busyId === video.id}
                   onClick={() => void handleDelete(video.id)}
-                  className="rounded-lg px-2 py-1 text-xs font-medium text-blush-deep transition hover:bg-white/80 disabled:opacity-50"
+                  className="rounded-lg px-2 py-1 text-xs font-medium whitespace-nowrap text-blush-deep transition hover:bg-white/80 disabled:opacity-50"
                 >
                   Delete
                 </button>
