@@ -93,7 +93,7 @@ function RowControls({
   onRemove: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-2">
+    <div className="flex flex-wrap items-center justify-between gap-2">
       <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
         {label} {index + 1}
       </p>
