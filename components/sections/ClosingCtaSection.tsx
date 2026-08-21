@@ -119,7 +119,7 @@ export function ClosingCtaSection() {
               width={SIGNATURE.width}
               height={SIGNATURE.height}
               sizes="(max-width: 640px) 13.75rem, (max-width: 1024px) 16.25rem, 18.5rem"
-              className="h-auto w-full origin-center rotate-[4deg] mix-blend-multiply"
+              className="h-auto w-full origin-center rotate-[3deg] mix-blend-multiply"
             />
           </figure>
         </SectionReveal>
