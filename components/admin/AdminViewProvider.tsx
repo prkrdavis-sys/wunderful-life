@@ -34,6 +34,18 @@ export type SiteEditorFocus = {
 
 export type AdminPanelTab = "content" | "portfolio";
 
+export type EditorLocation = {
+  tab: AdminPanelTab;
+  section: SiteEditorSection;
+  focus: SiteEditorFocus | null;
+};
+
+const DEFAULT_LOCATION: EditorLocation = {
+  tab: "content",
+  section: "profile",
+  focus: null,
+};
+
 type AdminViewContextValue = {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
@@ -41,12 +53,10 @@ type AdminViewContextValue = {
   authRequired: boolean;
   panelOpen: boolean;
   setPanelOpen: (open: boolean) => void;
-  editorSection: SiteEditorSection | null;
-  setEditorSection: (section: SiteEditorSection | null) => void;
-  editorFocus: SiteEditorFocus | null;
+  location: EditorLocation;
+  setEditorTab: (tab: AdminPanelTab) => void;
+  setEditorSection: (section: SiteEditorSection) => void;
   clearEditorFocus: () => void;
-  preferredTab: AdminPanelTab | null;
-  clearPreferredTab: () => void;
   openSiteEditor: (
     section?: SiteEditorSection,
     focus?: SiteEditorFocus,
@@ -85,9 +95,7 @@ export function AdminViewProvider({
   const [authenticated, setAuthenticated] = useState(initialAuthenticated);
   const [authRequired, setAuthRequired] = useState(initialAuthRequired);
   const [panelOpen, setPanelOpen] = useState(false);
-  const [editorSection, setEditorSection] = useState<SiteEditorSection | null>(null);
-  const [editorFocus, setEditorFocus] = useState<SiteEditorFocus | null>(null);
-  const [preferredTab, setPreferredTab] = useState<AdminPanelTab | null>(null);
+  const [location, setLocation] = useState<EditorLocation>(DEFAULT_LOCATION);
   const [site, setSite] = useState(initialSite);
   const [siteVersion, setSiteVersion] = useState(initialSiteVersion);
 
@@ -134,28 +142,41 @@ export function AdminViewProvider({
     router.refresh();
   }, [router]);
 
-  const clearPreferredTab = useCallback(() => {
-    setPreferredTab(null);
+  const setEditorTab = useCallback((tab: AdminPanelTab) => {
+    setLocation((current) => ({ ...current, tab, focus: null }));
+  }, []);
+
+  const setEditorSection = useCallback((section: SiteEditorSection) => {
+    setLocation((current) => ({
+      ...current,
+      tab: "content",
+      section,
+      focus: null,
+    }));
   }, []);
 
   const clearEditorFocus = useCallback(() => {
-    setEditorFocus(null);
+    setLocation((current) => ({ ...current, focus: null }));
   }, []);
 
   const openSiteEditor = useCallback(
     (section?: SiteEditorSection, focus?: SiteEditorFocus) => {
-      setEditorSection(section ?? null);
-      setEditorFocus(focus ?? null);
-      setPreferredTab("content");
+      setLocation({
+        tab: "content",
+        section: section ?? "profile",
+        focus: focus ?? null,
+      });
       setPanelOpen(true);
     },
     [],
   );
 
   const openPortfolioEditor = useCallback(() => {
-    setEditorSection(null);
-    setEditorFocus(null);
-    setPreferredTab("portfolio");
+    setLocation((current) => ({
+      ...current,
+      tab: "portfolio",
+      focus: null,
+    }));
     setPanelOpen(true);
   }, []);
 
@@ -167,12 +188,10 @@ export function AdminViewProvider({
       authRequired,
       panelOpen,
       setPanelOpen,
-      editorSection,
+      location,
+      setEditorTab,
       setEditorSection,
-      editorFocus,
       clearEditorFocus,
-      preferredTab,
-      clearPreferredTab,
       openSiteEditor,
       openPortfolioEditor,
       enterAdminView,
@@ -189,11 +208,10 @@ export function AdminViewProvider({
       authenticated,
       authRequired,
       panelOpen,
-      editorSection,
-      editorFocus,
+      location,
+      setEditorTab,
+      setEditorSection,
       clearEditorFocus,
-      preferredTab,
-      clearPreferredTab,
       openSiteEditor,
       openPortfolioEditor,
       enterAdminView,

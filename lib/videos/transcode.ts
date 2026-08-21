@@ -1,137 +1,20 @@
+import { toErrorMessage } from "@/lib/errors";
+import { extensionFromFilename } from "@/lib/files";
 import { MAX_VIDEO_BYTES } from "@/lib/videos/upload";
+import { waitForVideoEvent, withTimeout } from "@/lib/videos/media-dom";
+import {
+  bytesFromFfmpegFile,
+  fileFromBytes,
+  getFFmpeg,
+  readFileBytes,
+} from "@/lib/videos/ffmpeg";
+import type { VideoUploadProfile } from "@/lib/videos/profile";
 
-const FFMPEG_UMD =
-  "https://unpkg.com/@ffmpeg/ffmpeg@0.12.15/dist/umd/ffmpeg.js";
-const FFMPEG_CORE_BASE =
-  "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
+export type { VideoUploadProfile };
 
-const FFMPEG_LOAD_TIMEOUT_MS = 60_000;
 const FFMPEG_CONVERT_TIMEOUT_MS = 180_000;
 const BROWSER_RECORD_TIMEOUT_MS = 180_000;
 const MAX_SOURCE_VIDEO_BYTES = 250 * 1024 * 1024;
-
-type FFmpegInstance = {
-  loaded: boolean;
-  load: (config: {
-    coreURL: string;
-    wasmURL: string;
-  }) => Promise<boolean>;
-  writeFile: (name: string, data: Uint8Array) => Promise<unknown>;
-  exec: (args: string[]) => Promise<number>;
-  readFile: (name: string) => Promise<Uint8Array | string>;
-  deleteFile: (name: string) => Promise<unknown>;
-};
-
-type FFmpegConstructor = new () => FFmpegInstance;
-
-declare global {
-  interface Window {
-    FFmpegWASM?: {
-      FFmpeg: FFmpegConstructor;
-    };
-  }
-}
-
-let ffmpeg: FFmpegInstance | null = null;
-let loadPromise: Promise<FFmpegInstance> | null = null;
-let scriptPromise: Promise<void> | null = null;
-
-function extensionFromFilename(filename: string): string {
-  const dotIndex = filename.lastIndexOf(".");
-  if (dotIndex <= 0) return "";
-  return filename.slice(dotIndex).toLowerCase();
-}
-
-function toErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error && error.message) return error.message;
-  if (typeof error === "string" && error.trim()) return error;
-  return fallback;
-}
-
-function withTimeout<T>(
-  promise: Promise<T>,
-  ms: number,
-  message: string,
-): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error(message)), ms);
-    promise.then(
-      (value) => {
-        clearTimeout(timer);
-        resolve(value);
-      },
-      (error: unknown) => {
-        clearTimeout(timer);
-        reject(error);
-      },
-    );
-  });
-}
-
-async function readFileBytes(file: File): Promise<Uint8Array> {
-  const buffer = await file.arrayBuffer();
-  return new Uint8Array(buffer);
-}
-
-async function toBlobURL(url: string, mimeType: string): Promise<string> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error("Video converter failed to download.");
-  }
-  const blob = await response.blob();
-  return URL.createObjectURL(new Blob([blob], { type: mimeType }));
-}
-
-function loadFfmpegScript(): Promise<void> {
-  if (typeof window === "undefined") {
-    return Promise.reject(new Error("Video conversion must run in the browser."));
-  }
-
-  if (window.FFmpegWASM) return Promise.resolve();
-
-  if (!scriptPromise) {
-    scriptPromise = withTimeout(
-      new Promise<void>((resolve, reject) => {
-        const existing = document.querySelector<HTMLScriptElement>(
-          'script[data-ffmpeg-script="true"]',
-        );
-        if (existing) {
-          if (window.FFmpegWASM) {
-            resolve();
-            return;
-          }
-          existing.addEventListener("load", () => resolve(), { once: true });
-          existing.addEventListener(
-            "error",
-            () => reject(new Error("Video converter failed to load.")),
-            { once: true },
-          );
-          return;
-        }
-
-        const script = document.createElement("script");
-        script.src = FFMPEG_UMD;
-        script.async = true;
-        script.dataset.ffmpegScript = "true";
-        script.onload = () => resolve();
-        script.onerror = () =>
-          reject(
-            new Error("Video converter failed to load. Check your connection."),
-          );
-        document.head.appendChild(script);
-      }),
-      FFMPEG_LOAD_TIMEOUT_MS,
-      "Video converter timed out while loading.",
-    ).catch((error: unknown) => {
-      scriptPromise = null;
-      throw error;
-    });
-  }
-
-  return scriptPromise;
-}
-
-export type VideoUploadProfile = "portfolio" | "hero" | "cta";
 
 type CompressSettings = {
   /** Short edge, i.e. true 720p / 1080p. Long-edge 720 made portrait clips 406×720. */
@@ -140,44 +23,50 @@ type CompressSettings = {
   stripAudio: boolean;
   maxDurationSec: number | null;
   skipIfMp4UnderBytes: number;
+  progressMessage: string;
+  bitrate: number;
+  requireMp4: boolean;
+};
+
+const COMPRESS_SETTINGS: Record<VideoUploadProfile, CompressSettings> = {
+  hero: {
+    maxShortEdge: 1080,
+    crf: 23,
+    stripAudio: true,
+    maxDurationSec: 8,
+    skipIfMp4UnderBytes: 8_000_000,
+    progressMessage: "Compressing background video (1080p, muted)…",
+    bitrate: 4_500_000,
+    requireMp4: true,
+  },
+  cta: {
+    maxShortEdge: 1080,
+    crf: 23,
+    stripAudio: false,
+    maxDurationSec: null,
+    skipIfMp4UnderBytes: 12_000_000,
+    progressMessage: "Compressing looping video (1080p)…",
+    bitrate: 5_000_000,
+    requireMp4: false,
+  },
+  portfolio: {
+    maxShortEdge: 720,
+    crf: 26,
+    stripAudio: false,
+    maxDurationSec: null,
+    skipIfMp4UnderBytes: 5_000_000,
+    progressMessage: "Compressing video for the web…",
+    bitrate: 2_500_000,
+    requireMp4: false,
+  },
 };
 
 function settingsForProfile(profile: VideoUploadProfile): CompressSettings {
-  switch (profile) {
-    case "hero":
-      return {
-        maxShortEdge: 1080,
-        crf: 23,
-        stripAudio: true,
-        maxDurationSec: 8,
-        skipIfMp4UnderBytes: 8_000_000,
-      };
-    case "cta":
-      return {
-        maxShortEdge: 1080,
-        crf: 23,
-        stripAudio: false,
-        maxDurationSec: null,
-        skipIfMp4UnderBytes: 12_000_000,
-      };
-    case "portfolio":
-      return {
-        maxShortEdge: 720,
-        crf: 26,
-        stripAudio: false,
-        maxDurationSec: null,
-        skipIfMp4UnderBytes: 5_000_000,
-      };
-    default: {
-      const _exhaustive: never = profile;
-      return _exhaustive;
-    }
-  }
+  return COMPRESS_SETTINGS[profile];
 }
 
-function isAlreadyMp4(file: File): boolean {
-  const ext = extensionFromFilename(file.name);
-  return ext === ".mp4" || file.type === "video/mp4";
+export function isMp4File(file: File): boolean {
+  return extensionFromFilename(file.name) === ".mp4" || file.type === "video/mp4";
 }
 
 /**
@@ -217,59 +106,12 @@ export function needsWebTranscode(
 ): boolean {
   const ext = extensionFromFilename(file.name);
   if (ext === ".mov" || ext === ".m4v" || ext === ".webm") return true;
-  if (!isAlreadyMp4(file)) return true;
+  if (!isMp4File(file)) return true;
   return file.size > settingsForProfile(profile).skipIfMp4UnderBytes;
-}
-
-async function getFFmpeg(): Promise<FFmpegInstance> {
-  if (ffmpeg?.loaded) return ffmpeg;
-
-  if (!loadPromise) {
-    loadPromise = (async () => {
-      await loadFfmpegScript();
-      const FFmpeg = window.FFmpegWASM?.FFmpeg;
-      if (!FFmpeg) {
-        throw new Error("Video converter failed to initialize.");
-      }
-
-      const instance = new FFmpeg();
-      await withTimeout(
-        instance.load({
-          coreURL: await toBlobURL(
-            `${FFMPEG_CORE_BASE}/ffmpeg-core.js`,
-            "text/javascript",
-          ),
-          wasmURL: await toBlobURL(
-            `${FFMPEG_CORE_BASE}/ffmpeg-core.wasm`,
-            "application/wasm",
-          ),
-        }),
-        FFMPEG_LOAD_TIMEOUT_MS,
-        "Video converter timed out while starting.",
-      );
-      ffmpeg = instance;
-      return instance;
-    })().catch((error: unknown) => {
-      loadPromise = null;
-      ffmpeg = null;
-      throw new Error(
-        toErrorMessage(
-          error,
-          "Video converter failed to load. Check your connection and try again.",
-        ),
-      );
-    });
-  }
-
-  return loadPromise;
 }
 
 function scaleToShortEdge(maxShortEdge: number): string {
   return `scale='if(gte(iw,ih),-2,min(iw,${maxShortEdge}))':'if(gt(ih,iw),-2,min(ih,${maxShortEdge}))',scale=trunc(iw/2)*2:trunc(ih/2)*2`;
-}
-
-function scaleToLongEdge(maxLongEdge: number): string {
-  return `scale='if(gte(iw,ih),min(iw,${maxLongEdge}),-2)':'if(gt(ih,iw),min(ih,${maxLongEdge}),-2)',scale=trunc(iw/2)*2:trunc(ih/2)*2`;
 }
 
 function ffmpegArgs(
@@ -307,36 +149,6 @@ function ffmpegArgs(
   return args;
 }
 
-function progressMessage(profile: VideoUploadProfile): string {
-  switch (profile) {
-    case "hero":
-      return "Compressing background video (1080p, muted)…";
-    case "cta":
-      return "Compressing looping video (1080p)…";
-    case "portfolio":
-      return "Compressing video for the web…";
-    default: {
-      const _exhaustive: never = profile;
-      return _exhaustive;
-    }
-  }
-}
-
-function bitrateForProfile(profile: VideoUploadProfile): number {
-  switch (profile) {
-    case "hero":
-      return 4_500_000;
-    case "cta":
-      return 5_000_000;
-    case "portfolio":
-      return 2_500_000;
-    default: {
-      const _exhaustive: never = profile;
-      return _exhaustive;
-    }
-  }
-}
-
 function prefersBrowserRecorder(): boolean {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent;
@@ -372,32 +184,6 @@ type CapturableVideo = HTMLVideoElement & {
   captureStream?: (frameRate?: number) => MediaStream;
   mozCaptureStream?: (frameRate?: number) => MediaStream;
 };
-
-function waitForVideoEvent(
-  video: HTMLVideoElement,
-  event: "loadeddata" | "seeked" | "ended",
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const onSuccess = () => {
-      cleanup();
-      resolve();
-    };
-    const onError = () => {
-      cleanup();
-      reject(new Error("Could not load this video to compress it."));
-    };
-    const cleanup = () => {
-      video.removeEventListener(event, onSuccess);
-      video.removeEventListener("error", onError);
-    };
-    video.addEventListener(event, onSuccess);
-    video.addEventListener("error", onError);
-    if (event === "loadeddata" && video.readyState >= 2) {
-      cleanup();
-      resolve();
-    }
-  });
-}
 
 function isAutoplayBlocked(error: unknown): boolean {
   return error instanceof DOMException && error.name === "NotAllowedError";
@@ -490,7 +276,11 @@ async function transcodeWithMediaRecorder(
     return await withTimeout(
       (async () => {
         await Promise.race([
-          waitForVideoEvent(video, "loadeddata"),
+          waitForVideoEvent(
+            video,
+            "loadeddata",
+            "Could not load this video to compress it.",
+          ),
           playPromise.then(
             () => undefined,
             () => undefined,
@@ -529,7 +319,7 @@ async function transcodeWithMediaRecorder(
         const hasAudio = audioTracks.length > 0;
         const recorder = new MediaRecorder(mixedStream, {
           ...(mimeType ? { mimeType } : {}),
-          videoBitsPerSecond: bitrateForProfile(profile),
+          videoBitsPerSecond: settings.bitrate,
           ...(hasAudio ? { audioBitsPerSecond: 96_000 } : {}),
         });
 
@@ -638,7 +428,7 @@ async function transcodeToMp4(
   const outputName = "output.mp4";
 
   await ff.writeFile(inputName, await readFileBytes(file));
-  onProgress?.(progressMessage(profile));
+  onProgress?.(settingsForProfile(profile).progressMessage);
 
   const exitCode = await withTimeout(
     ff.exec(ffmpegArgs(profile, inputName, outputName)),
@@ -656,8 +446,7 @@ async function transcodeToMp4(
   await ff.deleteFile(inputName);
   await ff.deleteFile(outputName);
 
-  const bytes =
-    data instanceof Uint8Array ? new Uint8Array(data) : new TextEncoder().encode(data);
+  const bytes = bytesFromFfmpegFile(data);
 
   if (bytes.byteLength === 0) {
     throw new Error(
@@ -666,10 +455,7 @@ async function transcodeToMp4(
   }
 
   const baseName = file.name.replace(/\.[^.]+$/i, "") || "video";
-  return new File([bytes], `${baseName}.mp4`, {
-    type: "video/mp4",
-    lastModified: Date.now(),
-  });
+  return fileFromBytes(bytes, `${baseName}.mp4`, "video/mp4");
 }
 
 async function remuxMp4FastStart(
@@ -696,120 +482,33 @@ async function remuxMp4FastStart(
   await ff.deleteFile(inputName);
   await ff.deleteFile(outputName);
 
-  const bytes =
-    data instanceof Uint8Array ? new Uint8Array(data) : new TextEncoder().encode(data);
+  const bytes = bytesFromFfmpegFile(data);
 
   if (bytes.byteLength === 0) {
     throw new Error("Could not optimize this video for fast start.");
   }
 
   const baseName = file.name.replace(/\.[^.]+$/i, "") || "video";
-  return new File([bytes], `${baseName}.mp4`, {
-    type: "video/mp4",
-    lastModified: Date.now(),
-  });
+  return fileFromBytes(bytes, `${baseName}.mp4`, "video/mp4");
 }
 
-const FFMPEG_THUMBNAIL_TIMEOUT_MS = 45_000;
-
-export async function extractThumbnailWithFfmpeg(file: File): Promise<File> {
-  const ff = await getFFmpeg();
-  const inputExt = extensionFromFilename(file.name) || ".mov";
-  const inputName = `thumb-input${inputExt}`;
-  const outputName = "thumb.jpg";
-
-  try {
-    await ff.writeFile(inputName, await readFileBytes(file));
-    const exitCode = await withTimeout(
-      ff.exec([
-        "-ss",
-        "0",
-        "-i",
-        inputName,
-        "-frames:v",
-        "1",
-        "-q:v",
-        "5",
-        "-vf",
-        scaleToLongEdge(720),
-        outputName,
-      ]),
-      FFMPEG_THUMBNAIL_TIMEOUT_MS,
-      "Thumbnail capture timed out.",
+function assertUploadableVideo(file: File): File {
+  if (file.size > MAX_VIDEO_BYTES) {
+    throw new Error(
+      "That clip is still too large after compression. Export a shorter 720p or 1080p MP4 from Photos and try again.",
     );
-
-    if (exitCode !== 0) {
-      throw new Error("Could not capture a thumbnail from this video.");
-    }
-
-    const data = await ff.readFile(outputName);
-    const bytes =
-      data instanceof Uint8Array
-        ? new Uint8Array(data)
-        : new TextEncoder().encode(data);
-
-    if (bytes.byteLength === 0) {
-      throw new Error("Could not capture a thumbnail from this video.");
-    }
-
-    const baseName = file.name.replace(/\.[^.]+$/i, "") || "video";
-    return new File([bytes], `${baseName}-thumbnail.jpg`, {
-      type: "image/jpeg",
-      lastModified: Date.now(),
-    });
-  } finally {
-    try {
-      await ff.deleteFile(inputName);
-    } catch {
-      // File may not have been written.
-    }
-    try {
-      await ff.deleteFile(outputName);
-    } catch {
-      // Frame grab may have failed before writing output.
-    }
   }
+  return file;
 }
 
-export type PrepareVideoOptions = {
-  onProgress?: (message: string) => void;
-  /** Called when the clip is uploaded uncompressed because compression failed. */
-  onNotice?: (message: string) => void;
-  profile?: VideoUploadProfile;
-};
-
-/**
- * Browser compression is a best-effort optimization, not a requirement. When
- * every strategy fails we still upload the original clip so a save is never
- * blocked by a codec or autoplay quirk in the admin's browser — except the
- * hero, which must be a real MP4 or phones just show a black frame.
- */
-export async function prepareVideoForWebUpload(
-  file: File,
-  options: PrepareVideoOptions = {},
-): Promise<File> {
-  const { onProgress, onNotice, profile = "portfolio" } = options;
-
-  try {
-    return await compressForWebUpload(file, profile, onProgress);
-  } catch (error) {
-    if (file.size > MAX_VIDEO_BYTES) throw error;
-
-    if (profile === "hero" && !isAlreadyMp4(file)) {
-      throw new Error(
-        toErrorMessage(
-          error,
-          "This clip could not be converted for phones. Export an MP4 from Photos and try again.",
-        ),
-      );
-    }
-
-    console.warn("Falling back to the original video file:", error);
-    onNotice?.(
-      "Couldn't compress this clip in the browser, so the original was uploaded. It will play fine but may load more slowly.",
+function assertProfileOutput(file: File, profile: VideoUploadProfile): File {
+  const uploadable = assertUploadableVideo(file);
+  if (settingsForProfile(profile).requireMp4 && !isMp4File(uploadable)) {
+    throw new Error(
+      "This clip could not be converted for phones. Export an MP4 from Photos and try again.",
     );
-    return file;
   }
+  return uploadable;
 }
 
 async function compressForWebUpload(
@@ -823,12 +522,10 @@ async function compressForWebUpload(
     );
   }
 
+  const settings = settingsForProfile(profile);
+
   if (!needsWebTranscode(file, profile)) {
-    if (
-      profile === "hero" &&
-      isAlreadyMp4(file) &&
-      !(await mp4HasFastStart(file))
-    ) {
+    if (settings.requireMp4 && isMp4File(file) && !(await mp4HasFastStart(file))) {
       try {
         return await remuxMp4FastStart(file, onProgress);
       } catch (error) {
@@ -853,8 +550,8 @@ async function compressForWebUpload(
   };
 
   const compressed = await compress();
-  if (isAlreadyMp4(file) && compressed.size >= file.size) {
-    if (profile === "hero" && !(await mp4HasFastStart(file))) {
+  if (isMp4File(file) && compressed.size >= file.size) {
+    if (settings.requireMp4 && !(await mp4HasFastStart(file))) {
       try {
         return await remuxMp4FastStart(file, onProgress);
       } catch (error) {
@@ -868,11 +565,47 @@ async function compressForWebUpload(
   return assertUploadableVideo(compressed);
 }
 
-function assertUploadableVideo(file: File): File {
-  if (file.size > MAX_VIDEO_BYTES) {
-    throw new Error(
-      "That clip is still too large after compression. Export a shorter 720p or 1080p MP4 from Photos and try again.",
+export type PrepareVideoOptions = {
+  onProgress?: (message: string) => void;
+  /** Called when the clip is uploaded uncompressed because compression failed. */
+  onNotice?: (message: string) => void;
+  profile?: VideoUploadProfile;
+};
+
+/**
+ * Browser compression is a best-effort optimization, not a requirement. When
+ * every strategy fails we still upload the original clip so a save is never
+ * blocked by a codec or autoplay quirk in the admin's browser — except
+ * profiles that require an MP4 (hero), which phones cannot play as MOV/WebM.
+ */
+export async function prepareVideoForWebUpload(
+  file: File,
+  options: PrepareVideoOptions = {},
+): Promise<File> {
+  const { onProgress, onNotice, profile = "portfolio" } = options;
+  const settings = settingsForProfile(profile);
+
+  try {
+    return assertProfileOutput(
+      await compressForWebUpload(file, profile, onProgress),
+      profile,
     );
+  } catch (error) {
+    if (file.size > MAX_VIDEO_BYTES) throw error;
+
+    if (settings.requireMp4 && !isMp4File(file)) {
+      throw new Error(
+        toErrorMessage(
+          error,
+          "This clip could not be converted for phones. Export an MP4 from Photos and try again.",
+        ),
+      );
+    }
+
+    console.warn("Falling back to the original video file:", error);
+    onNotice?.(
+      "Couldn't compress this clip in the browser, so the original was uploaded. It will play fine but may load more slowly.",
+    );
+    return assertProfileOutput(file, profile);
   }
-  return file;
 }

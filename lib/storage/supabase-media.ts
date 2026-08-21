@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import { extensionFromFilename } from "@/lib/files";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { isMediaUploadDir, type MediaUploadDir } from "./media-upload";
 import { StorageError } from "./types";
@@ -34,14 +35,6 @@ function getMediaStorage(): SupabaseClient {
   return createClient(normalizeSupabaseUrl(rawUrl), serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
-}
-
-function extensionFromFilename(filename: string): string {
-  const dotIndex = filename.lastIndexOf(".");
-  if (dotIndex <= 0) return "";
-  const ext = filename.slice(dotIndex).toLowerCase();
-  if (!/^\.[a-z0-9]{1,8}$/.test(ext)) return "";
-  return ext;
 }
 
 function defaultExtensionForDir(dir: MediaUploadDir): string {

@@ -23,7 +23,7 @@ function HeroBackgroundVideo({
         eager
         aria-hidden
         tabIndex={-1}
-        className="hero-bg-video pointer-events-none object-cover"
+        className="pointer-events-none object-cover"
       />
       <div
         aria-hidden

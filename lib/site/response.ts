@@ -6,3 +6,11 @@ export function siteResponseHeaders(version: number): HeadersInit {
     "X-Site-Version": String(version),
   };
 }
+
+export function siteVersionFromResponse(response: Response): number {
+  const version = Number(response.headers.get("x-site-version"));
+  if (!Number.isSafeInteger(version) || version < 1) {
+    throw new Error("The server did not confirm the saved site version.");
+  }
+  return version;
+}

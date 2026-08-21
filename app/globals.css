@@ -154,12 +154,7 @@ body {
   -webkit-backface-visibility: hidden;
 }
 
-.autoplay-loop-video,
-.hero-bg-video {
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  max-height: none;
+.autoplay-loop-video {
   object-fit: cover;
   transform: translateZ(0);
   backface-visibility: hidden;
@@ -172,13 +167,7 @@ body {
 .autoplay-loop-video::-webkit-media-controls-overlay-enclosure,
 .autoplay-loop-video::-webkit-media-controls-panel,
 .autoplay-loop-video::-webkit-media-controls-start-playback-button,
-.autoplay-loop-video::-webkit-media-controls-overlay-play-button,
-.hero-bg-video::-webkit-media-controls,
-.hero-bg-video::-webkit-media-controls-enclosure,
-.hero-bg-video::-webkit-media-controls-overlay-enclosure,
-.hero-bg-video::-webkit-media-controls-panel,
-.hero-bg-video::-webkit-media-controls-start-playback-button,
-.hero-bg-video::-webkit-media-controls-overlay-play-button {
+.autoplay-loop-video::-webkit-media-controls-overlay-play-button {
   display: none !important;
   -webkit-appearance: none;
   appearance: none;

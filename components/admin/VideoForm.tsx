@@ -1,32 +1,38 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Platform, PortfolioVideo } from "@/lib/videos/types";
 import { PLATFORMS } from "@/lib/videos/types";
 import { slugify } from "@/lib/videos/slugify";
 import {
   isAcceptedVideoFile,
-  MAX_VIDEO_BYTES,
   VIDEO_FILE_ACCEPT,
   VIDEO_UPLOAD_HELP,
   videoUploadErrorMessage,
 } from "@/lib/videos/upload";
-import { extractVideoFrame } from "@/lib/videos/extractThumbnail";
-import {
-  extractThumbnailWithFfmpeg,
-  needsWebTranscode,
-  prepareVideoForWebUpload,
-} from "@/lib/videos/transcode";
-import { uploadMediaToStorage } from "@/lib/storage/client-upload";
+import { assetDisplayName } from "@/lib/files";
+import { toErrorMessage } from "@/lib/errors";
+import { readResponseJson } from "@/lib/http/json";
 import { isVercelBlobUrl } from "@/lib/storage/blob";
 import { AutoResizeTextarea } from "@/components/admin/AutoResizeTextarea";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { FileUploadButton } from "@/components/ui/FileUploadButton";
 import { UploadProgressBar } from "@/components/ui/UploadProgressBar";
+import {
+  appendPreparedUpload,
+  idleMediaUpload,
+  isMediaBlockingSave,
+  isMediaUploadBusy,
+  isUploadAborted,
+  prepareAndUploadImage,
+  prepareAndUploadVideo,
+  useMediaPreview,
+  type MediaUploadState,
+  type PreparedUpload,
+} from "@/lib/videos/client-pipeline";
 
 type VideoFormProps = {
   initial?: PortfolioVideo | null;
-  layout?: "default" | "panel";
   embedded?: boolean;
   onSuccess: (video: PortfolioVideo) => void;
   onCancel?: () => void;
@@ -35,107 +41,6 @@ type VideoFormProps = {
 
 const inputClass =
   "mt-1 w-full min-w-0 rounded-xl border border-brown/20 bg-white px-3 py-2.5 text-base leading-normal text-brown outline-none focus:border-forest/50";
-
-type UploadConfig = {
-  clientUpload: boolean;
-  handleUploadUrl: string;
-  directUploadLimitBytes: number;
-};
-
-type MediaUploadState = {
-  status: "idle" | "preparing" | "uploading" | "ready" | "error";
-  progress: number;
-  message: string;
-  url: string | null;
-  error: string | null;
-  useClientUpload: boolean;
-};
-
-const idleMediaUpload = (): MediaUploadState => ({
-  status: "idle",
-  progress: 0,
-  message: "",
-  url: null,
-  error: null,
-  useClientUpload: true,
-});
-
-async function readJsonResponse<T>(response: Response): Promise<T> {
-  const raw = await response.text();
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    if (response.status === 413) {
-      throw new Error(
-        "That file is too large for a direct upload. Compress it or try a shorter clip.",
-      );
-    }
-    throw new Error(
-      response.ok
-        ? "The server returned an unexpected response."
-        : `Upload failed (${response.status}). Please try again.`,
-    );
-  }
-}
-
-function toErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error && error.message) return error.message;
-  if (typeof error === "string" && error.trim()) return error;
-  return fallback;
-}
-
-function assetDisplayName(path: string): string {
-  try {
-    if (path.startsWith("http://") || path.startsWith("https://")) {
-      const segment = new URL(path).pathname.split("/").pop();
-      return segment || path;
-    }
-  } catch {
-    // fall through
-  }
-  return path.split("/").pop() || path;
-}
-
-function useMediaPreview(
-  file: File | null,
-  existingPath: string | undefined,
-): string | null {
-  const objectUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
-
-  useEffect(() => {
-    if (objectUrl) {
-      return () => URL.revokeObjectURL(objectUrl);
-    }
-  }, [objectUrl]);
-
-  return objectUrl ?? existingPath ?? null;
-}
-
-function isMediaUploadBusy(state: MediaUploadState): boolean {
-  return state.status === "preparing" || state.status === "uploading";
-}
-
-function isMediaBlockingSave(
-  file: File | null,
-  state: MediaUploadState,
-  required: boolean,
-): boolean {
-  if (!file && !required) return false;
-  if (!file && required) return true;
-  if (!file) return false;
-  if (state.status === "error") return true;
-  if (state.status === "ready") return false;
-  return true;
-}
-
-async function uploadAsset(
-  file: File,
-  dir: "videos" | "thumbnails",
-  handleUploadUrl: string,
-  onProgress?: (percentage: number) => void,
-): Promise<string> {
-  return uploadMediaToStorage(file, dir, handleUploadUrl, onProgress);
-}
 
 const emptyForm = {
   title: "",
@@ -148,9 +53,26 @@ const emptyForm = {
   featured: false,
 };
 
+function saveLabel(state: {
+  saving: boolean;
+  saveMessage: string;
+  capturingThumbnail: boolean;
+  uploadBusy: boolean;
+  saveBlocked: boolean;
+  isNew: boolean;
+  hasVideo: boolean;
+  hasThumbnail: boolean;
+}): string {
+  if (state.saving) return state.saveMessage;
+  if (state.capturingThumbnail) return "Capturing thumbnail…";
+  if (state.uploadBusy || state.saveBlocked) return "Waiting for uploads…";
+  if (state.isNew && !state.hasVideo) return "Add a video to save";
+  if (state.isNew && !state.hasThumbnail) return "Add a thumbnail to save";
+  return state.isNew ? "Add video" : "Save video";
+}
+
 export function VideoForm({
   initial,
-  layout = "default",
   embedded = false,
   onSuccess,
   onCancel,
@@ -175,6 +97,9 @@ export function VideoForm({
   const [videoUpload, setVideoUpload] = useState<MediaUploadState>(idleMediaUpload);
   const [thumbnailUpload, setThumbnailUpload] =
     useState<MediaUploadState>(idleMediaUpload);
+  const [videoPrepared, setVideoPrepared] = useState<PreparedUpload | null>(null);
+  const [thumbnailPrepared, setThumbnailPrepared] =
+    useState<PreparedUpload | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("Saving video details…");
   const [error, setError] = useState<string | null>(null);
@@ -183,26 +108,23 @@ export function VideoForm({
   const [thumbnailHint, setThumbnailHint] = useState<string | null>(null);
   const [videoHint, setVideoHint] = useState<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const uploadConfigRef = useRef<UploadConfig | null>(null);
   const videoUploadGenRef = useRef(0);
   const thumbnailUploadGenRef = useRef(0);
-  const thumbnailExtractGenRef = useRef(0);
-  const thumbnailFileRef = useRef<File | null>(null);
-  const captureInFlightRef = useRef(0);
 
   const videoPreviewUrl = useMediaPreview(videoFile, initial?.videoPath);
-  thumbnailFileRef.current = thumbnailFile;
-  const thumbnailPreviewUrl = useMediaPreview(thumbnailFile, initial?.thumbnailPath);
-  /** Prefer a captured still for the video picker preview. */
+  const thumbnailPreviewUrl = useMediaPreview(
+    thumbnailFile,
+    initial?.thumbnailPath,
+  );
   const videoUploadPreviewUrl = thumbnailPreviewUrl ?? videoPreviewUrl;
   const videoUploadPreviewType = thumbnailPreviewUrl
     ? ("image" as const)
     : ("video" as const);
 
-  const videoDisplayName =
+  const videoName =
     videoFile?.name ??
     (initial?.videoPath ? assetDisplayName(initial.videoPath) : null);
-  const thumbnailDisplayName =
+  const thumbnailName =
     thumbnailFile?.name ??
     (initial?.thumbnailPath ? assetDisplayName(initial.thumbnailPath) : null);
 
@@ -217,34 +139,9 @@ export function VideoForm({
     return () => {
       videoUploadGenRef.current += 1;
       thumbnailUploadGenRef.current += 1;
-      thumbnailExtractGenRef.current += 1;
       onUploadBusyChange?.(false);
     };
   }, [onUploadBusyChange]);
-
-  useEffect(() => {
-    if (!uploadBusy) return;
-
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [uploadBusy]);
-
-  const getUploadConfig = useCallback(async (): Promise<UploadConfig> => {
-    if (uploadConfigRef.current) return uploadConfigRef.current;
-
-    const response = await fetch("/api/videos/config");
-    const config = await readJsonResponse<UploadConfig>(response);
-    if (!response.ok) {
-      throw new Error("Could not load upload settings.");
-    }
-
-    uploadConfigRef.current = config;
-    return config;
-  }, []);
 
   const readVideoDuration = useCallback((file: File) => {
     const url = URL.createObjectURL(file);
@@ -260,236 +157,147 @@ export function VideoForm({
     };
   }, []);
 
-  const startThumbnailUpload = useCallback(
-    async (file: File) => {
-      const generation = ++thumbnailUploadGenRef.current;
+  const startThumbnailUpload = useCallback(async (file: File) => {
+    const generation = ++thumbnailUploadGenRef.current;
+    setThumbnailPrepared(null);
+    setThumbnailUpload({
+      status: "preparing",
+      progress: 0,
+      message: "Preparing thumbnail…",
+      error: null,
+    });
 
-      setThumbnailUpload({
-        status: "preparing",
-        progress: 0,
-        message: "Preparing thumbnail…",
-        url: null,
-        error: null,
-        useClientUpload: true,
-      });
-
-      try {
-        const config = await getUploadConfig();
-        if (generation !== thumbnailUploadGenRef.current) return;
-
-        if (!config.clientUpload) {
+    try {
+      const prepared = await prepareAndUploadImage({
+        file,
+        dir: "thumbnails",
+        isCurrent: () => generation === thumbnailUploadGenRef.current,
+        onProgress: (update) => {
+          if (generation !== thumbnailUploadGenRef.current) return;
           setThumbnailUpload({
-            status: "ready",
-            progress: 100,
-            message: "Thumbnail ready — will upload when you save",
-            url: null,
+            status: update.status,
+            progress: update.progress ?? 0,
+            message:
+              update.status === "uploading"
+                ? `Uploading thumbnail… ${update.progress ?? 0}%`
+                : "Preparing thumbnail…",
             error: null,
-            useClientUpload: false,
           });
-          return;
-        }
-
-        setThumbnailUpload({
-          status: "uploading",
-          progress: 0,
-          message: "Uploading thumbnail… 0%",
-          url: null,
-          error: null,
-          useClientUpload: true,
-        });
-
-        const url = await uploadAsset(
-          file,
-          "thumbnails",
-          config.handleUploadUrl,
-          (percentage) => {
-            if (generation !== thumbnailUploadGenRef.current) return;
-            const rounded = Math.round(percentage);
-            setThumbnailUpload((current) => ({
-              ...current,
-              status: "uploading",
-              progress: rounded,
-              message: `Uploading thumbnail… ${rounded}%`,
-            }));
-          },
-        );
-
-        if (generation !== thumbnailUploadGenRef.current) return;
-
-        setThumbnailUpload({
-          status: "ready",
-          progress: 100,
-          message: "Thumbnail ready",
-          url,
-          error: null,
-          useClientUpload: true,
-        });
-      } catch (err) {
-        if (generation !== thumbnailUploadGenRef.current) return;
-        const uploadError = toErrorMessage(err, "Thumbnail upload failed.");
-        setThumbnailUpload({
-          status: "error",
-          progress: 0,
-          message: uploadError,
-          url: null,
-          error: uploadError,
-          useClientUpload: true,
-        });
-        setError(uploadError);
+        },
+      });
+      if (generation !== thumbnailUploadGenRef.current) return;
+      setThumbnailPrepared(prepared);
+      setThumbnailUpload({
+        status: "ready",
+        progress: 100,
+        message:
+          prepared.kind === "file"
+            ? "Thumbnail ready — will upload when you save"
+            : "Thumbnail ready",
+        error: null,
+      });
+    } catch (err) {
+      if (isUploadAborted(err) || generation !== thumbnailUploadGenRef.current) {
+        return;
       }
-    },
-    [getUploadConfig],
-  );
-
-  const captureThumbnailFromVideo = useCallback(
-    async (file: File, allowFfmpeg = false) => {
-      const generation = thumbnailExtractGenRef.current;
-      captureInFlightRef.current += 1;
-      setCapturingThumbnail(true);
-
-      try {
-        let frame: File;
-        try {
-          frame = await extractVideoFrame(file, { seekTo: 0 });
-        } catch (browserError) {
-          if (!allowFfmpeg) throw browserError;
-          frame = await extractThumbnailWithFfmpeg(file);
-        }
-        if (generation !== thumbnailExtractGenRef.current) return;
-
-        setThumbnailFile(frame);
-        thumbnailFileRef.current = frame;
-        setThumbnailHint(null);
-        void startThumbnailUpload(frame);
-      } catch (err) {
-        if (generation !== thumbnailExtractGenRef.current) return;
-        console.warn(
-          toErrorMessage(err, "Could not capture a thumbnail from the video."),
-        );
-      } finally {
-        captureInFlightRef.current = Math.max(0, captureInFlightRef.current - 1);
-        if (generation !== thumbnailExtractGenRef.current) return;
-        if (captureInFlightRef.current > 0) return;
-        setCapturingThumbnail(false);
-        if (!thumbnailFileRef.current && allowFfmpeg) {
-          setThumbnailHint(
-            "Couldn't capture a thumbnail from this video. Upload a PNG, JPEG, or WebP cover to save.",
-          );
-        }
-      }
-    },
-    [startThumbnailUpload],
-  );
+      const uploadError = toErrorMessage(err, "Thumbnail upload failed.");
+      setThumbnailUpload({
+        status: "error",
+        progress: 0,
+        message: uploadError,
+        error: uploadError,
+      });
+      setError(uploadError);
+    }
+  }, []);
 
   const startVideoUpload = useCallback(
     async (file: File) => {
       const generation = ++videoUploadGenRef.current;
-
+      thumbnailUploadGenRef.current += 1;
       setVideoHint(null);
+      setThumbnailHint(null);
+      setVideoPrepared(null);
+      setCapturingThumbnail(true);
       setVideoUpload({
         status: "preparing",
         progress: 0,
-        message: needsWebTranscode(file, "portfolio")
-          ? "Compressing video for the web… (can take a minute)"
-          : "Preparing video…",
-        url: null,
+        message: "Preparing video…",
         error: null,
-        useClientUpload: true,
       });
 
       try {
-        const preparedPromise = prepareVideoForWebUpload(file, {
+        const result = await prepareAndUploadVideo({
+          file,
           profile: "portfolio",
-          onProgress: (progressMessage) => {
-            if (generation !== videoUploadGenRef.current) return;
-            setVideoUpload((current) => ({
-              ...current,
-              status: "preparing",
-              message: progressMessage,
-            }));
-          },
+          dir: "videos",
+          capture: "thumbnail",
+          stillDir: "thumbnails",
+          isCurrent: () => generation === videoUploadGenRef.current,
           onNotice: (notice) => {
             if (generation !== videoUploadGenRef.current) return;
             setVideoHint(notice);
           },
-        });
-        const config = await getUploadConfig();
-        const prepared = await preparedPromise;
-        if (generation !== videoUploadGenRef.current) return;
-
-        if (prepared.size > MAX_VIDEO_BYTES) {
-          throw new Error(
-            "That clip is still too large after compression. Export a shorter 720p or 1080p MP4 from Photos and try again.",
-          );
-        }
-
-        setVideoFile(prepared);
-        if (!thumbnailFileRef.current) {
-          void captureThumbnailFromVideo(prepared, true);
-        }
-
-        if (!config.clientUpload) {
-          setVideoUpload({
-            status: "ready",
-            progress: 100,
-            message: "Video ready — will upload when you save",
-            url: null,
-            error: null,
-            useClientUpload: false,
-          });
-          return;
-        }
-
-        setVideoUpload({
-          status: "uploading",
-          progress: 0,
-          message: "Uploading video… 0%",
-          url: null,
-          error: null,
-          useClientUpload: true,
-        });
-
-        const url = await uploadAsset(
-          prepared,
-          "videos",
-          config.handleUploadUrl,
-          (percentage) => {
+          onProgress: (update) => {
             if (generation !== videoUploadGenRef.current) return;
-            const rounded = Math.round(percentage);
-            setVideoUpload((current) => ({
-              ...current,
-              status: "uploading",
-              progress: rounded,
-              message: `Uploading video… ${rounded}%`,
-            }));
+            setVideoUpload({
+              status: update.status,
+              progress: update.progress ?? 0,
+              message: update.message,
+              error: null,
+            });
           },
-        );
-
+        });
         if (generation !== videoUploadGenRef.current) return;
 
+        setVideoFile(result.video.file);
+        setVideoPrepared(result.video);
         setVideoUpload({
           status: "ready",
           progress: 100,
-          message: "Video ready — fill in details and save",
-          url,
+          message:
+            result.video.kind === "file"
+              ? "Video ready — will upload when you save"
+              : "Video ready — fill in details and save",
           error: null,
-          useClientUpload: true,
         });
+
+        if (result.still) {
+          setThumbnailFile(result.still.file);
+          setThumbnailPrepared(result.still);
+          setThumbnailUpload({
+            status: "ready",
+            progress: 100,
+            message:
+              result.still.kind === "file"
+                ? "Thumbnail ready — will upload when you save"
+                : "Thumbnail ready",
+            error: null,
+          });
+        } else {
+          setThumbnailHint(
+            "Couldn't capture a thumbnail from this video. Upload a PNG, JPEG, or WebP cover to save.",
+          );
+        }
       } catch (err) {
-        if (generation !== videoUploadGenRef.current) return;
+        if (isUploadAborted(err) || generation !== videoUploadGenRef.current) {
+          return;
+        }
         const uploadError = toErrorMessage(err, "Video upload failed.");
         setVideoUpload({
           status: "error",
           progress: 0,
           message: uploadError,
-          url: null,
           error: uploadError,
-          useClientUpload: true,
         });
         setError(uploadError);
+      } finally {
+        if (generation === videoUploadGenRef.current) {
+          setCapturingThumbnail(false);
+        }
       }
     },
-    [captureThumbnailFromVideo, getUploadConfig],
+    [],
   );
 
   const saveBlocked =
@@ -497,23 +305,29 @@ export function VideoForm({
     isMediaBlockingSave(thumbnailFile, thumbnailUpload, !initial) ||
     capturingThumbnail;
 
-  const submitLabel = saving
-    ? saveMessage
-    : capturingThumbnail
-      ? "Capturing thumbnail…"
-      : isMediaUploadBusy(videoUpload) || isMediaUploadBusy(thumbnailUpload)
-        ? "Waiting for uploads…"
-        : !initial && !videoFile
-          ? "Add a video to save"
-          : !initial && !thumbnailFile
-            ? "Add a thumbnail to save"
-            : saveBlocked
-              ? "Waiting for uploads…"
-              : initial
-                ? "Save video"
-                : layout === "panel"
-                  ? "Add video"
-                  : "Add Video";
+  const submitLabel = saveLabel({
+    saving,
+    saveMessage,
+    capturingThumbnail,
+    uploadBusy,
+    saveBlocked,
+    isNew: !initial,
+    hasVideo: Boolean(videoFile),
+    hasThumbnail: Boolean(thumbnailFile),
+  });
+
+  const resetMedia = () => {
+    setVideoFile(null);
+    setThumbnailFile(null);
+    setVideoPrepared(null);
+    setThumbnailPrepared(null);
+    setVideoUpload(idleMediaUpload());
+    setThumbnailUpload(idleMediaUpload());
+    setThumbnailHint(null);
+    setVideoHint(null);
+    setCapturingThumbnail(false);
+    if (videoInputRef.current) videoInputRef.current.value = "";
+  };
 
   const save = async () => {
     if (saveBlocked) return;
@@ -532,74 +346,48 @@ export function VideoForm({
     payload.set("durationSec", String(form.durationSec));
     payload.set("slug", form.slug || slugify(form.title));
     payload.set("featured", String(form.featured));
-    // Always clear legacy category tags — filters were removed from the site.
     payload.set("tagsPresent", "1");
 
     try {
       if (videoFile) {
-        if (videoUpload.url) {
-          payload.set("videoUrl", videoUpload.url);
-        } else if (!videoUpload.useClientUpload) {
-          payload.set("video", videoFile);
-        }
+        appendPreparedUpload(payload, videoPrepared, {
+          url: "videoUrl",
+          file: "video",
+        });
       }
-
       if (thumbnailFile) {
-        if (thumbnailUpload.url) {
-          payload.set("thumbnailUrl", thumbnailUpload.url);
-        } else if (!thumbnailUpload.useClientUpload) {
-          payload.set("thumbnail", thumbnailFile);
-        }
+        appendPreparedUpload(payload, thumbnailPrepared, {
+          url: "thumbnailUrl",
+          file: "thumbnail",
+        });
       }
 
       const url = initial ? `/api/videos/${initial.id}` : "/api/videos";
       const method = initial ? "PATCH" : "POST";
       const response = await fetch(url, { method, body: payload });
-      const data = await readJsonResponse<{ error?: string } & PortfolioVideo>(
+      const data = await readResponseJson<{ error?: string } & PortfolioVideo>(
         response,
+        { payload: "video" },
       );
 
       if (!response.ok) {
         throw new Error(data.error ?? "Something went wrong.");
       }
 
-      if (layout === "panel") {
-        const saved = data as PortfolioVideo;
-        setForm({
-          title: saved.title,
-          brand: saved.brand,
-          platform: saved.platform,
-          hook: saved.hook,
-          cta: saved.cta,
-          durationSec: saved.durationSec,
-          slug: saved.slug,
-          featured: saved.featured,
-        });
-        setVideoFile(null);
-        setThumbnailFile(null);
-        setVideoUpload(idleMediaUpload());
-        setThumbnailUpload(idleMediaUpload());
-        setThumbnailHint(null);
-        setVideoHint(null);
-        setCapturingThumbnail(false);
-        if (videoInputRef.current) videoInputRef.current.value = "";
-        setMessage("Saved.");
-        onSuccess(saved);
-        return;
-      }
-
-      onSuccess(data as PortfolioVideo);
-      if (!initial) {
-        setForm(emptyForm);
-        setVideoFile(null);
-        setThumbnailFile(null);
-        setVideoUpload(idleMediaUpload());
-        setThumbnailUpload(idleMediaUpload());
-        setThumbnailHint(null);
-        setVideoHint(null);
-        setCapturingThumbnail(false);
-        if (videoInputRef.current) videoInputRef.current.value = "";
-      }
+      const saved = data as PortfolioVideo;
+      setForm({
+        title: saved.title,
+        brand: saved.brand,
+        platform: saved.platform,
+        hook: saved.hook,
+        cta: saved.cta,
+        durationSec: saved.durationSec,
+        slug: saved.slug,
+        featured: saved.featured,
+      });
+      resetMedia();
+      setMessage("Saved.");
+      onSuccess(saved);
     } catch (err) {
       setError(toErrorMessage(err, "Failed to save video."));
     } finally {
@@ -710,7 +498,7 @@ export function VideoForm({
           inputRef={videoInputRef}
           accept={VIDEO_FILE_ACCEPT}
           hint={VIDEO_UPLOAD_HELP}
-          selectedName={videoDisplayName}
+          selectedName={videoName}
           previewUrl={videoUploadPreviewUrl}
           previewType={videoUploadPreviewType}
           required={!initial && !videoFile}
@@ -719,6 +507,7 @@ export function VideoForm({
           onChange={(file) => {
             if (file && !isAcceptedVideoFile(file)) {
               setVideoFile(null);
+              setVideoPrepared(null);
               setVideoUpload(idleMediaUpload());
               setError(videoUploadErrorMessage());
               if (videoInputRef.current) videoInputRef.current.value = "";
@@ -726,14 +515,13 @@ export function VideoForm({
             }
             setError(null);
             setThumbnailHint(null);
-            thumbnailExtractGenRef.current += 1;
             setVideoFile(file);
             if (file) {
               readVideoDuration(file);
-              void captureThumbnailFromVideo(file);
               void startVideoUpload(file);
             } else {
               videoUploadGenRef.current += 1;
+              setVideoPrepared(null);
               setVideoUpload(idleMediaUpload());
             }
           }}
@@ -741,16 +529,9 @@ export function VideoForm({
             videoFile
               ? () => {
                   videoUploadGenRef.current += 1;
-                  thumbnailExtractGenRef.current += 1;
                   thumbnailUploadGenRef.current += 1;
-                  setVideoFile(null);
-                  setVideoUpload(idleMediaUpload());
-                  setThumbnailFile(null);
-                  setThumbnailUpload(idleMediaUpload());
-                  setThumbnailHint(null);
-                  setCapturingThumbnail(false);
+                  resetMedia();
                   setError(null);
-                  if (videoInputRef.current) videoInputRef.current.value = "";
                 }
               : undefined
           }
@@ -773,31 +554,33 @@ export function VideoForm({
           className="mt-1"
           kind="thumbnail"
           accept="image/png,image/jpeg,image/webp,image/svg+xml"
-          selectedName={thumbnailDisplayName}
+          selectedName={thumbnailName}
           previewUrl={thumbnailPreviewUrl}
           previewType="image"
           required={!initial && !thumbnailFile}
-          buttonLabel={initial?.thumbnailPath ? "Swap thumbnail" : "Add a thumbnail"}
+          buttonLabel={
+            initial?.thumbnailPath ? "Swap thumbnail" : "Add a thumbnail"
+          }
           hint="Auto-captured from the first frame — or upload your own PNG, JPEG, or WebP"
           disabled={isMediaUploadBusy(thumbnailUpload)}
           onChange={(file) => {
-            thumbnailExtractGenRef.current += 1;
+            thumbnailUploadGenRef.current += 1;
             setCapturingThumbnail(false);
             setThumbnailHint(null);
             setThumbnailFile(file);
+            setThumbnailPrepared(null);
             if (file) {
               void startThumbnailUpload(file);
             } else {
-              thumbnailUploadGenRef.current += 1;
               setThumbnailUpload(idleMediaUpload());
             }
           }}
           onRemove={
             thumbnailFile
               ? () => {
-                  thumbnailExtractGenRef.current += 1;
                   thumbnailUploadGenRef.current += 1;
                   setThumbnailFile(null);
+                  setThumbnailPrepared(null);
                   setThumbnailUpload(idleMediaUpload());
                   setThumbnailHint(null);
                   setCapturingThumbnail(false);
@@ -860,7 +643,7 @@ export function VideoForm({
     </>
   );
 
-  if (layout === "panel" && embedded) {
+  if (embedded) {
     return (
       <div className="min-w-0 space-y-4">
         {fields}
@@ -869,69 +652,38 @@ export function VideoForm({
     );
   }
 
-  if (layout === "panel") {
-    return (
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="min-w-0 shrink-0 border-b border-brown/10 px-3 pb-4 sm:px-6">
-          <div className="flex min-w-0 items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h3 className="font-display text-lg text-brown">
-                {initial ? "Edit video" : "Add video"}
-              </h3>
-              <p className="mt-1 text-sm text-muted">
-                {initial?.title ??
-                  "Pick a video — we'll grab a thumbnail from the first frame."}
-              </p>
-            </div>
-            {onCancel && (
-              <button
-                type="button"
-                onClick={onCancel}
-                className="rounded-full border border-brown/20 px-3 py-1.5 text-sm text-brown hover:bg-cream"
-              >
-                Back
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 py-4 sm:px-6 sm:py-5">
-          {fields}
-        </div>
-
-        <div className="min-w-0 shrink-0 border-t border-brown/10 bg-paper px-3 py-3 sm:px-6">
-          {saveFooter}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        void save();
-      }}
-      className="rounded-3xl border-2 border-lavender/35 bg-white/80 p-6 backdrop-blur-sm"
-    >
-      <h2 className="font-display text-xl text-brown">Add New Video</h2>
-      <p className="mt-1 text-sm text-muted">
-        Pick a video and we'll capture a thumbnail from the first frame. Save when it's ready.
-      </p>
-
-      <div className="mt-6">{fields}</div>
-
-      {error && (
-        <p className="mt-4 rounded-xl bg-blush/20 px-4 py-2 text-sm text-brown">
-          {error}
-        </p>
-      )}
-
-      <div className="mt-6 flex flex-wrap gap-3">
-        <AnimatedButton type="submit" disabled={saving || uploadBusy || saveBlocked}>
-          {submitLabel}
-        </AnimatedButton>
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <div className="min-w-0 shrink-0 border-b border-brown/10 px-3 pb-4 sm:px-6">
+        <div className="flex min-w-0 items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="font-display text-lg text-brown">
+              {initial ? "Edit video" : "Add video"}
+            </h3>
+            <p className="mt-1 text-sm text-muted">
+              {initial?.title ??
+                "Pick a video — we'll grab a thumbnail from the first frame."}
+            </p>
+          </div>
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded-full border border-brown/20 px-3 py-1.5 text-sm text-brown hover:bg-cream"
+            >
+              Back
+            </button>
+          )}
+        </div>
       </div>
-    </form>
+
+      <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 py-4 sm:px-6 sm:py-5">
+        {fields}
+      </div>
+
+      <div className="min-w-0 shrink-0 border-t border-brown/10 bg-paper px-3 py-3 sm:px-6">
+        {saveFooter}
+      </div>
+    </div>
   );
 }

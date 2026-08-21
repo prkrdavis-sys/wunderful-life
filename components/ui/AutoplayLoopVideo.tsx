@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { isQuickTimeVideoPath } from "@/lib/videos/upload";
 
 type AutoplayLoopVideoProps = {
   src: string;
@@ -85,7 +84,6 @@ export function AutoplayLoopVideo({
   const activeSrc = eager || inView ? src : null;
   const showCover = !playing;
   const hasPoster = Boolean(poster);
-  const isQuickTime = isQuickTimeVideoPath(src);
 
   if (src !== appliedSrc || poster !== appliedPoster) {
     setAppliedSrc(src);
@@ -197,7 +195,7 @@ export function AutoplayLoopVideo({
         });
     };
 
-    const onLoaded = () => {
+    const onReady = () => {
       captureFrame();
       tryPlay();
     };
@@ -221,43 +219,25 @@ export function AutoplayLoopVideo({
 
     tryPlay();
     const playAfterLayout = window.requestAnimationFrame(tryPlay);
-    video.addEventListener("loadeddata", onLoaded);
-    video.addEventListener("loadedmetadata", onLoaded);
-    video.addEventListener("canplay", tryPlay);
-    if (!isQuickTime) {
-      video.addEventListener("canplaythrough", tryPlay);
-    }
+    video.addEventListener("canplay", onReady);
     video.addEventListener("playing", onPlaying);
     video.addEventListener("pause", onPause);
     video.addEventListener("waiting", captureFrame);
     video.addEventListener("seeked", captureFrame);
-    video.addEventListener("stalled", tryPlay);
     video.addEventListener("error", onError);
     document.addEventListener("visibilitychange", tryPlay);
-    window.addEventListener("pageshow", tryPlay);
-    window.addEventListener("touchstart", tryPlay, { passive: true });
-    window.addEventListener("pointerdown", tryPlay);
-    window.addEventListener("scroll", tryPlay, { passive: true });
 
     return () => {
       window.cancelAnimationFrame(playAfterLayout);
-      video.removeEventListener("loadeddata", onLoaded);
-      video.removeEventListener("loadedmetadata", onLoaded);
-      video.removeEventListener("canplay", tryPlay);
-      video.removeEventListener("canplaythrough", tryPlay);
+      video.removeEventListener("canplay", onReady);
       video.removeEventListener("playing", onPlaying);
       video.removeEventListener("pause", onPause);
       video.removeEventListener("waiting", captureFrame);
       video.removeEventListener("seeked", captureFrame);
-      video.removeEventListener("stalled", tryPlay);
       video.removeEventListener("error", onError);
       document.removeEventListener("visibilitychange", tryPlay);
-      window.removeEventListener("pageshow", tryPlay);
-      window.removeEventListener("touchstart", tryPlay);
-      window.removeEventListener("pointerdown", tryPlay);
-      window.removeEventListener("scroll", tryPlay);
     };
-  }, [activeSrc, hasPoster, isQuickTime, muted]);
+  }, [activeSrc, hasPoster, muted]);
 
   useEffect(() => {
     const container = containerRef.current;

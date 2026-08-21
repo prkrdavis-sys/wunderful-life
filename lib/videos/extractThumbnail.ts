@@ -1,3 +1,12 @@
+import { extensionFromFilename } from "@/lib/files";
+import { waitForVideoEvent, withTimeout } from "@/lib/videos/media-dom";
+import {
+  bytesFromFfmpegFile,
+  fileFromBytes,
+  getFFmpeg,
+  readFileBytes,
+} from "@/lib/videos/ffmpeg";
+
 /**
  * Capture a still frame from a local video file for use as a thumbnail image.
  *
@@ -6,56 +15,7 @@
  * `video.play()` and `videoWidth` stays 0.
  */
 const EXTRACT_TIMEOUT_MS = 15_000;
-
-function withTimeout<T>(
-  promise: Promise<T>,
-  ms: number,
-  message: string,
-): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error(message)), ms);
-    promise.then(
-      (value) => {
-        clearTimeout(timer);
-        resolve(value);
-      },
-      (error: unknown) => {
-        clearTimeout(timer);
-        reject(error);
-      },
-    );
-  });
-}
-
-function waitForVideoEvent(
-  video: HTMLVideoElement,
-  event: "loadedmetadata" | "loadeddata" | "seeked",
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const onSuccess = () => {
-      cleanup();
-      resolve();
-    };
-    const onError = () => {
-      cleanup();
-      reject(new Error("Could not load video for thumbnail."));
-    };
-    const cleanup = () => {
-      video.removeEventListener(event, onSuccess);
-      video.removeEventListener("error", onError);
-    };
-    if (event === "loadedmetadata" && video.readyState >= 1) {
-      resolve();
-      return;
-    }
-    if (event === "loadeddata" && video.readyState >= 2) {
-      resolve();
-      return;
-    }
-    video.addEventListener(event, onSuccess);
-    video.addEventListener("error", onError);
-  });
-}
+const FFMPEG_THUMBNAIL_TIMEOUT_MS = 45_000;
 
 async function waitForDecodedFrame(video: HTMLVideoElement): Promise<void> {
   if (typeof video.requestVideoFrameCallback === "function") {
@@ -134,7 +94,7 @@ async function captureFrame(
   );
 
   await Promise.race([
-    waitForVideoEvent(video, "loadeddata"),
+    waitForVideoEvent(video, "loadeddata", "Could not load video for thumbnail."),
     playAttempt.then(() => undefined),
   ]);
 
@@ -155,7 +115,11 @@ async function captureFrame(
       : 0;
 
   if (target > 0 && Math.abs(video.currentTime - target) > 0.04) {
-    const seeked = waitForVideoEvent(video, "seeked");
+    const seeked = waitForVideoEvent(
+      video,
+      "seeked",
+      "Could not load video for thumbnail.",
+    );
     video.currentTime = target;
     await seeked;
     await waitForDecodedFrame(video);
@@ -202,4 +166,59 @@ async function captureFrame(
     type: options.mimeType,
     lastModified: Date.now(),
   });
+}
+
+export async function extractThumbnailWithFfmpeg(file: File): Promise<File> {
+  const ff = await getFFmpeg();
+  const inputExt = extensionFromFilename(file.name) || ".mov";
+  const inputName = `thumb-input${inputExt}`;
+  const outputName = "thumb.jpg";
+  const scaleToLongEdge =
+    "scale='if(gte(iw,ih),min(iw,720),-2)':'if(gt(ih,iw),min(ih,720),-2)',scale=trunc(iw/2)*2:trunc(ih/2)*2";
+
+  try {
+    await ff.writeFile(inputName, await readFileBytes(file));
+    const exitCode = await withTimeout(
+      ff.exec([
+        "-ss",
+        "0",
+        "-i",
+        inputName,
+        "-frames:v",
+        "1",
+        "-q:v",
+        "5",
+        "-vf",
+        scaleToLongEdge,
+        outputName,
+      ]),
+      FFMPEG_THUMBNAIL_TIMEOUT_MS,
+      "Thumbnail capture timed out.",
+    );
+
+    if (exitCode !== 0) {
+      throw new Error("Could not capture a thumbnail from this video.");
+    }
+
+    const data = await ff.readFile(outputName);
+    const bytes = bytesFromFfmpegFile(data);
+
+    if (bytes.byteLength === 0) {
+      throw new Error("Could not capture a thumbnail from this video.");
+    }
+
+    const baseName = file.name.replace(/\.[^.]+$/i, "") || "video";
+    return fileFromBytes(bytes, `${baseName}-thumbnail.jpg`, "image/jpeg");
+  } finally {
+    try {
+      await ff.deleteFile(inputName);
+    } catch {
+      // File may not have been written.
+    }
+    try {
+      await ff.deleteFile(outputName);
+    } catch {
+      // Frame grab may have failed before writing output.
+    }
+  }
 }

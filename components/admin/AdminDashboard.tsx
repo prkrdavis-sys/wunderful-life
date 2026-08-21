@@ -98,7 +98,6 @@ export function AdminDashboard({
         <VideoForm
           key={editing.id}
           initial={editing}
-          layout="panel"
           onSuccess={handleSuccess}
           onCancel={handleCancelEdit}
           onUploadBusyChange={handleUploadBusyChange}
@@ -164,7 +163,6 @@ export function AdminDashboard({
               </div>
               <VideoForm
                 key="new"
-                layout="panel"
                 embedded
                 onSuccess={handleSuccess}
                 onUploadBusyChange={handleUploadBusyChange}

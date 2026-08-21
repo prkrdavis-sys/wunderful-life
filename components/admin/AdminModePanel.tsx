@@ -48,44 +48,31 @@ export function AdminModePanel() {
     authRequired,
     panelOpen,
     setPanelOpen,
-    editorSection,
-    setEditorSection,
-    clearEditorFocus,
-    preferredTab,
-    clearPreferredTab,
+    location,
+    setEditorTab,
   } = useAdminView();
-  const [tab, setTab] = useState<AdminPanelTab>("content");
   const [videos, setVideos] = useState<PortfolioVideo[]>([]);
   const [videosLoaded, setVideosLoaded] = useState(false);
-  const [portfolioUploadBusy, setPortfolioUploadBusy] = useState(false);
+  const [uploadBusy, setUploadBusy] = useState(false);
 
   const canEdit = authenticated || !authRequired;
   const isOpen = viewMode === "admin" && panelOpen && canEdit;
-  const activeTab = editorSection ? "content" : tab;
+  const activeTab = location.tab;
 
   const tryClosePanel = () => {
-    if (!confirmLeaveDuringUpload(portfolioUploadBusy)) return;
-    setPortfolioUploadBusy(false);
+    if (!confirmLeaveDuringUpload(uploadBusy)) return;
+    setUploadBusy(false);
     setPanelOpen(false);
   };
 
   const trySetTab = (next: AdminPanelTab) => {
-    if (!confirmLeaveDuringUpload(portfolioUploadBusy)) return;
-    if (next !== "portfolio") setPortfolioUploadBusy(false);
-    setEditorSection(null);
-    clearEditorFocus();
-    clearPreferredTab();
-    setTab(next);
+    if (!confirmLeaveDuringUpload(uploadBusy)) return;
+    if (next !== "portfolio") setUploadBusy(false);
+    setEditorTab(next);
   };
 
   useEffect(() => {
-    if (!preferredTab) return;
-    setTab(preferredTab);
-    clearPreferredTab();
-  }, [preferredTab, clearPreferredTab]);
-
-  useEffect(() => {
-    if (!portfolioUploadBusy) return;
+    if (!uploadBusy) return;
 
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
@@ -93,7 +80,7 @@ export function AdminModePanel() {
 
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [portfolioUploadBusy]);
+  }, [uploadBusy]);
 
   useEffect(() => {
     if (!isOpen || videosLoaded) return;
@@ -218,6 +205,7 @@ export function AdminModePanel() {
                     <SiteEditorForm
                       portfolioVideos={videos}
                       portfolioVideosLoaded={videosLoaded}
+                      onUploadBusyChange={setUploadBusy}
                     />
                   </div>
                 ) : (
@@ -226,7 +214,7 @@ export function AdminModePanel() {
                       <AdminDashboard
                         initialVideos={videos}
                         onVideosChange={setVideos}
-                        onUploadBusyChange={setPortfolioUploadBusy}
+                        onUploadBusyChange={setUploadBusy}
                       />
                     ) : (
                       <p className="px-4 py-6 text-sm text-muted">Loading videos…</p>

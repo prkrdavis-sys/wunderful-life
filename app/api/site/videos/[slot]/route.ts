@@ -1,33 +1,50 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import {
-  clearHeroVideo,
-  setHeroVideoUrl,
-  uploadHeroVideo,
+  clearSlotVideo,
+  setSlotVideoUrl,
+  uploadSlotVideo,
 } from "@/lib/storage/site";
 import { readSiteRecord } from "@/lib/storage/site";
 import { StorageError } from "@/lib/storage";
 import { expectedSiteVersion } from "@/lib/storage/siteVersion";
 import { siteResponseHeaders } from "@/lib/site/response";
+import { isVideoSlot, videoSlotDescriptor } from "@/lib/site/video-slots";
 import { isAcceptedVideoFile, videoUploadErrorMessage } from "@/lib/videos/upload";
 
-export async function POST(request: Request) {
+type RouteContext = {
+  params: Promise<{ slot: string }>;
+};
+
+export async function POST(request: Request, context: RouteContext) {
+  const { slot: rawSlot } = await context.params;
+  if (!isVideoSlot(rawSlot)) {
+    return NextResponse.json({ error: "Unknown video slot." }, { status: 404 });
+  }
+  const slot = rawSlot;
+  const descriptor = videoSlotDescriptor(slot);
+
   try {
     const version = expectedSiteVersion(request);
     const form = await request.formData();
     const videoUrl = form.get("videoUrl");
     const file = form.get("video");
-    const posterUrl = form.get("posterUrl");
-    const poster = form.get("poster");
     const posterFile =
-      poster instanceof File && poster.size > 0 ? poster : undefined;
+      descriptor.persistPoster &&
+      form.get("poster") instanceof File &&
+      (form.get("poster") as File).size > 0
+        ? (form.get("poster") as File)
+        : undefined;
+    const posterRemoteRaw = form.get("posterUrl");
     const posterRemote =
-      typeof posterUrl === "string" && posterUrl.startsWith("https://")
-        ? posterUrl
+      descriptor.persistPoster &&
+      typeof posterRemoteRaw === "string" &&
+      posterRemoteRaw.startsWith("https://")
+        ? posterRemoteRaw
         : undefined;
 
     if (typeof videoUrl === "string" && videoUrl.startsWith("https://")) {
-      const site = await setHeroVideoUrl(videoUrl, version, posterRemote);
+      const site = await setSlotVideoUrl(slot, videoUrl, version, posterRemote);
       const record = await readSiteRecord();
       revalidatePath("/", "layout");
       return NextResponse.json(site, {
@@ -43,10 +60,13 @@ export async function POST(request: Request) {
     }
 
     if (!isAcceptedVideoFile(file)) {
-      return NextResponse.json({ error: videoUploadErrorMessage() }, { status: 400 });
+      return NextResponse.json(
+        { error: videoUploadErrorMessage() },
+        { status: 400 },
+      );
     }
 
-    const site = await uploadHeroVideo(file, version, posterFile);
+    const site = await uploadSlotVideo(slot, file, version, posterFile);
     const record = await readSiteRecord();
     revalidatePath("/", "layout");
     return NextResponse.json(site, {
@@ -58,16 +78,23 @@ export async function POST(request: Request) {
     }
     console.error(error);
     return NextResponse.json(
-      { error: "Failed to upload hero video." },
+      { error: `Failed to upload ${descriptor.noun}.` },
       { status: 500 },
     );
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: Request, context: RouteContext) {
+  const { slot: rawSlot } = await context.params;
+  if (!isVideoSlot(rawSlot)) {
+    return NextResponse.json({ error: "Unknown video slot." }, { status: 404 });
+  }
+  const slot = rawSlot;
+  const descriptor = videoSlotDescriptor(slot);
+
   try {
     const version = expectedSiteVersion(request);
-    const site = await clearHeroVideo(version);
+    const site = await clearSlotVideo(slot, version);
     const record = await readSiteRecord();
     revalidatePath("/", "layout");
     return NextResponse.json(site, {
@@ -79,7 +106,7 @@ export async function DELETE(request: Request) {
     }
     console.error(error);
     return NextResponse.json(
-      { error: "Failed to remove hero video." },
+      { error: `Failed to remove ${descriptor.noun}.` },
       { status: 500 },
     );
   }

@@ -1,3 +1,5 @@
+import { extensionFromFilename } from "@/lib/files";
+
 const ACCEPTED_VIDEO_EXTENSIONS = [".mov", ".mp4", ".m4v", ".webm"] as const;
 
 const ACCEPTED_VIDEO_MIME_TYPES = [
@@ -9,12 +11,6 @@ const ACCEPTED_VIDEO_MIME_TYPES = [
 
 type AcceptedVideoExtension = (typeof ACCEPTED_VIDEO_EXTENSIONS)[number];
 type AcceptedVideoMimeType = (typeof ACCEPTED_VIDEO_MIME_TYPES)[number];
-
-function extensionFromFilename(filename: string): string {
-  const dotIndex = filename.lastIndexOf(".");
-  if (dotIndex <= 0) return "";
-  return filename.slice(dotIndex).toLowerCase();
-}
 
 function isAcceptedExtension(ext: string): ext is AcceptedVideoExtension {
   return ACCEPTED_VIDEO_EXTENSIONS.includes(ext as AcceptedVideoExtension);

@@ -5,6 +5,10 @@ import { randomUUID } from "crypto";
 import { normalizeSiteContent } from "@/lib/site/normalize";
 import type { SiteContent } from "@/lib/site/types";
 import {
+  type VideoSlot,
+  videoSlotDescriptor,
+} from "@/lib/site/video-slots";
+import {
   getUseBlobStorage,
   SITE_METADATA_BLOB_PATH,
 } from "./blob";
@@ -23,12 +27,8 @@ import {
 import { StorageError } from "./types";
 
 const SITE_PATH = path.join(process.cwd(), "data", "site.json");
-const ABOUT_PHOTO_DIR = path.join(process.cwd(), "public", "about-photos");
-/** Folder name kept from the old home grid so existing uploads still resolve. */
-const COLLAGE_PHOTO_DIR = path.join(process.cwd(), "public", "home-grid-photos");
-const BRAND_LOGO_DIR = path.join(process.cwd(), "public", "brand-logos");
-const HERO_VIDEO_DIR = path.join(process.cwd(), "public", "uploads", "hero");
-const CTA_VIDEO_DIR = path.join(process.cwd(), "public", "uploads", "cta");
+
+type PhotoFolder = "about-photos" | "home-grid-photos" | "brand-logos";
 
 function isCompleteSiteContent(value: unknown): value is SiteContent {
   if (!value || typeof value !== "object") return false;
@@ -59,10 +59,6 @@ async function readSiteFromFile(): Promise<SiteContent> {
   const raw = await fs.readFile(SITE_PATH, "utf8");
   const parsed = JSON.parse(raw) as SiteContent;
   return normalizeSiteContent(parsed);
-}
-
-async function ensurePhotoDir(dir: string) {
-  await fs.mkdir(dir, { recursive: true });
 }
 
 async function readSiteFromBlob(): Promise<SiteContent | null> {
@@ -194,13 +190,28 @@ async function deleteStoredPhoto(imagePath: string) {
   }
 }
 
-type PhotoFolder = "about-photos" | "home-grid-photos" | "brand-logos";
+async function savePublicFile(
+  file: File,
+  options: {
+    remotePath: string;
+    localPublicPath: string;
+    contentType?: string;
+  },
+): Promise<string> {
+  if (hasSupabaseMediaConfig()) {
+    return uploadPublicMedia(
+      options.remotePath,
+      file,
+      options.contentType,
+    );
+  }
 
-const PHOTO_DIRS: Record<PhotoFolder, string> = {
-  "about-photos": ABOUT_PHOTO_DIR,
-  "home-grid-photos": COLLAGE_PHOTO_DIR,
-  "brand-logos": BRAND_LOGO_DIR,
-};
+  const absolute = path.join(process.cwd(), "public", options.localPublicPath);
+  await fs.mkdir(path.dirname(absolute), { recursive: true });
+  const buffer = Buffer.from(await file.arrayBuffer());
+  await fs.writeFile(absolute, buffer);
+  return `/${options.localPublicPath}`;
+}
 
 function photoFileExtension(file: File): string {
   const fromName = path.extname(file.name).toLowerCase();
@@ -247,19 +258,11 @@ async function savePhotoFile(
 ): Promise<string> {
   const ext = photoFileExtension(file);
   const filename = `${photoId}-${randomUUID()}${ext}`;
-
-  if (hasSupabaseMediaConfig()) {
-    return uploadPublicMedia(
-      `${folder}/${filename}`,
-      file,
-      photoContentType(file),
-    );
-  }
-
-  await ensurePhotoDir(PHOTO_DIRS[folder]);
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(path.join(PHOTO_DIRS[folder], filename), buffer);
-  return `/${folder}/${filename}`;
+  return savePublicFile(file, {
+    remotePath: `${folder}/${filename}`,
+    localPublicPath: `${folder}/${filename}`,
+    contentType: photoContentType(file),
+  });
 }
 
 async function setPhotoImagePath(
@@ -276,7 +279,7 @@ async function setPhotoImagePath(
       409,
     );
   }
-  const site = record.content;
+  const site = structuredClone(record.content);
   const photos =
     kind === "about" ? site.about.photos : site.photography.photos;
   const photoIndex = photos.findIndex((photo) => photo.id === photoId);
@@ -328,7 +331,7 @@ export async function clearAboutPhoto(photoId: string, expectedVersion?: number)
       409,
     );
   }
-  const site = record.content;
+  const site = structuredClone(record.content);
   const photoIndex = site.about.photos.findIndex((photo) => photo.id === photoId);
 
   if (photoIndex === -1) {
@@ -336,7 +339,8 @@ export async function clearAboutPhoto(photoId: string, expectedVersion?: number)
   }
 
   const current = site.about.photos[photoIndex];
-  const { imagePath: _removed, ...rest } = current;
+  const rest = { ...current };
+  delete rest.imagePath;
   site.about.photos[photoIndex] = rest;
   await writeSiteContent(site, record.version);
   if (current.imagePath) {
@@ -345,47 +349,24 @@ export async function clearAboutPhoto(photoId: string, expectedVersion?: number)
   return site;
 }
 
-type VideoSlot = "hero" | "cta";
-
-const VIDEO_DIRS: Record<VideoSlot, string> = {
-  hero: HERO_VIDEO_DIR,
-  cta: CTA_VIDEO_DIR,
-};
-
 async function saveVideoFile(slot: VideoSlot, file: File): Promise<string> {
   const ext = path.extname(file.name) || ".mp4";
   const filename = `${slot}-${randomUUID()}${ext}`;
-
-  if (hasSupabaseMediaConfig()) {
-    return uploadPublicMedia(
-      `${slot}/${filename}`,
-      file,
-      file.type || undefined,
-    );
-  }
-
-  await ensurePhotoDir(VIDEO_DIRS[slot]);
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(path.join(VIDEO_DIRS[slot], filename), buffer);
-  return `/uploads/${slot}/${filename}`;
+  return savePublicFile(file, {
+    remotePath: `${slot}/${filename}`,
+    localPublicPath: `uploads/${slot}/${filename}`,
+    contentType: file.type || undefined,
+  });
 }
 
 async function savePosterFile(slot: VideoSlot, file: File): Promise<string> {
   const ext = path.extname(file.name) || ".jpg";
   const filename = `${slot}-poster-${randomUUID()}${ext}`;
-
-  if (hasSupabaseMediaConfig()) {
-    return uploadPublicMedia(
-      `${slot}/${filename}`,
-      file,
-      file.type || "image/jpeg",
-    );
-  }
-
-  await ensurePhotoDir(VIDEO_DIRS[slot]);
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(path.join(VIDEO_DIRS[slot], filename), buffer);
-  return `/uploads/${slot}/${filename}`;
+  return savePublicFile(file, {
+    remotePath: `${slot}/${filename}`,
+    localPublicPath: `uploads/${slot}/${filename}`,
+    contentType: file.type || "image/jpeg",
+  });
 }
 
 async function replaceVideoPath(
@@ -403,16 +384,17 @@ async function replaceVideoPath(
       409,
     );
   }
-  const site = record.content;
+  const site = structuredClone(record.content);
   const previousVideo =
     slot === "hero" ? site.hero.videoPath : site.closingCta.videoPath;
   const previousPoster = slot === "hero" ? site.hero.posterPath : undefined;
+  const nextPoster = posterPath ?? previousPoster;
 
   if (slot === "hero") {
     site.hero = {
       subtitle: site.hero.subtitle,
       videoPath,
-      ...(posterPath ? { posterPath } : {}),
+      ...(nextPoster ? { posterPath: nextPoster } : {}),
     };
   } else {
     site.closingCta = { ...site.closingCta, videoPath };
@@ -433,7 +415,7 @@ async function replaceVideoPath(
   if (previousVideo && previousVideo !== videoPath) {
     await deleteStoredPhoto(previousVideo);
   }
-  if (previousPoster && previousPoster !== posterPath) {
+  if (previousPoster && previousPoster !== nextPoster) {
     await deleteStoredPhoto(previousPoster);
   }
 
@@ -451,7 +433,7 @@ async function clearVideoPath(
       409,
     );
   }
-  const site = record.content;
+  const site = structuredClone(record.content);
   const previousVideo =
     slot === "hero" ? site.hero.videoPath : site.closingCta.videoPath;
   const previousPoster = slot === "hero" ? site.hero.posterPath : undefined;
@@ -459,7 +441,8 @@ async function clearVideoPath(
   if (slot === "hero") {
     site.hero = { subtitle: site.hero.subtitle };
   } else {
-    const { videoPath: _removed, ...closingCta } = site.closingCta;
+    const closingCta = { ...site.closingCta };
+    delete closingCta.videoPath;
     site.closingCta = closingCta;
   }
 
@@ -471,53 +454,40 @@ async function clearVideoPath(
   return site;
 }
 
-/** Local/dev path: the video file arrives in the request body. */
-export async function uploadHeroVideo(
+export async function uploadSlotVideo(
+  slot: VideoSlot,
   file: File,
   expectedVersion?: number,
   poster?: File,
 ): Promise<SiteContent> {
-  return replaceVideoPath(
-    "hero",
-    await saveVideoFile("hero", file),
-    expectedVersion,
-    poster ? await savePosterFile("hero", poster) : undefined,
-  );
+  const { persistPoster } = videoSlotDescriptor(slot);
+  const videoPath = await saveVideoFile(slot, file);
+  let posterPath: string | undefined;
+  try {
+    if (persistPoster && poster) {
+      posterPath = await savePosterFile(slot, poster);
+    }
+  } catch (error) {
+    await deleteStoredPhoto(videoPath);
+    throw error;
+  }
+  return replaceVideoPath(slot, videoPath, expectedVersion, posterPath);
 }
 
-/** Production path: the file was client-uploaded to Blob; persist its URL. */
-export async function setHeroVideoUrl(
+export async function setSlotVideoUrl(
+  slot: VideoSlot,
   url: string,
   expectedVersion?: number,
   posterUrl?: string,
 ): Promise<SiteContent> {
-  return replaceVideoPath("hero", url, expectedVersion, posterUrl);
+  return replaceVideoPath(slot, url, expectedVersion, posterUrl);
 }
 
-export async function clearHeroVideo(expectedVersion?: number): Promise<SiteContent> {
-  return clearVideoPath("hero", expectedVersion);
-}
-
-export async function uploadCtaVideo(
-  file: File,
+export async function clearSlotVideo(
+  slot: VideoSlot,
   expectedVersion?: number,
 ): Promise<SiteContent> {
-  return replaceVideoPath(
-    "cta",
-    await saveVideoFile("cta", file),
-    expectedVersion,
-  );
-}
-
-export async function setCtaVideoUrl(
-  url: string,
-  expectedVersion?: number,
-): Promise<SiteContent> {
-  return replaceVideoPath("cta", url, expectedVersion);
-}
-
-export async function clearCtaVideo(expectedVersion?: number): Promise<SiteContent> {
-  return clearVideoPath("cta", expectedVersion);
+  return clearVideoPath(slot, expectedVersion);
 }
 
 export async function uploadCollagePhoto(
@@ -549,7 +519,7 @@ export async function clearCollagePhoto(
       409,
     );
   }
-  const site = record.content;
+  const site = structuredClone(record.content);
   const photoIndex = site.photography.photos.findIndex(
     (photo) => photo.id === photoId,
   );
@@ -559,7 +529,8 @@ export async function clearCollagePhoto(
   }
 
   const current = site.photography.photos[photoIndex];
-  const { imagePath: _removed, ...rest } = current;
+  const rest = { ...current };
+  delete rest.imagePath;
   site.photography.photos[photoIndex] = rest;
   await writeSiteContent(site, record.version);
   if (current.imagePath) {
@@ -591,7 +562,7 @@ export async function setBrandLogoUrl(
       409,
     );
   }
-  const site = record.content;
+  const site = structuredClone(record.content);
   const brandIndex = site.brands.items.findIndex((brand) => brand.id === brandId);
 
   if (brandIndex === -1) {
@@ -625,7 +596,7 @@ export async function clearBrandLogo(
       409,
     );
   }
-  const site = record.content;
+  const site = structuredClone(record.content);
   const brandIndex = site.brands.items.findIndex((brand) => brand.id === brandId);
 
   if (brandIndex === -1) {
@@ -633,7 +604,8 @@ export async function clearBrandLogo(
   }
 
   const current = site.brands.items[brandIndex];
-  const { logoPath: _removed, ...rest } = current;
+  const rest = { ...current };
+  delete rest.logoPath;
   site.brands.items[brandIndex] = rest;
   await writeSiteContent(site, record.version);
   if (current.logoPath) {

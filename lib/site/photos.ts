@@ -1,3 +1,5 @@
+import { extensionFromFilename } from "@/lib/files";
+
 const ACCEPTED_PHOTO_EXTENSIONS = [
   ".jpg",
   ".jpeg",
@@ -15,12 +17,6 @@ const MAX_PHOTO_EDGE = 1920;
 const COMPRESS_PHOTO_OVER_BYTES = 300_000;
 
 type PhotoFolder = "about-photos" | "home-grid-photos" | "brand-logos";
-
-function extensionFromFilename(filename: string): string {
-  const dotIndex = filename.lastIndexOf(".");
-  if (dotIndex <= 0) return "";
-  return filename.slice(dotIndex).toLowerCase();
-}
 
 function isHeicLike(file: Pick<File, "name" | "type">): boolean {
   const mime = file.type.toLowerCase();
@@ -212,20 +208,3 @@ export async function preparePhotoForUpload(
   }
 }
 
-export async function readUploadJson<T>(response: Response): Promise<T> {
-  const raw = await response.text();
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    if (response.status === 413) {
-      throw new Error(
-        "That photo is too large for a direct upload. Try a smaller JPEG and save again.",
-      );
-    }
-    throw new Error(
-      response.ok
-        ? "The server returned an unexpected response."
-        : `Upload failed (${response.status}). Please try again.`,
-    );
-  }
-}
