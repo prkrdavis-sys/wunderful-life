@@ -112,14 +112,14 @@ export function ClosingCtaSection() {
             </motion.a>
           </div>
 
-          <figure className="mx-auto mt-9 w-[min(100%,13.75rem)] px-1 pb-4 sm:mt-10 sm:w-[16.25rem] lg:mx-0 lg:mt-12 lg:ml-1 lg:w-[18.5rem]">
+          <figure className="mx-auto mt-9 w-[min(100%,13.75rem)] px-1 pt-2 pb-5 sm:mt-10 sm:w-[16.25rem] lg:mx-0 lg:mt-12 lg:ml-1 lg:w-[18.5rem]">
             <Image
               src={SIGNATURE.src}
               alt="Emily Wunden"
               width={SIGNATURE.width}
               height={SIGNATURE.height}
               sizes="(max-width: 640px) 13.75rem, (max-width: 1024px) 16.25rem, 18.5rem"
-              className="h-auto w-full origin-[18%_62%] -rotate-[5deg] mix-blend-multiply"
+              className="h-auto w-full origin-center rotate-[7deg] mix-blend-multiply"
             />
           </figure>
         </SectionReveal>
