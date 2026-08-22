@@ -1,94 +1,34 @@
 [
   {
-    "id": "f77327aa-a53a-4be0-b833-1085a3a1e220",
-    "slug": "m-ass-age",
-    "title": "Massage",
-    "brand": "Spa town",
+    "id": "87b98b3d-beb4-43be-9c2a-8ada4042e979",
+    "slug": "test-2",
+    "title": "test ",
+    "brand": "a",
     "platform": "instagram",
-    "hook": "So happy and clean",
-    "cta": "wowee go there",
-    "durationSec": 21,
-    "tags": [
-      "nice dude"
-    ],
-    "thumbnailPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/thumbnails/73d8d7ea-b4c0-4937-a4c1-784ada2e7691.jpeg",
-    "videoPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/videos/c1b97c11-86cb-411d-8af2-7b4392a90f54.mov",
+    "hook": "",
+    "cta": "",
+    "durationSec": 14,
+    "tags": [],
+    "thumbnailPath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/thumbnails/f94efe38-0f51-42e9-ad4e-cfa558098a67.jpg",
+    "videoPath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/videos/ccd273a8-b748-44ee-a532-9f5071255fdd.mp4",
     "featured": true,
     "sortOrder": 0,
-    "createdAt": "2026-06-18T03:08:46.726Z"
+    "createdAt": "2026-08-20T22:21:07.586Z"
   },
   {
-    "id": "2b62d48d-ae10-4b31-b915-3624e80b26b2",
-    "slug": "bath-time",
-    "title": "Bath Time",
-    "brand": "Sopay",
+    "id": "642aa113-cd25-4606-8624-0663f131fc62",
+    "slug": "test-3",
+    "title": "Test 3",
+    "brand": "C",
     "platform": "instagram",
-    "hook": "Rub a dub",
-    "cta": "dont be dirty",
-    "durationSec": 6,
-    "tags": [
-      "clean af"
-    ],
-    "thumbnailPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/thumbnails/98393d40-fe89-46f4-9897-42eafb5a53bb.jpeg",
-    "videoPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/videos/77fb96df-eda5-433e-84cb-83712e43b443.mov",
+    "hook": "",
+    "cta": "",
+    "durationSec": 25,
+    "tags": [],
+    "thumbnailPath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/thumbnails/bafee12a-40ff-4a95-bb34-b031d0607b05.png",
+    "videoPath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/videos/b6ce5c86-c420-4e14-bdeb-73ab8f9459ea.mp4",
     "featured": true,
     "sortOrder": 1,
-    "createdAt": "2026-06-18T03:05:36.283Z"
-  },
-  {
-    "id": "6af08f79-b16c-4821-a8e3-6908c5607437",
-    "slug": "slug-2",
-    "title": "Book in da Tub",
-    "brand": "Bubblez",
-    "platform": "instagram",
-    "hook": "Look how dry my book is",
-    "cta": "pop the bubble",
-    "durationSec": 14,
-    "tags": [
-      "bubbly",
-      "fancy",
-      "cooler than you"
-    ],
-    "thumbnailPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/thumbnails/28ba2832-6feb-4482-aac4-5760fafe2811.jpeg",
-    "videoPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/videos/5adb1f65-88df-449e-b1c9-9e7e26b357bb.mov",
-    "featured": true,
-    "sortOrder": 999,
-    "createdAt": "2026-06-19T02:02:12.378Z"
-  },
-  {
-    "id": "6e0d01d4-71cd-4157-9ce4-6396495e92eb",
-    "slug": "slug",
-    "title": "Hoodlum",
-    "brand": "CMFRT",
-    "platform": "instagram",
-    "hook": "I'll rob you in this",
-    "cta": "buy this shirt",
-    "durationSec": 24,
-    "tags": [
-      "yah mon"
-    ],
-    "thumbnailPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/thumbnails/9916b8cd-d6f7-4e17-a469-aa338f7b4652.jpeg",
-    "videoPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/videos/498207fe-ba74-486b-a4c7-6aa4e9555bd8.mov",
-    "featured": true,
-    "sortOrder": 999,
-    "createdAt": "2026-06-19T02:08:28.372Z"
-  },
-  {
-    "id": "d4e2d65b-aaec-4862-a94a-46c106749de8",
-    "slug": "slug-3",
-    "title": "Disco BALLS",
-    "brand": "Shiny Balls",
-    "platform": "instagram",
-    "hook": "Balls to the walls ",
-    "cta": "dont you wanna",
-    "durationSec": 2,
-    "tags": [
-      "ball"
-    ],
-    "thumbnailPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/thumbnails/72ef6cf3-ded2-4799-ba27-409e5cc59755.jpeg",
-    "videoPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/videos/b621e810-ac3b-4a29-8bbd-5f730c6ca059.mov",
-    "featured": true,
-    "sortOrder": 999,
-    "createdAt": "2026-06-19T02:20:22.495Z"
+    "createdAt": "2026-08-22T12:46:59.011Z"
   }
 ]

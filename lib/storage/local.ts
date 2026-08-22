@@ -77,17 +77,13 @@ type LibrarySnapshot = {
 };
 
 /**
- * Read for display only. The bundled catalog is a read-only uptime fallback,
- * so a storage outage never renders as an empty library. Never feed the result
- * back into a write: it may be a stale snapshot.
+ * Read for display only. When the transactional store is configured, never
+ * substitute the bundled JSON catalog — that file can be a stale transfer
+ * snapshot and would flash old clips over the live admin library.
  */
 async function readVideosFile(): Promise<PortfolioVideo[]> {
   if (hasSiteDatabaseConfig()) {
-    try {
-      return (await readLibraryForWrite()).videos;
-    } catch {
-      return readVideosFromLocalFile();
-    }
+    return (await readLibraryForWrite()).videos;
   }
 
   return readVideosFromLocalFile();
