@@ -66,5 +66,22 @@
       <p>Reconnect to the internet, then try again to keep browsing Wunderful Life.</p>
       <button type="button" onclick="location.reload()">Try again</button>
     </main>
+    <script>
+      (function () {
+        var key = "wl-offline-auto-reload";
+        function reloadOnce() {
+          try {
+            var last = sessionStorage.getItem(key);
+            if (last && Date.now() - Number(last) < 15000) return;
+            sessionStorage.setItem(key, String(Date.now()));
+          } catch (error) {
+            // Private mode can block sessionStorage; still try once.
+          }
+          location.reload();
+        }
+        if (navigator.onLine) reloadOnce();
+        window.addEventListener("online", reloadOnce);
+      })();
+    </script>
   </body>
 </html>

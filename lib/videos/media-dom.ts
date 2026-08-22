@@ -18,6 +18,31 @@ export function withTimeout<T>(
   });
 }
 
+export function attachHiddenVideo(video: HTMLVideoElement): void {
+  if (typeof document === "undefined") return;
+  video.muted = true;
+  video.defaultMuted = true;
+  video.playsInline = true;
+  video.setAttribute("playsinline", "true");
+  video.setAttribute("webkit-playsinline", "true");
+  video.preload = "auto";
+  video.controls = false;
+  video.style.position = "fixed";
+  video.style.left = "-9999px";
+  video.style.width = "2px";
+  video.style.height = "2px";
+  video.style.opacity = "0";
+  video.style.pointerEvents = "none";
+  document.body.appendChild(video);
+}
+
+export function detachHiddenVideo(video: HTMLVideoElement): void {
+  video.pause();
+  video.removeAttribute("src");
+  video.load();
+  video.remove();
+}
+
 export function waitForVideoEvent(
   video: HTMLVideoElement,
   event: "loadedmetadata" | "loadeddata" | "seeked" | "ended",
@@ -47,4 +72,25 @@ export function waitForVideoEvent(
     video.addEventListener(event, onSuccess);
     video.addEventListener("error", onError);
   });
+}
+
+export async function waitForVideoDimensions(
+  video: HTMLVideoElement,
+  timeoutMs = 8_000,
+): Promise<{ width: number; height: number }> {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    if (video.error) {
+      throw new Error("Could not load this video.");
+    }
+    if (video.videoWidth > 0 && video.videoHeight > 0) {
+      return { width: video.videoWidth, height: video.videoHeight };
+    }
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, 40);
+    });
+  }
+
+  throw new Error("Could not read video dimensions.");
 }

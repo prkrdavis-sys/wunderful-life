@@ -19,12 +19,12 @@ export default async function HomePage() {
     <>
       <HeroSection />
       <StatsBannerSection />
-      <AboutSection />
       <ServicesSection />
+      <BrandsBanner />
       <WorkPreviewSection videos={videos} />
       <UgcBenefitsSection />
-      <BrandsBanner />
       <PhotographyCollage />
+      <AboutSection />
       <TestimonialsSection />
       <MoreEmilySection />
       <ClosingCtaSection />

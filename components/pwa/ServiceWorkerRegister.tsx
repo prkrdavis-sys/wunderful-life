@@ -7,9 +7,11 @@ export function ServiceWorkerRegister() {
     if (!("serviceWorker" in navigator)) return;
 
     const register = () => {
-      void navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
-        // Registration can fail on unsupported origins (e.g. private LAN IP over HTTP).
-      });
+      void navigator.serviceWorker
+        .register("/sw.js", { scope: "/", updateViaCache: "none" })
+        .catch(() => {
+          // Registration can fail on unsupported origins (e.g. private LAN IP over HTTP).
+        });
     };
 
     if (document.readyState === "complete") {

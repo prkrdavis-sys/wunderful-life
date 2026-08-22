@@ -1,5 +1,11 @@
 import { extensionFromFilename } from "@/lib/files";
-import { waitForVideoEvent, withTimeout } from "@/lib/videos/media-dom";
+import {
+  attachHiddenVideo,
+  detachHiddenVideo,
+  waitForVideoDimensions,
+  waitForVideoEvent,
+  withTimeout,
+} from "@/lib/videos/media-dom";
 import {
   bytesFromFfmpegFile,
   fileFromBytes,
@@ -16,40 +22,55 @@ import {
  */
 const EXTRACT_TIMEOUT_MS = 15_000;
 const FFMPEG_THUMBNAIL_TIMEOUT_MS = 45_000;
+const DECODE_WAIT_MS = 600;
+
+function seekTargetSeconds(duration: number): number {
+  if (!Number.isFinite(duration) || duration <= 0.04) return 0;
+  return Math.min(
+    Math.max(duration * 0.05, 0.1),
+    Math.max(0, duration - 0.04),
+    1,
+  );
+}
 
 async function waitForDecodedFrame(video: HTMLVideoElement): Promise<void> {
-  if (typeof video.requestVideoFrameCallback === "function") {
-    await new Promise<void>((resolve) => {
-      video.requestVideoFrameCallback(() => resolve());
-    });
-    return;
-  }
+  const wait =
+    typeof video.requestVideoFrameCallback === "function"
+      ? new Promise<void>((resolve) => {
+          video.requestVideoFrameCallback(() => resolve());
+        })
+      : new Promise<void>((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        });
 
-  await new Promise<void>((resolve) => {
-    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-  });
+  await Promise.race([
+    wait,
+    new Promise<void>((resolve) => {
+      setTimeout(resolve, DECODE_WAIT_MS);
+    }),
+  ]);
 }
 
 export async function extractVideoFrame(
   file: File,
   options?: {
-    /** Seconds into the video to capture. Defaults to the first frame. */
+    /** Seconds into the video to capture. Defaults to a short offset. */
     seekTo?: number;
     mimeType?: "image/jpeg" | "image/png" | "image/webp";
     quality?: number;
   },
 ): Promise<File> {
-  const seekTo = options?.seekTo ?? 0;
   const mimeType = options?.mimeType ?? "image/jpeg";
   const quality = options?.quality ?? 0.74;
   const maxEdge = 720;
   const objectUrl = URL.createObjectURL(file);
   const video = document.createElement("video");
+  attachHiddenVideo(video);
 
   try {
     return await withTimeout(
       captureFrame(video, objectUrl, {
-        seekTo,
+        seekTo: options?.seekTo,
         mimeType,
         quality,
         maxEdge,
@@ -59,9 +80,7 @@ export async function extractVideoFrame(
       "Timed out capturing a thumbnail from this video.",
     );
   } finally {
-    video.pause();
-    video.removeAttribute("src");
-    video.load();
+    detachHiddenVideo(video);
     URL.revokeObjectURL(objectUrl);
   }
 }
@@ -70,20 +89,14 @@ async function captureFrame(
   video: HTMLVideoElement,
   objectUrl: string,
   options: {
-    seekTo: number;
+    seekTo?: number;
     mimeType: "image/jpeg" | "image/png" | "image/webp";
     quality: number;
     maxEdge: number;
     fileName: string;
   },
 ): Promise<File> {
-  video.muted = true;
-  video.defaultMuted = true;
-  video.playsInline = true;
-  video.setAttribute("playsinline", "true");
-  video.setAttribute("webkit-playsinline", "true");
-  video.preload = "auto";
-  video.crossOrigin = "anonymous";
+  // Blob URLs are same-origin; setting crossOrigin can block decode in some browsers.
   video.src = objectUrl;
   video.load();
 
@@ -93,10 +106,12 @@ async function captureFrame(
     () => false,
   );
 
-  await Promise.race([
-    waitForVideoEvent(video, "loadeddata", "Could not load video for thumbnail."),
-    playAttempt.then(() => undefined),
-  ]);
+  await waitForVideoEvent(
+    video,
+    "loadeddata",
+    "Could not load video for thumbnail.",
+  );
+  await playAttempt;
 
   if (video.paused) {
     try {
@@ -106,13 +121,16 @@ async function captureFrame(
     }
   }
 
+  const { width, height } = await waitForVideoDimensions(video);
   await waitForDecodedFrame(video);
 
   const duration = video.duration;
   const target =
-    Number.isFinite(duration) && duration > 0
-      ? Math.min(options.seekTo, Math.max(0, duration * 0.05))
-      : 0;
+    options.seekTo !== undefined
+      ? Number.isFinite(duration) && duration > 0
+        ? Math.min(options.seekTo, Math.max(0, duration - 0.04))
+        : 0
+      : seekTargetSeconds(duration);
 
   if (target > 0 && Math.abs(video.currentTime - target) > 0.04) {
     const seeked = waitForVideoEvent(
@@ -127,8 +145,6 @@ async function captureFrame(
 
   video.pause();
 
-  const width = video.videoWidth;
-  const height = video.videoHeight;
   if (!width || !height) {
     throw new Error("Could not read video dimensions for thumbnail.");
   }
@@ -173,15 +189,11 @@ export async function extractThumbnailWithFfmpeg(file: File): Promise<File> {
   const inputExt = extensionFromFilename(file.name) || ".mov";
   const inputName = `thumb-input${inputExt}`;
   const outputName = "thumb.jpg";
-  const scaleToLongEdge =
-    "scale='if(gte(iw,ih),min(iw,720),-2)':'if(gt(ih,iw),min(ih,720),-2)',scale=trunc(iw/2)*2:trunc(ih/2)*2";
 
   try {
     await ff.writeFile(inputName, await readFileBytes(file));
     const exitCode = await withTimeout(
       ff.exec([
-        "-ss",
-        "0",
         "-i",
         inputName,
         "-frames:v",
@@ -189,7 +201,9 @@ export async function extractThumbnailWithFfmpeg(file: File): Promise<File> {
         "-q:v",
         "5",
         "-vf",
-        scaleToLongEdge,
+        "scale='min(iw,720)':-2",
+        "-f",
+        "image2",
         outputName,
       ]),
       FFMPEG_THUMBNAIL_TIMEOUT_MS,

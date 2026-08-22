@@ -102,30 +102,50 @@ export async function captureVideoStill(
   preparedPromise?: Promise<File>,
 ): Promise<File | null> {
   const quality = capture === "poster" ? 0.72 : 0.74;
-  try {
-    return await extractVideoFrame(file, { mimeType: "image/jpeg", quality });
-  } catch (error) {
-    if (capture === "poster") {
-      console.warn("Poster capture skipped:", error);
-      return null;
-    }
-    if (!preparedPromise) {
+  const tryFrame = async (source: File) => {
+    try {
+      return await extractVideoFrame(source, {
+        mimeType: "image/jpeg",
+        quality,
+      });
+    } catch (error) {
       console.warn(
         toErrorMessage(error, "Could not capture a thumbnail from the video."),
       );
       return null;
     }
-    try {
-      return await extractThumbnailWithFfmpeg(await preparedPromise);
-    } catch (ffmpegError) {
-      console.warn(
-        toErrorMessage(
-          ffmpegError,
-          "Could not capture a thumbnail from the video.",
-        ),
-      );
-      return null;
-    }
+  };
+
+  const fromOriginal = await tryFrame(file);
+  if (fromOriginal) return fromOriginal;
+
+  if (!preparedPromise) return null;
+
+  let prepared: File;
+  try {
+    prepared = await preparedPromise;
+  } catch (error) {
+    console.warn(
+      toErrorMessage(error, "Could not capture a thumbnail from the video."),
+    );
+    return null;
+  }
+
+  if (prepared !== file) {
+    const fromPrepared = await tryFrame(prepared);
+    if (fromPrepared) return fromPrepared;
+  }
+
+  try {
+    return await extractThumbnailWithFfmpeg(prepared);
+  } catch (ffmpegError) {
+    console.warn(
+      toErrorMessage(
+        ffmpegError,
+        "Could not capture a thumbnail from the video.",
+      ),
+    );
+    return null;
   }
 }
 
