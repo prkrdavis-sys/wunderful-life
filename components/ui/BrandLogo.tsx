@@ -1,9 +1,9 @@
 import Image from "next/image";
 
 export const BRAND_LOGO = {
-  src: "/brand/wunderful-life-logo.png",
-  width: 929,
-  height: 952,
+  src: "/brand/wunderful-life-llc.png",
+  width: 930,
+  height: 946,
 } as const;
 
 type BrandLogoProps = {
@@ -22,7 +22,7 @@ export function BrandLogo({ alt, sizes, className, preload }: BrandLogoProps) {
       height={BRAND_LOGO.height}
       sizes={sizes}
       preload={preload}
-      className={className}
+      className={`bg-transparent ${className ?? ""}`.trim()}
     />
   );
 }
