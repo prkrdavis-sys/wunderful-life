@@ -76,14 +76,6 @@ export function ClosingCtaSection() {
       <SectionButterfly flight="closingFar" />
       <AdminEditButton section="cta" label="Edit CTA" />
 
-      <figure className="relative z-10 mx-auto mb-10 w-[min(100%,16.5rem)] sm:mb-14 sm:w-[20rem] lg:mb-16 lg:w-[22.5rem]">
-        <BrandLogo
-          alt={site.brand}
-          sizes="(max-width: 640px) 16.5rem, (max-width: 1024px) 20rem, 22.5rem"
-          className="h-auto w-full mix-blend-multiply"
-        />
-      </figure>
-
       <div className="relative z-10 mx-auto grid max-w-5xl items-center gap-10 sm:gap-14 lg:grid-cols-[0.85fr_1.15fr]">
         <div className="mx-auto w-full max-w-xs lg:max-w-none">
           <CtaVideo videoPath={closingCta.videoPath} />
@@ -121,7 +113,7 @@ export function ClosingCtaSection() {
             </motion.a>
           </div>
 
-          <figure className="mx-auto mt-9 w-[min(100%,13.75rem)] px-1 pt-2 pb-5 sm:mt-10 sm:w-[16.25rem] lg:mx-0 lg:mt-12 lg:ml-1 lg:w-[18.5rem]">
+          <figure className="mx-auto mt-9 w-[min(100%,13.75rem)] px-1 pt-2 sm:mt-10 sm:w-[16.25rem] lg:mx-0 lg:mt-12 lg:ml-1 lg:w-[18.5rem]">
             <Image
               src={SIGNATURE.src}
               alt="Emily Wunden"
@@ -129,6 +121,14 @@ export function ClosingCtaSection() {
               height={SIGNATURE.height}
               sizes="(max-width: 640px) 13.75rem, (max-width: 1024px) 16.25rem, 18.5rem"
               className="h-auto w-full origin-center rotate-[1deg] mix-blend-multiply"
+            />
+          </figure>
+
+          <figure className="mx-auto mt-4 w-[min(100%,16.5rem)] pb-5 sm:mt-5 sm:w-[20rem] lg:mx-0 lg:ml-1 lg:w-[22.5rem]">
+            <BrandLogo
+              alt={site.brand}
+              sizes="(max-width: 640px) 16.5rem, (max-width: 1024px) 20rem, 22.5rem"
+              className="h-auto w-full mix-blend-multiply"
             />
           </figure>
         </SectionReveal>
