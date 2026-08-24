@@ -124,11 +124,11 @@ export function ClosingCtaSection() {
             />
           </figure>
 
-          <figure className="mx-auto mt-1 w-[min(100%,16.5rem)] overflow-hidden sm:mt-2 sm:w-[20rem] lg:mx-0 lg:ml-1 lg:w-[22.5rem]">
+          <figure className="mx-auto mt-2 w-[min(100%,16.5rem)] sm:mt-3 sm:w-[20rem] lg:mx-0 lg:ml-1 lg:w-[22.5rem]">
             <BrandLogo
               alt={site.brand}
               sizes="(max-width: 640px) 16.5rem, (max-width: 1024px) 20rem, 22.5rem"
-              className="-my-[12%] h-auto w-full mix-blend-multiply"
+              className="h-auto w-full"
             />
           </figure>
         </SectionReveal>

@@ -1,9 +1,9 @@
 import Image from "next/image";
 
 export const BRAND_LOGO = {
-  src: "/brand/wunderful-life-logo.jpg",
-  width: 1024,
-  height: 1024,
+  src: "/brand/wunderful-life-logo.png",
+  width: 929,
+  height: 952,
 } as const;
 
 type BrandLogoProps = {

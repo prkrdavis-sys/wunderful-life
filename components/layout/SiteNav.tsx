@@ -49,7 +49,7 @@ export function SiteNav() {
             alt=""
             sizes="56px"
             preload
-            className="h-12 w-auto shrink-0 mix-blend-multiply transition duration-200 group-hover:opacity-80 sm:h-14"
+            className="h-12 w-auto shrink-0 transition duration-200 group-hover:opacity-80 sm:h-14"
           />
           <span className="flex min-w-0 flex-col">
             <span className="font-display text-lg font-semibold text-ink transition-colors group-hover:text-forest">
