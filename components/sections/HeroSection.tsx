@@ -20,7 +20,6 @@ function HeroBackgroundVideo({
         src={src}
         poster={poster}
         muted
-        eager
         aria-hidden
         tabIndex={-1}
         className="pointer-events-none object-cover"
@@ -39,13 +38,14 @@ export function HeroSection() {
   const text = sectionText.hero;
   const videoPath = site.hero.videoPath;
   const hasVideo = Boolean(videoPath);
+  const hasPoster = Boolean(site.hero.posterPath);
 
   return (
     <section className="relative flex min-h-[85svh] flex-col overflow-hidden px-4 py-16 sm:px-6 sm:py-20">
       <PlantSectionBackground
         wallpaper={wallpaper}
-        overlay={hasVideo ? "none" : overlay}
-        priority={!hasVideo}
+        overlay={hasVideo && hasPoster ? "none" : overlay}
+        priority={!hasPoster}
       />
       {hasVideo && videoPath ? (
         <HeroBackgroundVideo src={videoPath} poster={site.hero.posterPath} />

@@ -15,17 +15,7 @@ import { SiteHeaderHeightSync } from "@/components/layout/SiteHeaderHeightSync";
 import { AppProviders } from "@/components/layout/AppProviders";
 import { ADMIN_COOKIE, canAccessAdmin, isAdminAuthRequired } from "@/lib/auth";
 import { getSiteContentRecord } from "@/lib/site";
-import {
-  isQuickTimeVideoPath,
-  videoContentTypeFromPath,
-} from "@/lib/videos/upload";
 import "./globals.css";
-
-function preloadCrossOrigin(url: string): "anonymous" | undefined {
-  return url.startsWith("https://") || url.startsWith("http://")
-    ? "anonymous"
-    : undefined;
-}
 
 export const viewport: Viewport = {
   themeColor: "#f7f3ec",
@@ -51,12 +41,14 @@ const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
   display: "swap",
+  preload: false,
 });
 
 const instrumentSans = Instrument_Sans({
   variable: "--font-instrument",
   subsets: ["latin"],
   display: "swap",
+  preload: false,
 });
 
 const niconne = Niconne({
@@ -117,23 +109,12 @@ export default async function RootLayout({
       lang="en"
       className={`${bricolage.variable} ${dmSans.variable} ${fraunces.variable} ${instrumentSans.variable} ${niconne.variable} h-full scroll-smooth`}
     >
-      {site.hero.videoPath && !isQuickTimeVideoPath(site.hero.videoPath) ? (
-        <link
-          rel="preload"
-          as="video"
-          href={site.hero.videoPath}
-          type={videoContentTypeFromPath(site.hero.videoPath)}
-          fetchPriority="high"
-          crossOrigin={preloadCrossOrigin(site.hero.videoPath)}
-        />
-      ) : null}
       {site.hero.posterPath ? (
         <link
           rel="preload"
           as="image"
           href={site.hero.posterPath}
           fetchPriority="high"
-          crossOrigin={preloadCrossOrigin(site.hero.posterPath)}
         />
       ) : null}
       <body className="relative min-h-full flex flex-col bg-cream font-body antialiased">

@@ -1,16 +1,34 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import type { PortfolioVideo } from "@/lib/videos/types";
-import { AdminDashboard } from "@/components/admin/AdminDashboard";
-import { SiteEditorForm } from "@/components/admin/SiteEditorForm";
 import {
   useAdminView,
   type AdminPanelTab,
 } from "@/components/admin/AdminViewProvider";
 import { EditorPanelIcon } from "@/components/ui/EditorPanelIcon";
 import { confirmLeaveDuringUpload } from "@/lib/admin/uploadGuard";
+
+const AdminDashboard = dynamic(
+  () =>
+    import("@/components/admin/AdminDashboard").then(
+      (module) => module.AdminDashboard,
+    ),
+  {
+    ssr: false,
+    loading: () => <p className="px-4 py-6 text-sm text-muted">Loading videos…</p>,
+  },
+);
+
+const SiteEditorForm = dynamic(
+  () =>
+    import("@/components/admin/SiteEditorForm").then(
+      (module) => module.SiteEditorForm,
+    ),
+  { ssr: false },
+);
 
 export function AdminModeBanner() {
   const { viewMode, setPanelOpen, exitAdminView } = useAdminView();

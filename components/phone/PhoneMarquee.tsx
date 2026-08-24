@@ -25,10 +25,10 @@ type PhoneMarqueeProps = {
 const INTERACTIVE_SELECTOR = "a, video, input, textarea, select, label";
 /** Phone width (md) + gap — used to guarantee the track overflows the viewport. */
 const ESTIMATED_SLIDE_WIDTH = 250;
-/** Keep at least this many slides so short lists still feel like a marquee. */
-const MIN_MARQUEE_SLIDES = 8;
-/** Cap duplicated slides so we do not mount a dozen giant phone frames. */
-const MAX_MARQUEE_SLIDES = 10;
+/** Keep enough slides to span desktop widths without over-rendering duplicates. */
+const MIN_MARQUEE_SLIDES = 6;
+/** Cap duplicated slides so short libraries do not mount unnecessary phone frames. */
+const MAX_MARQUEE_SLIDES = 6;
 /** Track should span this many viewport widths for seamless loop scrolling. */
 const VIEWPORT_COVERAGE = 2.25;
 const AUTO_SCROLL_SPEED = 0.45;
