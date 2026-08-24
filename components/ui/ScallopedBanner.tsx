@@ -23,7 +23,7 @@ const TONE_SURFACE: Record<BannerTone, string> = {
  *
  * The scallop strip hangs off the unmasked banner body and overlaps it so
  * parent overflow never eats the edge and zoom cannot open a hairline gap.
- * Banners stay unornamented — flowers, moons, and butterflies belong on the
+ * Banners stay unornamented — moons, stars, and butterflies belong on the
  * neighboring section washes instead.
  */
 export function ScallopedBanner({
