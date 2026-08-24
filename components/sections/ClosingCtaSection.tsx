@@ -69,7 +69,7 @@ export function ClosingCtaSection() {
     <section
       id="contact"
       aria-labelledby="closing-cta-heading"
-      className="scroll-section-anchor relative overflow-hidden px-4 pt-16 pb-20 sm:px-6 sm:pt-24 sm:pb-28"
+      className="scroll-section-anchor relative overflow-hidden px-4 pt-16 pb-8 sm:px-6 sm:pt-24 sm:pb-10"
     >
       <SectionSurface tone="ivory" motifs="scatter" />
       <SectionButterfly flight="closing" />
@@ -124,11 +124,11 @@ export function ClosingCtaSection() {
             />
           </figure>
 
-          <figure className="mx-auto mt-4 w-[min(100%,16.5rem)] pb-5 sm:mt-5 sm:w-[20rem] lg:mx-0 lg:ml-1 lg:w-[22.5rem]">
+          <figure className="mx-auto mt-1 w-[min(100%,16.5rem)] overflow-hidden sm:mt-2 sm:w-[20rem] lg:mx-0 lg:ml-1 lg:w-[22.5rem]">
             <BrandLogo
               alt={site.brand}
               sizes="(max-width: 640px) 16.5rem, (max-width: 1024px) 20rem, 22.5rem"
-              className="h-auto w-full mix-blend-multiply"
+              className="-my-[12%] h-auto w-full mix-blend-multiply"
             />
           </figure>
         </SectionReveal>
