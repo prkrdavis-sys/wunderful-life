@@ -21,10 +21,10 @@ const TONE_SURFACE: Record<BannerTone, string> = {
  * Full-bleed accent strip, optionally with a repeating scalloped bottom edge.
  * Place between lighter sections so the band reads as punctuation.
  *
- * The scallop strip hangs off the unmasked banner body and overlaps it so
- * parent overflow never eats the edge and zoom cannot open a hairline gap.
- * Banners stay unornamented — moons, stars, and butterflies belong on the
- * neighboring section washes instead.
+ * The scallop surface hangs below the content clip so parent overflow never
+ * eats the edge. One wash paints the body and scallops so the band gradient
+ * continues through the edge. Banners stay unornamented — moons, stars, and
+ * butterflies belong on the neighboring section washes instead.
  */
 export function ScallopedBanner({
   children,

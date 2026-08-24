@@ -76,17 +76,17 @@ const DEFAULT_UGC_BENEFITS: SiteContent["ugcBenefits"] = {
     {
       id: "authentic",
       value: "2.4×",
-      label: "more likely to be viewed as authentic",
+      label: "more likely to feel authentic",
     },
     {
       id: "trustworthy",
       value: "73%",
-      label: "of shoppers say UGC makes a brand feel more trustworthy",
+      label: "say UGC builds brand trust",
     },
     {
       id: "influences",
       value: "79%",
-      label: "of people say UGC strongly influences what they buy",
+      label: "say UGC influences what they buy",
     },
   ],
   calloutLabel: "Did you know?",

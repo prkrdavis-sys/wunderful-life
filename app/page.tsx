@@ -20,11 +20,11 @@ export default async function HomePage() {
       <HeroSection />
       <WorkPreviewSection videos={videos} />
       <ServicesSection />
-      <UgcBenefitsSection />
       <BrandsBanner />
       <PhotographyCollage />
       <StatsBannerSection />
       <AboutSection />
+      <UgcBenefitsSection />
       <TestimonialsSection />
       <MoreEmilySection />
       <ClosingCtaSection />
