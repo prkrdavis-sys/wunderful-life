@@ -5,6 +5,7 @@ import Image from "next/image";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { useAdminView, useSiteContent } from "@/components/admin/AdminViewProvider";
 import { AutoplayLoopVideo } from "@/components/ui/AutoplayLoopVideo";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { SectionSurface } from "@/components/ui/SectionSurface";
 import { SectionReveal } from "@/components/ui/motion";
@@ -74,6 +75,14 @@ export function ClosingCtaSection() {
       <SectionButterfly flight="closing" />
       <SectionButterfly flight="closingFar" />
       <AdminEditButton section="cta" label="Edit CTA" />
+
+      <figure className="relative z-10 mx-auto mb-10 w-[min(100%,16.5rem)] sm:mb-14 sm:w-[20rem] lg:mb-16 lg:w-[22.5rem]">
+        <BrandLogo
+          alt={site.brand}
+          sizes="(max-width: 640px) 16.5rem, (max-width: 1024px) 20rem, 22.5rem"
+          className="h-auto w-full mix-blend-multiply"
+        />
+      </figure>
 
       <div className="relative z-10 mx-auto grid max-w-5xl items-center gap-10 sm:gap-14 lg:grid-cols-[0.85fr_1.15fr]">
         <div className="mx-auto w-full max-w-xs lg:max-w-none">

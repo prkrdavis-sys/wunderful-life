@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { SectionLink } from "@/components/ui/SectionLink";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
 import type { HeroLink } from "@/lib/site/types";
@@ -39,14 +40,18 @@ export function SiteNav() {
       ref={headerRef}
       className="glass-header relative z-10 border-b border-white/55"
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-        <SectionLink href="/" className="group flex flex-col">
-          <span className="font-display text-lg font-semibold text-ink transition-colors group-hover:text-forest">
-            {site.fullName}
-          </span>
-          <span className="text-xs tracking-widest text-ink/60 uppercase">
-            {site.brand}
-          </span>
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-2.5 sm:px-6">
+        <SectionLink
+          href="/"
+          aria-label={site.brand}
+          className="group inline-flex shrink-0 items-center"
+        >
+          <BrandLogo
+            alt={site.brand}
+            sizes="56px"
+            preload
+            className="h-12 w-auto origin-left mix-blend-multiply transition duration-200 group-hover:opacity-80 sm:h-14"
+          />
         </SectionLink>
 
         <nav className="hidden items-center gap-5 md:flex">
