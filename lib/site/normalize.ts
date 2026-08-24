@@ -143,6 +143,7 @@ const LEGACY_UGC_HREFS = new Set(["/#ugc-benefits", "/#what-is-ugc"]);
 
 type SiteContentInput = Omit<
   SiteContent,
+  | "about"
   | "statsBanner"
   | "work"
   | "photography"
@@ -153,6 +154,9 @@ type SiteContentInput = Omit<
   | "testimonials"
   | "hero"
 > & {
+  about: Omit<SiteContent["about"], "galleryHeading"> & {
+    galleryHeading?: string;
+  };
   statsBanner?: Partial<SiteContent["statsBanner"]>;
   work?: Partial<SiteContent["work"]>;
   photography?: Partial<SiteContent["photography"]>;
@@ -360,6 +364,10 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
     },
     about: {
       headline: raw.about.headline,
+      galleryHeading: text(
+        raw.about.galleryHeading,
+        `A little more ${raw.name}`,
+      ),
       paragraphs: raw.about.paragraphs,
       photos: normalizeAboutPhotos(raw.about.photos),
     },

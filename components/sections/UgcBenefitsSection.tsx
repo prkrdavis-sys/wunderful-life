@@ -21,7 +21,7 @@ export function UgcBenefitsSection() {
     <section
       id="ugc"
       aria-labelledby="ugc-heading"
-      className="ugc-benefits-section scroll-section-anchor relative overflow-hidden px-4 py-16 sm:px-6 sm:py-24"
+      className="ugc-benefits-section scroll-section-anchor relative overflow-hidden px-4 py-10 sm:px-6 sm:py-16"
     >
       <DecorMotifs preset="scatter" tone="paper" />
       <AdminEditButton section="ugc" label="Edit UGC" tone="light" />
@@ -30,63 +30,63 @@ export function UgcBenefitsSection() {
 
       <div className="relative z-10 mx-auto max-w-6xl">
         <SectionReveal className="mx-auto max-w-2xl text-center">
-          <p className="font-label text-xs font-semibold tracking-[0.22em] text-paper/80 uppercase">
+          <p className="font-label text-[0.65rem] font-semibold tracking-[0.22em] text-paper/80 uppercase sm:text-xs">
             {ugcBenefits.eyebrow}
           </p>
           <h2
             id="ugc-heading"
-            className="mt-3 font-serif text-4xl tracking-tight text-paper sm:text-6xl"
+            className="mt-2 font-serif text-3xl tracking-tight text-paper sm:mt-3 sm:text-5xl"
           >
             {whatIsUgc.heading}
           </h2>
-          <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-paper/85 sm:text-base">
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-paper/85 sm:mt-4 sm:text-base">
             {whatIsUgc.body}
           </p>
         </SectionReveal>
 
         {ugcBenefits.stats.length > 0 && (
-          <StaggerChildren className="mx-auto mt-12 grid max-w-4xl gap-5 sm:grid-cols-3 sm:gap-6">
+          <StaggerChildren className="mx-auto mt-7 grid max-w-4xl grid-cols-3 items-start gap-2 sm:mt-10 sm:gap-6">
             {ugcBenefits.stats.map((stat, index) => (
-              <StaggerItem key={stat.id}>
-                <article
-                  className={`ugc-stat-card ugc-stat-card-${STAT_TONES[index % STAT_TONES.length]}`}
-                >
-                  <p className="font-serif text-4xl leading-none sm:text-5xl">
-                    {stat.value}
-                  </p>
-                  <p className="mt-4 max-w-[12rem] text-center text-xs leading-relaxed sm:text-sm">
-                    {stat.label}
-                  </p>
+              <StaggerItem key={stat.id} className="min-w-0">
+                <article className="ugc-stat">
+                  <div
+                    className={`ugc-stat-card ugc-stat-card-${STAT_TONES[index % STAT_TONES.length]}`}
+                  >
+                    <p className="ugc-stat-value font-serif leading-none">
+                      {stat.value}
+                    </p>
+                  </div>
+                  <p className="ugc-stat-label">{stat.label}</p>
                 </article>
               </StaggerItem>
             ))}
           </StaggerChildren>
         )}
 
-        <div className="mt-14 grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-14">
+        <div className="mt-8 grid gap-6 lg:mt-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-14">
           <SectionReveal className="text-center lg:text-left">
-            <p className="font-label text-xs font-semibold tracking-[0.2em] text-paper/80 uppercase">
+            <p className="font-label text-[0.65rem] font-semibold tracking-[0.2em] text-paper/80 uppercase sm:text-xs">
               {ugcBenefits.calloutLabel}
             </p>
-            <p className="mt-3 font-serif text-7xl leading-none text-paper sm:text-8xl">
+            <p className="mt-2 font-serif text-5xl leading-none text-paper sm:mt-3 sm:text-7xl">
               {ugcBenefits.calloutValue}
             </p>
-            <p className="mx-auto mt-4 max-w-sm text-sm leading-relaxed text-paper/85 lg:mx-0 sm:text-base">
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-paper/85 lg:mx-0 sm:mt-4 sm:text-base">
               {ugcBenefits.calloutBody}
             </p>
           </SectionReveal>
 
           <SectionReveal
             delay={0.12}
-            className="ugc-benefits-card rounded-[2rem] border border-paper/40 p-6 text-ink shadow-xl sm:p-8"
+            className="ugc-benefits-card rounded-[1.5rem] border border-paper/40 p-5 text-ink shadow-xl sm:rounded-[2rem] sm:p-8"
           >
             <p className="font-label text-xs font-semibold tracking-[0.2em] text-forest/80 uppercase">
               UGC benefits
             </p>
-            <h3 className="mt-2 font-serif text-2xl text-forest sm:text-3xl">
+            <h3 className="mt-2 font-serif text-xl text-forest sm:text-3xl">
               {ugcBenefits.benefitsHeading}
             </h3>
-            <ul className="mt-6 grid gap-4 sm:grid-cols-2">
+            <ul className="mt-4 grid gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-4">
               {ugcBenefits.benefits.map((benefit) => (
                 <li
                   key={benefit}

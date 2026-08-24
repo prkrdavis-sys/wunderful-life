@@ -5,7 +5,7 @@ import { useAdminView } from "@/components/admin/AdminViewProvider";
 import { ScallopedBanner } from "@/components/ui/ScallopedBanner";
 import { StaggerChildren, StaggerItem } from "@/components/ui/motion";
 
-/** Reach and engagement figures, shown as a band directly under the hero. */
+/** Reach and engagement figures, shown as a band after photography. */
 export function StatsBannerSection() {
   const { site, viewMode } = useAdminView();
   const isAdminView = viewMode === "admin";

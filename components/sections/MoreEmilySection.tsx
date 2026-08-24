@@ -28,7 +28,7 @@ export function MoreEmilySection() {
       <div className="relative z-10 mx-auto max-w-5xl">
         <SectionReveal className="text-center">
           <h2 className={`font-serif text-3xl sm:text-5xl ${text.heading}`}>
-            A little more {site.name}
+            {site.about.galleryHeading}
           </h2>
         </SectionReveal>
         <StaggerChildren className="mx-auto mt-8 grid max-w-5xl grid-cols-2 justify-items-center gap-x-6 gap-y-10 sm:mt-10 sm:gap-x-10 lg:grid-cols-4">

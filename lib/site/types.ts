@@ -72,6 +72,8 @@ export type SiteContent = {
   };
   about: {
     headline: string;
+    /** Public heading for the gallery under About (e.g. "A little more Emily"). */
+    galleryHeading: string;
     paragraphs: string[];
     photos: AboutPhoto[];
   };

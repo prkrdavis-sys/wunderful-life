@@ -98,10 +98,26 @@ export function GalleryEditor({
       <div>
         <h3 className="font-display text-lg text-brown">A little more</h3>
         <p className="mt-1 text-sm text-muted">
-          Gallery photos below About. Upload images, captions, and rotation for
-          each photo.
+          Gallery photos below About. Change the section title, then upload
+          images, captions, and rotation for each photo.
         </p>
       </div>
+      <label className="block max-w-2xl text-sm">
+        <span className="text-muted">Section title</span>
+        <AutoResizeTextarea
+          value={form.about.galleryHeading}
+          onChange={(event) =>
+            setForm((current) => ({
+              ...current,
+              about: {
+                ...current.about,
+                galleryHeading: event.target.value,
+              },
+            }))
+          }
+          className={inputClass}
+        />
+      </label>
       {form.about.photos.length <= ABOUT_INTRO_PHOTO_COUNT ? (
         <p className="text-sm text-muted">No gallery photos yet.</p>
       ) : (
