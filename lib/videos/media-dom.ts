@@ -18,21 +18,36 @@ export function withTimeout<T>(
   });
 }
 
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+/**
+ * Keep the element in the viewport. iOS Safari treats off-screen videos
+ * (`left: -9999px`) as not visible and refuses `play()`, even when muted.
+ */
 export function attachHiddenVideo(video: HTMLVideoElement): void {
   if (typeof document === "undefined") return;
   video.muted = true;
   video.defaultMuted = true;
+  video.volume = 0;
   video.playsInline = true;
   video.setAttribute("playsinline", "true");
   video.setAttribute("webkit-playsinline", "true");
+  video.setAttribute("muted", "");
   video.preload = "auto";
   video.controls = false;
+  video.disablePictureInPicture = true;
   video.style.position = "fixed";
-  video.style.left = "-9999px";
+  video.style.top = "0";
+  video.style.left = "0";
   video.style.width = "2px";
   video.style.height = "2px";
-  video.style.opacity = "0";
+  video.style.opacity = "0.01";
   video.style.pointerEvents = "none";
+  video.style.zIndex = "-1";
   document.body.appendChild(video);
 }
 
@@ -74,6 +89,39 @@ export function waitForVideoEvent(
   });
 }
 
+export function readVideoDurationSeconds(video: HTMLVideoElement): number {
+  if (Number.isFinite(video.duration) && video.duration > 0) {
+    return video.duration;
+  }
+  if (video.seekable.length > 0) {
+    const end = video.seekable.end(video.seekable.length - 1);
+    if (Number.isFinite(end) && end > 0) return end;
+  }
+  return 0;
+}
+
+export async function seekVideo(
+  video: HTMLVideoElement,
+  time: number,
+  timeoutMs = 8_000,
+): Promise<void> {
+  const duration = readVideoDurationSeconds(video);
+  const target =
+    duration > 0
+      ? Math.min(Math.max(0, time), Math.max(0, duration - 0.001))
+      : Math.max(0, time);
+  if (
+    Math.abs(video.currentTime - target) <= 0.04 &&
+    video.readyState >= 2 &&
+    video.videoWidth > 0
+  ) {
+    return;
+  }
+  const seeked = waitForVideoEvent(video, "seeked", "Could not load this video.");
+  video.currentTime = target;
+  await withTimeout(seeked, timeoutMs, "Could not load this video.");
+}
+
 export async function waitForVideoDimensions(
   video: HTMLVideoElement,
   timeoutMs = 8_000,
@@ -87,9 +135,7 @@ export async function waitForVideoDimensions(
     if (video.videoWidth > 0 && video.videoHeight > 0) {
       return { width: video.videoWidth, height: video.videoHeight };
     }
-    await new Promise<void>((resolve) => {
-      setTimeout(resolve, 40);
-    });
+    await sleep(40);
   }
 
   throw new Error("Could not read video dimensions.");

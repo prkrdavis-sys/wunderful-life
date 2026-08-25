@@ -30,6 +30,7 @@ import {
   type MediaUploadState,
   type PreparedUpload,
 } from "@/lib/videos/client-pipeline";
+import { attachHiddenVideo, detachHiddenVideo } from "@/lib/videos/media-dom";
 
 type VideoFormProps = {
   initial?: PortfolioVideo | null;
@@ -116,7 +117,9 @@ export function VideoForm({
     thumbnailFile,
     initial?.thumbnailPath,
   );
-  const videoUploadPreviewUrl = thumbnailPreviewUrl ?? videoPreviewUrl;
+  const videoBusy = isMediaUploadBusy(videoUpload);
+  const videoUploadPreviewUrl =
+    thumbnailPreviewUrl ?? (videoBusy ? null : videoPreviewUrl);
   const videoUploadPreviewType = thumbnailPreviewUrl
     ? ("image" as const)
     : ("video" as const);
@@ -146,15 +149,21 @@ export function VideoForm({
   const readVideoDuration = useCallback((file: File) => {
     const url = URL.createObjectURL(file);
     const element = document.createElement("video");
+    attachHiddenVideo(element);
     element.preload = "metadata";
     element.src = url;
-    element.onloadedmetadata = () => {
+    const finish = () => {
+      detachHiddenVideo(element);
       URL.revokeObjectURL(url);
-      setForm((current) => ({
-        ...current,
-        durationSec: Math.round(element.duration) || current.durationSec,
-      }));
     };
+    element.onloadedmetadata = () => {
+      const duration = Math.round(element.duration);
+      finish();
+      if (duration > 0) {
+        setForm((current) => ({ ...current, durationSec: duration }));
+      }
+    };
+    element.onerror = finish;
   }, []);
 
   const startThumbnailUpload = useCallback(async (file: File) => {
@@ -252,6 +261,7 @@ export function VideoForm({
 
         setVideoFile(result.video.file);
         setVideoPrepared(result.video);
+        readVideoDuration(result.video.file);
         setVideoUpload({
           status: "ready",
           progress: 100,
@@ -297,7 +307,7 @@ export function VideoForm({
         }
       }
     },
-    [],
+    [readVideoDuration],
   );
 
   const saveBlocked =
@@ -517,7 +527,6 @@ export function VideoForm({
             setThumbnailHint(null);
             setVideoFile(file);
             if (file) {
-              readVideoDuration(file);
               void startVideoUpload(file);
             } else {
               videoUploadGenRef.current += 1;

@@ -102,11 +102,12 @@ export async function captureVideoStill(
   preparedPromise?: Promise<File>,
 ): Promise<File | null> {
   const quality = capture === "poster" ? 0.72 : 0.74;
-  const tryFrame = async (source: File) => {
+  const tryFrame = async (source: File, allowPlay: boolean) => {
     try {
       return await extractVideoFrame(source, {
         mimeType: "image/jpeg",
         quality,
+        allowPlay,
       });
     } catch (error) {
       console.warn(
@@ -116,28 +117,31 @@ export async function captureVideoStill(
     }
   };
 
-  const fromOriginal = await tryFrame(file);
-  if (fromOriginal) return fromOriginal;
-
-  if (!preparedPromise) return null;
-
-  let prepared: File;
-  try {
-    prepared = await preparedPromise;
-  } catch (error) {
-    console.warn(
-      toErrorMessage(error, "Could not capture a thumbnail from the video."),
-    );
-    return null;
+  let prepared: File | null = null;
+  if (preparedPromise) {
+    try {
+      prepared = await preparedPromise;
+    } catch (error) {
+      console.warn(
+        toErrorMessage(error, "Could not capture a thumbnail from the video."),
+      );
+    }
   }
 
-  if (prepared !== file) {
-    const fromPrepared = await tryFrame(prepared);
+  // Prefer the already-transcoded clip: iOS often refuses a second HEVC
+  // decode of the original, and play() is blocked after the file-picker
+  // gesture has expired.
+  if (prepared) {
+    const fromPrepared = await tryFrame(prepared, false);
     if (fromPrepared) return fromPrepared;
   }
 
+  const fromOriginal = await tryFrame(file, !prepared);
+  if (fromOriginal) return fromOriginal;
+
+  const ffmpegSource = prepared ?? file;
   try {
-    return await extractThumbnailWithFfmpeg(prepared);
+    return await extractThumbnailWithFfmpeg(ffmpegSource);
   } catch (ffmpegError) {
     console.warn(
       toErrorMessage(
@@ -238,17 +242,24 @@ export async function prepareAndUploadVideo(options: {
     onNotice,
   });
   const configPromise = getMediaUploadConfig();
-  const stillPromise =
-    capture === "none"
-      ? Promise.resolve(null)
-      : captureVideoStill(file, capture, preparedPromise);
 
-  const [prepared, config, stillFile] = await Promise.all([
+  // Do not decode a second <video> while compressing. iOS will block both
+  // play() calls and surface "browser blocked video playback".
+  const [prepared, config] = await Promise.all([
     preparedPromise,
     configPromise,
-    stillPromise,
   ]);
   assertCurrent();
+
+  let stillFile: File | null = null;
+  if (capture !== "none") {
+    onProgress?.({
+      status: "preparing",
+      message: "Capturing thumbnail…",
+    });
+    stillFile = await captureVideoStill(file, capture, Promise.resolve(prepared));
+    assertCurrent();
+  }
 
   if (config.clientUpload) {
     onProgress?.({

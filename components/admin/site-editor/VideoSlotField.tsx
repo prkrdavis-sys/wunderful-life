@@ -54,7 +54,7 @@ export function VideoSlotField({
         accept={VIDEO_FILE_ACCEPT}
         hint={hint}
         selectedName={file?.name ?? (videoPath ? assetDisplayName(videoPath) : null)}
-        previewUrl={previewUrl ?? videoPath ?? null}
+        previewUrl={busy ? null : (previewUrl ?? videoPath ?? null)}
         previewType="video"
         disabled={busy || disabled}
         buttonLabel={videoPath ? "Swap video" : "Add a video"}

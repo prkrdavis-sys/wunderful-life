@@ -2,6 +2,7 @@ import { extensionFromFilename } from "@/lib/files";
 import {
   attachHiddenVideo,
   detachHiddenVideo,
+  seekVideo,
   waitForVideoDimensions,
   waitForVideoEvent,
   withTimeout,
@@ -58,6 +59,11 @@ export async function extractVideoFrame(
     seekTo?: number;
     mimeType?: "image/jpeg" | "image/png" | "image/webp";
     quality?: number;
+    /**
+     * When false, never call `play()`. Use this after a long async gap so a
+     * blocked autoplay policy does not race a second video decoder on iOS.
+     */
+    allowPlay?: boolean;
   },
 ): Promise<File> {
   const mimeType = options?.mimeType ?? "image/jpeg";
@@ -75,6 +81,7 @@ export async function extractVideoFrame(
         quality,
         maxEdge,
         fileName: file.name,
+        allowPlay: options?.allowPlay !== false,
       }),
       EXTRACT_TIMEOUT_MS,
       "Timed out capturing a thumbnail from this video.",
@@ -94,17 +101,19 @@ async function captureFrame(
     quality: number;
     maxEdge: number;
     fileName: string;
+    allowPlay: boolean;
   },
 ): Promise<File> {
   // Blob URLs are same-origin; setting crossOrigin can block decode in some browsers.
   video.src = objectUrl;
   video.load();
 
-  // Kick decode immediately so iOS still counts this as the file-picker gesture.
-  const playAttempt = video.play().then(
-    () => true,
-    () => false,
-  );
+  const playAttempt = options.allowPlay
+    ? video.play().then(
+        () => true,
+        () => false,
+      )
+    : Promise.resolve(false);
 
   await waitForVideoEvent(
     video,
@@ -113,12 +122,16 @@ async function captureFrame(
   );
   await playAttempt;
 
-  if (video.paused) {
+  if (options.allowPlay && video.paused) {
     try {
       await video.play();
     } catch {
-      // Autoplay may be blocked after a long async gap; still try to draw.
+      // Autoplay may be blocked after a long async gap; seek a frame instead.
     }
+  }
+
+  if (!video.videoWidth || !video.videoHeight) {
+    await seekVideo(video, seekTargetSeconds(video.duration) || 0.1);
   }
 
   const { width, height } = await waitForVideoDimensions(video);
@@ -133,13 +146,7 @@ async function captureFrame(
       : seekTargetSeconds(duration);
 
   if (target > 0 && Math.abs(video.currentTime - target) > 0.04) {
-    const seeked = waitForVideoEvent(
-      video,
-      "seeked",
-      "Could not load video for thumbnail.",
-    );
-    video.currentTime = target;
-    await seeked;
+    await seekVideo(video, target);
     await waitForDecodedFrame(video);
   }
 
