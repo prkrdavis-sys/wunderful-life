@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { coverFitForVideo, stillCanvasSize } from "@/lib/videos/cover-fit";
+import {
+  containFitForVideo,
+  coverFitForVideo,
+  stillCanvasSize,
+  type MediaIntrinsicSize,
+  type VideoObjectFit,
+} from "@/lib/videos/cover-fit";
 
 type AutoplayLoopVideoProps = {
   src: string;
@@ -11,6 +17,9 @@ type AutoplayLoopVideoProps = {
   showMuteToggle?: boolean;
   /** Start loading immediately. Use for above-the-fold hero video. */
   eager?: boolean;
+  /** Safari-safe box fit. Cover fills and may crop; contain never crops. */
+  fit?: VideoObjectFit;
+  onIntrinsicSize?: (size: MediaIntrinsicSize) => void;
   "aria-hidden"?: boolean;
   tabIndex?: number;
 };
@@ -39,40 +48,60 @@ function scheduleIdle(callback: () => void) {
   return () => window.clearTimeout(timeoutId);
 }
 
-function applyCssCover(video: HTMLVideoElement) {
+function applyCssObjectFit(video: HTMLVideoElement, fit: VideoObjectFit) {
   video.style.width = "100%";
   video.style.height = "100%";
   video.style.maxWidth = "";
   video.style.maxHeight = "";
   video.style.inset = "0";
-  video.style.objectFit = "cover";
+  video.style.objectFit = fit;
   video.style.objectPosition = "center";
   video.style.transformOrigin = "center center";
   video.style.transform = "translateZ(0)";
 }
 
+function mediaFitForVideo(
+  options: Parameters<typeof coverFitForVideo>[0],
+  fit: VideoObjectFit,
+) {
+  switch (fit) {
+    case "cover":
+      return coverFitForVideo(options);
+    case "contain":
+      return containFitForVideo(options);
+    default: {
+      const _exhaustive: never = fit;
+      return _exhaustive;
+    }
+  }
+}
+
 /**
- * Cover the box at the clip's real ratio. Sizing the <video> to the
+ * Fit the box at the clip's real ratio. Sizing the <video> to the
  * container's aspect (then relying on object-fit) stretches on Safari —
  * portrait lifestyle clips become a wide, flattened still.
  */
 function fitVideoToDisplaySize(
   video: HTMLVideoElement,
   container: HTMLElement,
+  objectFit: VideoObjectFit,
 ) {
   const width = container.clientWidth;
   const height = container.clientHeight;
-  const fit = coverFitForVideo({
-    sourceWidth: video.videoWidth,
-    sourceHeight: video.videoHeight,
-    containerWidth: width,
-    containerHeight: height,
-    devicePixelRatio: window.devicePixelRatio || 1,
-    // Full-viewport heroes do not need 3x decode; that stalls first paint.
-    maxDevicePixelRatio: width * height > 400_000 ? 1.25 : 2,
-  });
+  const fit = mediaFitForVideo(
+    {
+      sourceWidth: video.videoWidth,
+      sourceHeight: video.videoHeight,
+      containerWidth: width,
+      containerHeight: height,
+      devicePixelRatio: window.devicePixelRatio || 1,
+      // Full-viewport heroes do not need 3x decode; that stalls first paint.
+      maxDevicePixelRatio: width * height > 400_000 ? 1.25 : 2,
+    },
+    objectFit,
+  );
   if (!fit) {
-    applyCssCover(video);
+    applyCssObjectFit(video, objectFit);
     return;
   }
 
@@ -115,6 +144,8 @@ export function AutoplayLoopVideo({
   muted: mutedProp = true,
   showMuteToggle = false,
   eager = false,
+  fit = "cover",
+  onIntrinsicSize,
   "aria-hidden": ariaHidden,
   tabIndex,
 }: AutoplayLoopVideoProps) {
@@ -294,7 +325,7 @@ export function AutoplayLoopVideo({
     const video = videoRef.current;
     if (!container || !video) return;
 
-    const apply = () => fitVideoToDisplaySize(video, container);
+    const apply = () => fitVideoToDisplaySize(video, container, fit);
     apply();
     const frame = window.requestAnimationFrame(apply);
     const observer = new ResizeObserver(apply);
@@ -309,7 +340,41 @@ export function AutoplayLoopVideo({
       video.removeEventListener("loadeddata", apply);
       window.removeEventListener("resize", apply);
     };
-  }, [activeSrc]);
+  }, [activeSrc, fit]);
+
+  useEffect(() => {
+    if (!onIntrinsicSize) return;
+
+    let cancelled = false;
+    const report = (width: number, height: number) => {
+      if (cancelled || width < 2 || height < 2) return;
+      onIntrinsicSize({ width, height });
+    };
+
+    if (poster) {
+      const image = new Image();
+      const reportPoster = () =>
+        report(image.naturalWidth, image.naturalHeight);
+      image.onload = reportPoster;
+      image.src = poster;
+      if (image.complete) reportPoster();
+    }
+
+    const video = videoRef.current;
+    const reportVideo = () => {
+      if (!video) return;
+      report(video.videoWidth, video.videoHeight);
+    };
+    video?.addEventListener("loadedmetadata", reportVideo);
+    video?.addEventListener("loadeddata", reportVideo);
+    reportVideo();
+
+    return () => {
+      cancelled = true;
+      video?.removeEventListener("loadedmetadata", reportVideo);
+      video?.removeEventListener("loadeddata", reportVideo);
+    };
+  }, [activeSrc, onIntrinsicSize, poster]);
 
   return (
     <div
@@ -337,7 +402,8 @@ export function AutoplayLoopVideo({
         tabIndex={tabIndex}
         aria-hidden={ariaHidden}
         className={[
-          "autoplay-loop-video pointer-events-none absolute inset-0 z-[1] h-full w-full object-cover object-center",
+          "autoplay-loop-video pointer-events-none absolute inset-0 z-[1] h-full w-full object-center",
+          fit === "contain" ? "object-contain" : "object-cover",
           // iOS Safari will not decode a fully transparent <video>, so keep a
           // sliver of opacity until playback starts (poster/wallpaper cover it).
           playing ? "opacity-100" : "opacity-[0.01]",
@@ -354,18 +420,18 @@ export function AutoplayLoopVideo({
           alt=""
           aria-hidden
           fetchPriority={eager ? "high" : "auto"}
-          className={`pointer-events-none absolute inset-0 z-[2] h-full w-full object-cover object-center ${
-            showCover ? "opacity-100" : "opacity-0"
-          }`}
+          className={`pointer-events-none absolute inset-0 z-[2] h-full w-full object-center ${
+            fit === "contain" ? "object-contain" : "object-cover"
+          } ${showCover ? "opacity-100" : "opacity-0"}`}
         />
       ) : null}
       {!hasPoster ? (
         <canvas
           ref={canvasRef}
           aria-hidden
-          className={`pointer-events-none absolute inset-0 z-[2] h-full w-full object-cover object-center ${
-            showCover && hasFrame ? "opacity-100" : "opacity-0"
-          }`}
+          className={`pointer-events-none absolute inset-0 z-[2] h-full w-full object-center ${
+            fit === "contain" ? "object-contain" : "object-cover"
+          } ${showCover && hasFrame ? "opacity-100" : "opacity-0"}`}
         />
       ) : null}
       {showMuteToggle ? (

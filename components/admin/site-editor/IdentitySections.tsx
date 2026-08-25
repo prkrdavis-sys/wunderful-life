@@ -130,9 +130,10 @@ export function HeroEditor({
         <p className="text-sm text-muted">
           Goes live as soon as you pick a file — no need to press &ldquo;Save
           site content&rdquo;. Use the original 1080p (or higher) file so it
-          stays sharp. Portrait or landscape is cropped to fill the hero — it
-          is never stretched wide. Without a video, the hero shows the plant
-          wallpaper.
+          stays sharp. Clips loop and can be up to one minute. Portrait clips
+          lengthen the hero so the full frame stays visible. Landscape clips
+          fill the viewport height. The picture is never stretched. Without a
+          video, the hero shows the plant wallpaper.
         </p>
         <VideoSlotField
           slot="hero"

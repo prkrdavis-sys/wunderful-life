@@ -155,7 +155,6 @@ body {
 }
 
 .autoplay-loop-video {
-  object-fit: cover;
   object-position: center;
   transform: translateZ(0);
   backface-visibility: hidden;

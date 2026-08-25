@@ -20,8 +20,8 @@ import type { VideoUploadProfile } from "@/lib/videos/profile";
 
 export type { VideoUploadProfile };
 
-const FFMPEG_CONVERT_TIMEOUT_MS = 180_000;
-const BROWSER_RECORD_TIMEOUT_MS = 180_000;
+const FFMPEG_CONVERT_TIMEOUT_MS = 300_000;
+const BROWSER_RECORD_TIMEOUT_MS = 300_000;
 const VIDEO_LOAD_TIMEOUT_MS = 20_000;
 const MAX_SOURCE_VIDEO_BYTES = 250 * 1024 * 1024;
 const SEEK_RECORD_FPS = 24;
@@ -43,8 +43,8 @@ const COMPRESS_SETTINGS: Record<VideoUploadProfile, CompressSettings> = {
     maxShortEdge: 1080,
     crf: 23,
     stripAudio: true,
-    maxDurationSec: 8,
-    skipIfMp4UnderBytes: 8_000_000,
+    maxDurationSec: 60,
+    skipIfMp4UnderBytes: 20_000_000,
     progressMessage: "Compressing background video (1080p, muted)…",
     bitrate: 4_500_000,
     requireMp4: true,

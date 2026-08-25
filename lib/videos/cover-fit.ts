@@ -1,7 +1,8 @@
 /**
- * Size a replaced media element so it covers a box without changing the
- * source aspect ratio. Used instead of stretching width/height to the
- * container, which Safari often does when object-fit on <video> is ignored.
+ * Size a replaced media element so it covers or contains a box without
+ * changing the source aspect ratio. Used instead of stretching width/height
+ * to the container, which Safari often does when object-fit on <video> is
+ * ignored.
  */
 export type CoverFit = {
   width: number;
@@ -11,14 +12,26 @@ export type CoverFit = {
   scale: number;
 };
 
-export function coverFitForVideo(options: {
+export type MediaIntrinsicSize = {
+  width: number;
+  height: number;
+};
+
+export type VideoObjectFit = "cover" | "contain";
+
+type FitVideoOptions = {
   sourceWidth: number;
   sourceHeight: number;
   containerWidth: number;
   containerHeight: number;
   devicePixelRatio: number;
   maxDevicePixelRatio: number;
-}): CoverFit | null {
+};
+
+function fitVideoToBox(
+  options: FitVideoOptions,
+  mode: VideoObjectFit,
+): CoverFit | null {
   const sourceWidth = options.sourceWidth;
   const sourceHeight = options.sourceHeight;
   const containerWidth = options.containerWidth;
@@ -36,12 +49,14 @@ export function coverFitForVideo(options: {
     Math.max(options.devicePixelRatio, 1),
     options.maxDevicePixelRatio,
   );
-  const cover = Math.max(
-    containerWidth / sourceWidth,
-    containerHeight / sourceHeight,
-  );
-  const cssWidth = sourceWidth * cover;
-  const cssHeight = sourceHeight * cover;
+  const widthScale = containerWidth / sourceWidth;
+  const heightScale = containerHeight / sourceHeight;
+  const cssScale =
+    mode === "cover"
+      ? Math.max(widthScale, heightScale)
+      : Math.min(widthScale, heightScale);
+  const cssWidth = sourceWidth * cssScale;
+  const cssHeight = sourceHeight * cssScale;
   const width = Math.max(2, Math.round(cssWidth * dpr));
   const height = Math.max(
     2,
@@ -55,6 +70,14 @@ export function coverFitForVideo(options: {
     top: (containerHeight - cssHeight) / 2,
     scale: 1 / dpr,
   };
+}
+
+export function coverFitForVideo(options: FitVideoOptions): CoverFit | null {
+  return fitVideoToBox(options, "cover");
+}
+
+export function containFitForVideo(options: FitVideoOptions): CoverFit | null {
+  return fitVideoToBox(options, "contain");
 }
 
 /** Still-frame canvas sized from the clip, never from the container. */

@@ -19,7 +19,7 @@ export const VIDEO_SLOT_DESCRIPTORS: Record<VideoSlot, VideoSlotDescriptor> = {
     slot: "hero",
     noun: "hero video",
     endpoint: "/api/site/videos/hero",
-    hint: "Upload the original 1080p or 4K clip from Photos — not a compressed copy. Portrait or landscape is fine; it is cropped to fill the hero, never stretched wide.",
+    hint: "Upload the original 1080p or 4K clip from Photos — not a compressed copy. It loops, up to one minute. Portrait clips lengthen the hero so the full frame stays visible. Landscape clips fill the viewport height. The picture is never stretched.",
     profile: "hero",
     persistPoster: true,
     dir: "hero",
