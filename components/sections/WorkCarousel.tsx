@@ -2,6 +2,7 @@
 
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
+import { DeferredMount } from "@/components/ui/DeferredMount";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { PhoneMarquee } from "@/components/phone/PhoneMarquee";
 import { ScallopedBanner } from "@/components/ui/ScallopedBanner";
@@ -42,11 +43,13 @@ export function WorkCarousel({ featuredVideos }: WorkCarouselProps) {
         <SectionButterfly flight="workBand" />
         <SectionButterfly flight="workMarquee" />
         <div className="relative z-10">
-          <PhoneMarquee
-            videos={visibleVideos}
-            emptyClassName={sectionText.work.empty}
-            captionClasses={sectionText.work.caption}
-          />
+          <DeferredMount className="min-h-[24rem] sm:min-h-[28rem]">
+            <PhoneMarquee
+              videos={visibleVideos}
+              emptyClassName={sectionText.work.empty}
+              captionClasses={sectionText.work.caption}
+            />
+          </DeferredMount>
         </div>
 
         <SectionReveal

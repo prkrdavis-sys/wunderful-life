@@ -115,11 +115,26 @@ export function AdminViewProvider({
   }, []);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
+    let idleId = 0;
+    let timeoutId = 0;
+    const run = () => {
       void refreshSession();
-    }, 0);
+    };
 
-    return () => window.clearTimeout(timer);
+    if (typeof window.requestIdleCallback === "function") {
+      idleId = window.requestIdleCallback(run, { timeout: 4000 });
+    } else {
+      timeoutId = window.setTimeout(run, 2500);
+    }
+
+    return () => {
+      if (idleId && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+    };
   }, [refreshSession]);
 
   const setViewMode = useCallback((mode: ViewMode) => {

@@ -130,7 +130,8 @@ export function HeroEditor({
         <p className="text-sm text-muted">
           Goes live as soon as you pick a file — no need to press &ldquo;Save
           site content&rdquo;. Use the original 1080p (or higher) file so it
-          stays sharp across the hero. Without a video, the hero shows the plant
+          stays sharp. Portrait or landscape is cropped to fill the hero — it
+          is never stretched wide. Without a video, the hero shows the plant
           wallpaper.
         </p>
         <VideoSlotField
@@ -337,9 +338,9 @@ export function CtaEditor({
         </p>
         <p className="text-sm text-muted">
           Plays muted on a loop next to the headline. Visitors can unmute it. Use
-          the original 1080p (or higher) file so it does not look pixelated. Goes
-          live as soon as you pick a file — no need to press &ldquo;Save site
-          content&rdquo;.
+          the original 1080p (or higher) vertical or 4:5 clip so it fills the
+          frame without stretching. Goes live as soon as you pick a file — no
+          need to press &ldquo;Save site content&rdquo;.
         </p>
         <VideoSlotField
           slot="cta"

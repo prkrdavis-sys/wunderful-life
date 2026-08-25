@@ -57,6 +57,15 @@ const nextConfig: NextConfig = {
         },
       ],
     },
+    {
+      source: "/:folder(plants|about-photos|brand|mockify|home-grid-photos|butterfly)/:path*",
+      headers: [
+        {
+          key: "Cache-Control",
+          value: "public, max-age=86400, stale-while-revalidate=604800",
+        },
+      ],
+    },
   ],
 };
 

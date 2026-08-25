@@ -121,7 +121,15 @@ export function needsWebTranscode(
 }
 
 function scaleToShortEdge(maxShortEdge: number): string {
-  return `scale='if(gte(iw,ih),-2,min(iw,${maxShortEdge}))':'if(gt(ih,iw),-2,min(ih,${maxShortEdge}))',scale=trunc(iw/2)*2:trunc(ih/2)*2`;
+  // Square the pixels first so anamorphic / rotated phone clips do not encode
+  // as a stretched-wide frame that browsers then display incorrectly.
+  return [
+    "scale=iw*sar:ih",
+    "setsar=1",
+    `scale='if(gte(iw,ih),-2,min(iw,${maxShortEdge}))':'if(gt(ih,iw),-2,min(ih,${maxShortEdge}))'`,
+    "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+    "setsar=1",
+  ].join(",");
 }
 
 function ffmpegArgs(

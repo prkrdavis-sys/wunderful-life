@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePublicContent } from "@/lib/cache/public";
 import {
   readSiteRecord,
   updateSiteContent,
@@ -33,7 +33,7 @@ export async function PATCH(request: Request) {
     const body = (await request.json()) as SiteContent;
     const site = await updateSiteContent(body, version);
     const record = await readSiteRecord();
-    revalidatePath("/", "layout");
+    revalidatePublicContent();
     return NextResponse.json(site, {
       headers: siteResponseHeaders(record.version),
     });

@@ -1,7 +1,7 @@
 import Image from "next/image";
 
 export const BRAND_LOGO = {
-  src: "/brand/wunderful-life-llc.png",
+  src: "/brand/logo.png",
   width: 1254,
   height: 1254,
 } as const;

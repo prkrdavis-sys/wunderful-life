@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePublicContent } from "@/lib/cache/public";
 import { createVideo, listVideos, reorderVideos, StorageError } from "@/lib/storage";
 import {
   parseCreateVideoForm,
@@ -11,8 +11,7 @@ const VIDEO_LIST_HEADERS = {
 };
 
 function revalidateVideoPages() {
-  revalidatePath("/", "layout");
-  revalidatePath("/work");
+  revalidatePublicContent();
 }
 
 export async function GET() {

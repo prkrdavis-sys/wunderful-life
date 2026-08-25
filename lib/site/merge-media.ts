@@ -36,6 +36,7 @@ export function mergeSlotVideo(
     closingCta: {
       ...draft.closingCta,
       videoPath: saved.closingCta.videoPath,
+      posterPath: saved.closingCta.posterPath,
     },
   };
 }

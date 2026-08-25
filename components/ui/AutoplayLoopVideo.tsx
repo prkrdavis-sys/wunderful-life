@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { coverFitForVideo, stillCanvasSize } from "@/lib/videos/cover-fit";
 
 type AutoplayLoopVideoProps = {
   src: string;
@@ -18,28 +19,76 @@ function isRemoteMediaUrl(src: string): boolean {
   return src.startsWith("https://") || src.startsWith("http://");
 }
 
+function shouldLoadDecorativeVideo() {
+  const connection = (
+    navigator as Navigator & {
+      connection?: { saveData?: boolean; effectiveType?: string };
+    }
+  ).connection;
+  if (!connection) return true;
+  if (connection.saveData) return false;
+  return connection.effectiveType !== "slow-2g" && connection.effectiveType !== "2g";
+}
+
+function scheduleIdle(callback: () => void) {
+  if (typeof window.requestIdleCallback === "function") {
+    const idleId = window.requestIdleCallback(callback, { timeout: 2200 });
+    return () => window.cancelIdleCallback(idleId);
+  }
+  const timeoutId = window.setTimeout(callback, 800);
+  return () => window.clearTimeout(timeoutId);
+}
+
+function applyCssCover(video: HTMLVideoElement) {
+  video.style.width = "100%";
+  video.style.height = "100%";
+  video.style.maxWidth = "";
+  video.style.maxHeight = "";
+  video.style.inset = "0";
+  video.style.objectFit = "cover";
+  video.style.objectPosition = "center";
+  video.style.transformOrigin = "center center";
+  video.style.transform = "translateZ(0)";
+}
+
 /**
- * Chrome/Safari often decode <video> at CSS pixels, not device pixels, so a
- * 1080p clip in a 400px box looks 1x-soft on retina. Size the element at DPR
- * and scale it back so the decoder sees the extra pixels.
+ * Cover the box at the clip's real ratio. Sizing the <video> to the
+ * container's aspect (then relying on object-fit) stretches on Safari —
+ * portrait lifestyle clips become a wide, flattened still.
  */
 function fitVideoToDisplaySize(
   video: HTMLVideoElement,
   container: HTMLElement,
 ) {
-  const dpr = Math.min(window.devicePixelRatio || 1, 3);
   const width = container.clientWidth;
   const height = container.clientHeight;
-  if (width < 2 || height < 2) return;
+  const fit = coverFitForVideo({
+    sourceWidth: video.videoWidth,
+    sourceHeight: video.videoHeight,
+    containerWidth: width,
+    containerHeight: height,
+    devicePixelRatio: window.devicePixelRatio || 1,
+    // Full-viewport heroes do not need 3x decode; that stalls first paint.
+    maxDevicePixelRatio: width * height > 400_000 ? 1.25 : 2,
+  });
+  if (!fit) {
+    applyCssCover(video);
+    return;
+  }
 
-  video.style.width = `${Math.round(width * dpr)}px`;
-  video.style.height = `${Math.round(height * dpr)}px`;
+  video.style.width = `${fit.width}px`;
+  video.style.height = `${fit.height}px`;
   video.style.maxWidth = "none";
   video.style.maxHeight = "none";
-  video.style.objectFit = "cover";
+  video.style.left = `${fit.left}px`;
+  video.style.top = `${fit.top}px`;
+  video.style.right = "auto";
+  video.style.bottom = "auto";
+  video.style.objectFit = "fill";
+  video.style.objectPosition = "center";
   video.style.transformOrigin = "0 0";
   video.style.transform =
-    dpr === 1 ? "translateZ(0)" : `scale(${1 / dpr}) translateZ(0)`;
+    fit.scale === 1 ? "translateZ(0)" : `scale(${fit.scale}) translateZ(0)`;
 }
 
 function primeInlineAutoplay(video: HTMLVideoElement, muted: boolean) {
@@ -76,12 +125,13 @@ export function AutoplayLoopVideo({
   const decodeFailedRef = useRef(false);
   const playInFlightRef = useRef(false);
   const [inView, setInView] = useState(eager);
+  const [idleReady, setIdleReady] = useState(false);
   const [muted, setMuted] = useState(mutedProp);
   const [playing, setPlaying] = useState(false);
   const [hasFrame, setHasFrame] = useState(Boolean(poster));
   const [appliedSrc, setAppliedSrc] = useState(src);
   const [appliedPoster, setAppliedPoster] = useState(poster);
-  const activeSrc = eager || inView ? src : null;
+  const activeSrc = idleReady && (eager || inView) ? src : null;
   const showCover = !playing;
   const hasPoster = Boolean(poster);
 
@@ -96,6 +146,11 @@ export function AutoplayLoopVideo({
     decodeFailedRef.current = false;
     playInFlightRef.current = false;
   }, [src, poster]);
+
+  useEffect(() => {
+    if (!shouldLoadDecorativeVideo()) return;
+    return scheduleIdle(() => setIdleReady(true));
+  }, [src]);
 
   useEffect(() => {
     const node = containerRef.current;
@@ -149,25 +204,20 @@ export function AutoplayLoopVideo({
     const captureFrame = () => {
       if (hasPoster) return;
       const canvas = canvasRef.current;
-      const container = containerRef.current;
-      if (!canvas || video.videoWidth === 0) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 3);
-      const drawWidth = Math.max(
+      const size = stillCanvasSize(
         video.videoWidth,
-        Math.round((container?.clientWidth || video.videoWidth) * dpr),
-      );
-      const drawHeight = Math.max(
         video.videoHeight,
-        Math.round((container?.clientHeight || video.videoHeight) * dpr),
+        window.devicePixelRatio || 1,
       );
-      if (canvas.width !== drawWidth || canvas.height !== drawHeight) {
-        canvas.width = drawWidth;
-        canvas.height = drawHeight;
+      if (!canvas || !size) return;
+      if (canvas.width !== size.width || canvas.height !== size.height) {
+        canvas.width = size.width;
+        canvas.height = size.height;
       }
       const context = canvas.getContext("2d");
       if (!context) return;
       try {
-        context.drawImage(video, 0, 0, drawWidth, drawHeight);
+        context.drawImage(video, 0, 0, size.width, size.height);
         setHasFrame(true);
       } catch {
         // Cross-origin frames can fail; CSS still hides native play chrome.
@@ -249,10 +299,14 @@ export function AutoplayLoopVideo({
     const frame = window.requestAnimationFrame(apply);
     const observer = new ResizeObserver(apply);
     observer.observe(container);
+    video.addEventListener("loadedmetadata", apply);
+    video.addEventListener("loadeddata", apply);
     window.addEventListener("resize", apply);
     return () => {
       window.cancelAnimationFrame(frame);
       observer.disconnect();
+      video.removeEventListener("loadedmetadata", apply);
+      video.removeEventListener("loadeddata", apply);
       window.removeEventListener("resize", apply);
     };
   }, [activeSrc]);
@@ -283,7 +337,7 @@ export function AutoplayLoopVideo({
         tabIndex={tabIndex}
         aria-hidden={ariaHidden}
         className={[
-          "autoplay-loop-video pointer-events-none absolute top-0 left-0 z-[1] object-cover",
+          "autoplay-loop-video pointer-events-none absolute inset-0 z-[1] h-full w-full object-cover object-center",
           // iOS Safari will not decode a fully transparent <video>, so keep a
           // sliver of opacity until playback starts (poster/wallpaper cover it).
           playing ? "opacity-100" : "opacity-[0.01]",
@@ -300,7 +354,7 @@ export function AutoplayLoopVideo({
           alt=""
           aria-hidden
           fetchPriority={eager ? "high" : "auto"}
-          className={`pointer-events-none absolute inset-0 z-[2] h-full w-full object-cover ${
+          className={`pointer-events-none absolute inset-0 z-[2] h-full w-full object-cover object-center ${
             showCover ? "opacity-100" : "opacity-0"
           }`}
         />
@@ -309,7 +363,7 @@ export function AutoplayLoopVideo({
         <canvas
           ref={canvasRef}
           aria-hidden
-          className={`pointer-events-none absolute inset-0 z-[2] h-full w-full object-cover ${
+          className={`pointer-events-none absolute inset-0 z-[2] h-full w-full object-cover object-center ${
             showCover && hasFrame ? "opacity-100" : "opacity-0"
           }`}
         />

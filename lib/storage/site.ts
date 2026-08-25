@@ -61,6 +61,15 @@ async function readSiteFromFile(): Promise<SiteContent> {
   return normalizeSiteContent(parsed);
 }
 
+/** Bundled snapshot used only when the live store is unreachable. */
+export async function readBundledSiteRecord(): Promise<StoredSiteContent> {
+  return {
+    content: await readSiteFromFile(),
+    version: 1,
+    updatedAt: new Date(0).toISOString(),
+  };
+}
+
 async function readSiteFromBlob(): Promise<SiteContent | null> {
   if (!getUseBlobStorage()) return null;
 
@@ -359,6 +368,78 @@ async function saveVideoFile(slot: VideoSlot, file: File): Promise<string> {
   });
 }
 
+function slotMediaPaths(
+  site: SiteContent,
+  slot: VideoSlot,
+): { videoPath?: string; posterPath?: string } {
+  switch (slot) {
+    case "hero":
+      return {
+        videoPath: site.hero.videoPath,
+        posterPath: site.hero.posterPath,
+      };
+    case "cta":
+      return {
+        videoPath: site.closingCta.videoPath,
+        posterPath: site.closingCta.posterPath,
+      };
+    default: {
+      const _exhaustive: never = slot;
+      return _exhaustive;
+    }
+  }
+}
+
+function applySlotMedia(
+  site: SiteContent,
+  slot: VideoSlot,
+  videoPath: string,
+  posterPath?: string,
+) {
+  switch (slot) {
+    case "hero":
+      site.hero = {
+        subtitle: site.hero.subtitle,
+        videoPath,
+        ...(posterPath ? { posterPath } : {}),
+      };
+      return;
+    case "cta":
+      site.closingCta = {
+        ...site.closingCta,
+        videoPath,
+        ...(posterPath ? { posterPath } : {}),
+      };
+      if (!posterPath) {
+        delete site.closingCta.posterPath;
+      }
+      return;
+    default: {
+      const _exhaustive: never = slot;
+      return _exhaustive;
+    }
+  }
+}
+
+function clearSlotMedia(site: SiteContent, slot: VideoSlot) {
+  switch (slot) {
+    case "hero":
+      site.hero = { subtitle: site.hero.subtitle };
+      return;
+    case "cta": {
+      const closingCta = { ...site.closingCta };
+      delete closingCta.videoPath;
+      delete closingCta.posterPath;
+      site.closingCta = closingCta;
+      return;
+    }
+    default: {
+      const _exhaustive: never = slot;
+      return _exhaustive;
+    }
+  }
+}
+
 async function savePosterFile(slot: VideoSlot, file: File): Promise<string> {
   const ext = path.extname(file.name) || ".jpg";
   const filename = `${slot}-poster-${randomUUID()}${ext}`;
@@ -385,20 +466,11 @@ async function replaceVideoPath(
     );
   }
   const site = structuredClone(record.content);
-  const previousVideo =
-    slot === "hero" ? site.hero.videoPath : site.closingCta.videoPath;
-  const previousPoster = slot === "hero" ? site.hero.posterPath : undefined;
+  const previous = slotMediaPaths(site, slot);
+  const previousVideo = previous.videoPath;
+  const previousPoster = previous.posterPath;
   const nextPoster = posterPath ?? previousPoster;
-
-  if (slot === "hero") {
-    site.hero = {
-      subtitle: site.hero.subtitle,
-      videoPath,
-      ...(nextPoster ? { posterPath: nextPoster } : {}),
-    };
-  } else {
-    site.closingCta = { ...site.closingCta, videoPath };
-  }
+  applySlotMedia(site, slot, videoPath, nextPoster);
 
   try {
     await writeSiteContent(site, record.version);
@@ -434,17 +506,10 @@ async function clearVideoPath(
     );
   }
   const site = structuredClone(record.content);
-  const previousVideo =
-    slot === "hero" ? site.hero.videoPath : site.closingCta.videoPath;
-  const previousPoster = slot === "hero" ? site.hero.posterPath : undefined;
-
-  if (slot === "hero") {
-    site.hero = { subtitle: site.hero.subtitle };
-  } else {
-    const closingCta = { ...site.closingCta };
-    delete closingCta.videoPath;
-    site.closingCta = closingCta;
-  }
+  const previous = slotMediaPaths(site, slot);
+  const previousVideo = previous.videoPath;
+  const previousPoster = previous.posterPath;
+  clearSlotMedia(site, slot);
 
   await writeSiteContent(site, record.version);
 

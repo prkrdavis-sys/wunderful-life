@@ -67,6 +67,11 @@ async function readVideosFromLocalFile(): Promise<PortfolioVideo[]> {
   }
 }
 
+/** Bundled snapshot used only when the live store is unreachable. */
+export async function readBundledPortfolioVideos(): Promise<PortfolioVideo[]> {
+  return sortVideos(await readVideosFromLocalFile());
+}
+
 /**
  * The library plus the store version it was read at. `version` is null only
  * when the local JSON file is the real store (development without Supabase).

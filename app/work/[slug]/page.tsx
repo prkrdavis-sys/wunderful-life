@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { DetailVideoPlayer } from "@/components/work/DetailVideoPlayer";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { SectionReveal } from "@/components/ui/motion";
-import { getVideo } from "@/lib/videos/load";
+import { getVideo, getVideos } from "@/lib/videos/load";
 import {
   formatDuration,
   platformLabel,
@@ -11,6 +11,11 @@ import {
 type WorkDetailPageProps = {
   params: Promise<{ slug: string }>;
 };
+
+export async function generateStaticParams() {
+  const videos = await getVideos();
+  return videos.map((video) => ({ slug: video.slug }));
+}
 
 export async function generateMetadata({ params }: WorkDetailPageProps) {
   const { slug } = await params;

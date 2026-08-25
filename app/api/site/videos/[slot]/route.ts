@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePublicContent } from "@/lib/cache/public";
 import {
   clearSlotVideo,
   setSlotVideoUrl,
@@ -46,7 +46,7 @@ export async function POST(request: Request, context: RouteContext) {
     if (typeof videoUrl === "string" && videoUrl.startsWith("https://")) {
       const site = await setSlotVideoUrl(slot, videoUrl, version, posterRemote);
       const record = await readSiteRecord();
-      revalidatePath("/", "layout");
+      revalidatePublicContent();
       return NextResponse.json(site, {
         headers: siteResponseHeaders(record.version),
       });
@@ -68,7 +68,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     const site = await uploadSlotVideo(slot, file, version, posterFile);
     const record = await readSiteRecord();
-    revalidatePath("/", "layout");
+    revalidatePublicContent();
     return NextResponse.json(site, {
       headers: siteResponseHeaders(record.version),
     });
@@ -96,7 +96,7 @@ export async function DELETE(request: Request, context: RouteContext) {
     const version = expectedSiteVersion(request);
     const site = await clearSlotVideo(slot, version);
     const record = await readSiteRecord();
-    revalidatePath("/", "layout");
+    revalidatePublicContent();
     return NextResponse.json(site, {
       headers: siteResponseHeaders(record.version),
     });

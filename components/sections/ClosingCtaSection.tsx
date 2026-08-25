@@ -35,7 +35,13 @@ function InstagramIcon() {
   );
 }
 
-function CtaVideo({ videoPath }: { videoPath?: string }) {
+function CtaVideo({
+  videoPath,
+  posterPath,
+}: {
+  videoPath?: string;
+  posterPath?: string;
+}) {
   const { viewMode } = useAdminView();
 
   if (!videoPath) {
@@ -53,9 +59,10 @@ function CtaVideo({ videoPath }: { videoPath?: string }) {
     <div className="autoplay-loop-clip relative aspect-[4/5] w-full overflow-hidden rounded-[2rem] border border-white/70 shadow-xl">
       <AutoplayLoopVideo
         src={videoPath}
+        poster={posterPath}
         muted
         showMuteToggle
-        className="object-cover"
+        className="object-cover object-center"
       />
     </div>
   );
@@ -78,7 +85,10 @@ export function ClosingCtaSection() {
 
       <div className="relative z-10 mx-auto grid max-w-5xl items-center gap-10 sm:gap-14 lg:grid-cols-[0.85fr_1.15fr]">
         <div className="mx-auto w-full max-w-xs lg:max-w-none">
-          <CtaVideo videoPath={closingCta.videoPath} />
+          <CtaVideo
+            videoPath={closingCta.videoPath}
+            posterPath={closingCta.posterPath}
+          />
         </div>
 
         <SectionReveal delay={0.12} className="text-center lg:text-left">

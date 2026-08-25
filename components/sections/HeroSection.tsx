@@ -22,7 +22,7 @@ function HeroBackgroundVideo({
         muted
         aria-hidden
         tabIndex={-1}
-        className="pointer-events-none object-cover"
+        className="pointer-events-none object-cover object-center"
       />
       <div
         aria-hidden

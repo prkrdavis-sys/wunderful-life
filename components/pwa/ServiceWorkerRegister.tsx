@@ -14,13 +14,21 @@ export function ServiceWorkerRegister() {
         });
     };
 
+    const start = () => {
+      if (typeof window.requestIdleCallback === "function") {
+        window.requestIdleCallback(register, { timeout: 4000 });
+        return;
+      }
+      window.setTimeout(register, 1500);
+    };
+
     if (document.readyState === "complete") {
-      register();
+      start();
       return;
     }
 
-    window.addEventListener("load", register, { once: true });
-    return () => window.removeEventListener("load", register);
+    window.addEventListener("load", start, { once: true });
+    return () => window.removeEventListener("load", start);
   }, []);
 
   return null;

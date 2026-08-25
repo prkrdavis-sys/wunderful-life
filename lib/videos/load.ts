@@ -1,13 +1,33 @@
 import { cache } from "react";
-import { unstable_noStore as noStore } from "next/cache";
-import { getVideoBySlug, listVideos } from "@/lib/storage";
+import { unstable_cache } from "next/cache";
+import {
+  PUBLIC_REVALIDATE_SECONDS,
+  VIDEOS_CACHE_TAG,
+} from "@/lib/cache/public";
+import { listVideos, readBundledPortfolioVideos } from "@/lib/storage/local";
+
+const loadCachedVideos = unstable_cache(
+  async () => listVideos(),
+  ["portfolio-videos"],
+  {
+    tags: [VIDEOS_CACHE_TAG],
+    revalidate: PUBLIC_REVALIDATE_SECONDS,
+  },
+);
 
 export const getVideos = cache(async function getVideos() {
-  noStore();
-  return listVideos();
+  try {
+    return await loadCachedVideos();
+  } catch (error) {
+    console.error(
+      "Video library store unavailable; serving bundled fallback.",
+      error,
+    );
+    return readBundledPortfolioVideos();
+  }
 });
 
 export const getVideo = cache(async function getVideo(slug: string) {
-  noStore();
-  return getVideoBySlug(slug);
+  const videos = await getVideos();
+  return videos.find((video) => video.slug === slug) ?? null;
 });

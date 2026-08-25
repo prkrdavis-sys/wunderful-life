@@ -1,10 +1,18 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import type { ReactNode } from "react";
 import type { SiteContent } from "@/lib/site/types";
 import { AdminViewProvider } from "@/components/admin/AdminViewProvider";
-import { AdminModePanel } from "@/components/admin/AdminModePanel";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
+
+const AdminModePanel = dynamic(
+  () =>
+    import("@/components/admin/AdminModePanel").then(
+      (module) => module.AdminModePanel,
+    ),
+  { ssr: false },
+);
 
 type AppProvidersProps = {
   children: ReactNode;

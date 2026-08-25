@@ -430,6 +430,7 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
       ),
       emailLabel: text(closingCta.emailLabel, DEFAULT_CTA_EMAIL_LABEL),
       ...(closingCta.videoPath ? { videoPath: closingCta.videoPath } : {}),
+      ...(closingCta.posterPath ? { posterPath: closingCta.posterPath } : {}),
     },
     social: raw.social,
     services: raw.services.map((service) => ({

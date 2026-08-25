@@ -208,7 +208,7 @@ export async function extractThumbnailWithFfmpeg(file: File): Promise<File> {
         "-q:v",
         "5",
         "-vf",
-        "scale='min(iw,720)':-2",
+        "scale=iw*sar:ih,setsar=1,scale='min(iw,720)':-2",
         "-f",
         "image2",
         outputName,

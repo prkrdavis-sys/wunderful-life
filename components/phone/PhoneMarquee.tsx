@@ -25,21 +25,15 @@ type PhoneMarqueeProps = {
 const INTERACTIVE_SELECTOR = "a, video, input, textarea, select, label";
 /** Phone width (md) + gap — used to guarantee the track overflows the viewport. */
 const ESTIMATED_SLIDE_WIDTH = 250;
-/** Keep enough slides to span desktop widths without over-rendering duplicates. */
-const MIN_MARQUEE_SLIDES = 6;
-/** Cap duplicated slides so short libraries do not mount unnecessary phone frames. */
-const MAX_MARQUEE_SLIDES = 6;
 /** Track should span this many viewport widths for seamless loop scrolling. */
 const VIEWPORT_COVERAGE = 2.25;
+/** At least two full copies so every carousel video repeats in the infinite track. */
+const MIN_COPIES = 2;
 const AUTO_SCROLL_SPEED = 0.45;
 
 function slidesNeededForWidth(viewportWidth: number): number {
-  const fromViewport = Math.ceil(
+  return Math.ceil(
     (Math.max(viewportWidth, 320) * VIEWPORT_COVERAGE) / ESTIMATED_SLIDE_WIDTH,
-  );
-  return Math.min(
-    MAX_MARQUEE_SLIDES,
-    Math.max(MIN_MARQUEE_SLIDES, fromViewport),
   );
 }
 
@@ -48,15 +42,11 @@ function buildMarqueeSlides(
   minSlides: number,
 ): PortfolioVideo[] {
   if (videos.length === 0) return [];
-  if (videos.length >= MAX_MARQUEE_SLIDES) return videos;
-  const target = Math.min(
-    MAX_MARQUEE_SLIDES,
-    Math.max(minSlides, MIN_MARQUEE_SLIDES, videos.length),
-  );
-  const repeats = Math.ceil(target / videos.length);
-  return Array.from({ length: repeats }, () => videos)
-    .flat()
-    .slice(0, Math.max(target, videos.length));
+
+  const copiesForCoverage = Math.ceil(minSlides / videos.length);
+  const copies = Math.max(MIN_COPIES, copiesForCoverage);
+
+  return Array.from({ length: copies }, () => videos).flat();
 }
 
 function PhoneSlide({

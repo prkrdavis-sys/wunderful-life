@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePublicContent } from "@/lib/cache/public";
 import {
   clearBrandLogo,
   setBrandLogoUrl,
@@ -25,7 +25,7 @@ export async function POST(request: Request, context: RouteContext) {
     if (typeof imageUrl === "string" && imageUrl.startsWith("https://")) {
       const site = await setBrandLogoUrl(brandId, imageUrl, version);
       const record = await readSiteRecord();
-      revalidatePath("/", "layout");
+      revalidatePublicContent();
       return NextResponse.json(site, {
         headers: siteResponseHeaders(record.version),
       });
@@ -37,7 +37,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     const site = await uploadBrandLogo(brandId, file, version);
     const record = await readSiteRecord();
-    revalidatePath("/", "layout");
+    revalidatePublicContent();
     return NextResponse.json(site, {
       headers: siteResponseHeaders(record.version),
     });
@@ -56,7 +56,7 @@ export async function DELETE(request: Request, context: RouteContext) {
     const version = expectedSiteVersion(request);
     const site = await clearBrandLogo(brandId, version);
     const record = await readSiteRecord();
-    revalidatePath("/", "layout");
+    revalidatePublicContent();
     return NextResponse.json(site, {
       headers: siteResponseHeaders(record.version),
     });

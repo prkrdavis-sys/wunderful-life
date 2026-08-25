@@ -108,6 +108,8 @@ export type SiteContent = {
     body: string;
     emailLabel: string;
     videoPath?: string;
+    /** First-frame still shown while the CTA video buffers. */
+    posterPath?: string;
   };
   social: {
     instagram: string;
