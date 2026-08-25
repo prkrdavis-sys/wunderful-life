@@ -20,10 +20,13 @@ import type { VideoUploadProfile } from "@/lib/videos/profile";
 
 export type { VideoUploadProfile };
 
-const FFMPEG_CONVERT_TIMEOUT_MS = 300_000;
-const BROWSER_RECORD_TIMEOUT_MS = 300_000;
-const VIDEO_LOAD_TIMEOUT_MS = 20_000;
-const MAX_SOURCE_VIDEO_BYTES = 250 * 1024 * 1024;
+const FFMPEG_CONVERT_TIMEOUT_MS = 600_000;
+const BROWSER_RECORD_TIMEOUT_MS = 600_000;
+const VIDEO_LOAD_TIMEOUT_MS = 60_000;
+/** iPhone 4K originals for a two-minute clip can exceed 250MB. */
+const MAX_SOURCE_VIDEO_BYTES = 1024 * 1024 * 1024;
+/** Writing a huge file into ffmpeg.wasm often OOM-kills the tab. */
+const FFMPEG_SAFE_SOURCE_BYTES = 120 * 1024 * 1024;
 const SEEK_RECORD_FPS = 24;
 
 type CompressSettings = {
@@ -64,7 +67,7 @@ const COMPRESS_SETTINGS: Record<VideoUploadProfile, CompressSettings> = {
     crf: 26,
     stripAudio: false,
     maxDurationSec: null,
-    skipIfMp4UnderBytes: 5_000_000,
+    skipIfMp4UnderBytes: MAX_VIDEO_BYTES,
     progressMessage: "Compressing video for the web…",
     bitrate: 2_500_000,
     requireMp4: false,
@@ -172,6 +175,10 @@ function prefersBrowserRecorder(): boolean {
   const ua = navigator.userAgent;
   if (/iP(hone|ad|od)/.test(ua)) return true;
   return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+}
+
+function shouldPreferRecorder(file: File): boolean {
+  return prefersBrowserRecorder() || file.size > FFMPEG_SAFE_SOURCE_BYTES;
 }
 
 function pickRecorderMimeType(includeAudio: boolean): string {
@@ -715,11 +722,7 @@ async function compressForWebUpload(
     return file;
   }
 
-  if (
-    !prefersBrowserRecorder() &&
-    !isMp4File(file) &&
-    file.size <= settings.skipIfMp4UnderBytes
-  ) {
+  if (!isMp4File(file) && file.size <= MAX_VIDEO_BYTES) {
     try {
       return await remuxToMp4(file, onProgress);
     } catch (error) {
@@ -731,10 +734,13 @@ async function compressForWebUpload(
   const tryFfmpeg = () => transcodeToMp4(file, profile, onProgress);
 
   const compress = async (): Promise<File> => {
-    if (prefersBrowserRecorder()) {
+    if (shouldPreferRecorder(file)) {
       try {
         return await tryRecorder();
       } catch (error) {
+        if (file.size > FFMPEG_SAFE_SOURCE_BYTES) {
+          throw error;
+        }
         console.warn("Browser recorder failed, trying converter:", error);
         return tryFfmpeg();
       }

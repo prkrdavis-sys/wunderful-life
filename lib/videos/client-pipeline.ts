@@ -232,7 +232,7 @@ export async function prepareAndUploadVideo(options: {
   onProgress?.({
     status: "preparing",
     message: needsWebTranscode(file, profile)
-      ? "Compressing video for the web… (can take a minute)"
+        ? "Compressing video for the web… (longer clips can take a few minutes)"
       : "Preparing video…",
   });
 

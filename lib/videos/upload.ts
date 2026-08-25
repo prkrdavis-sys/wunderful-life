@@ -27,7 +27,7 @@ export const VIDEO_FILE_ACCEPT = [
 ].join(",");
 
 export const VIDEO_UPLOAD_HELP =
-  "MP4, MOV, and M4V supported. Videos are compressed in the browser so they stay small on the free plan.";
+  "MP4, MOV, and M4V supported, including clips up to two minutes. Files already under 50MB upload as-is; larger originals are compressed in the browser.";
 
 /** After compression, keep clips under this size so storage and playback stay cheap. */
 export const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
