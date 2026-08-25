@@ -5,6 +5,7 @@ import {
   type CollagePhoto,
   type CollagePhotoShape,
   type GridPhoto,
+  type ServiceItem,
   type SiteContent,
   type StatItem,
 } from "@/lib/site/types";
@@ -104,6 +105,36 @@ const DEFAULT_UGC_BENEFITS: SiteContent["ugcBenefits"] = {
   ],
 };
 
+const DEFAULT_SERVICES: SiteContent["services"] = {
+  heading: "Services",
+  items: [
+    {
+      id: "tiktok-reels",
+      title: "TikTok & Reels",
+      description:
+        "Short-form vertical video with strong hooks, trending audio, and that effortless Emily energy brands remember.",
+    },
+    {
+      id: "instagram",
+      title: "Instagram Content",
+      description:
+        "Static posts, carousels, and Stories with an airy, nature-driven look that still converts.",
+    },
+    {
+      id: "testimonial",
+      title: "Testimonials",
+      description:
+        "Talking-head UGC that builds trust — warm, honest, and unmistakably me on camera.",
+    },
+    {
+      id: "unboxing",
+      title: "Unboxing & Demos",
+      description:
+        "Product-first content with creative girl charm — polished enough for ads, real enough to relate.",
+    },
+  ],
+};
+
 const DEFAULT_TESTIMONIALS: SiteContent["testimonials"] = {
   visible: true,
   heading: "Kind Words",
@@ -151,6 +182,7 @@ type SiteContentInput = Omit<
   | "whatIsUgc"
   | "ugcBenefits"
   | "closingCta"
+  | "services"
   | "testimonials"
   | "hero"
 > & {
@@ -164,6 +196,8 @@ type SiteContentInput = Omit<
   whatIsUgc?: Partial<SiteContent["whatIsUgc"]>;
   ugcBenefits?: Partial<SiteContent["ugcBenefits"]>;
   closingCta?: Partial<SiteContent["closingCta"]>;
+  /** Legacy saves stored a bare service array. */
+  services?: ServiceItem[] | Partial<SiteContent["services"]>;
   testimonials?: Partial<SiteContent["testimonials"]>;
   hero?: Partial<SiteContent["hero"]>;
   /** Superseded by `photography`; still read so old saves migrate. */
@@ -331,6 +365,48 @@ function normalizeStringList(value: unknown, fallback: string[]): string[] {
   return normalized.length > 0 ? normalized : fallback;
 }
 
+function normalizeServiceItems(items: unknown): ServiceItem[] {
+  if (!Array.isArray(items)) return DEFAULT_SERVICES.items;
+
+  const normalized = items
+    .map((item, index): ServiceItem | null => {
+      if (!item || typeof item !== "object") return null;
+      const service = item as Partial<ServiceItem>;
+      const title = text(service.title, "");
+      const description = text(service.description, "");
+      if (!title && !description) return null;
+
+      return {
+        id: text(service.id, slugId(title, `service-${index + 1}`)),
+        title,
+        description,
+      };
+    })
+    .filter((service): service is ServiceItem => service !== null);
+
+  return normalized.length > 0 ? normalized : DEFAULT_SERVICES.items;
+}
+
+function normalizeServices(
+  raw: SiteContentInput["services"],
+): SiteContent["services"] {
+  if (Array.isArray(raw)) {
+    return {
+      heading: DEFAULT_SERVICES.heading,
+      items: normalizeServiceItems(raw),
+    };
+  }
+
+  if (raw && typeof raw === "object") {
+    return {
+      heading: text(raw.heading, DEFAULT_SERVICES.heading),
+      items: normalizeServiceItems(raw.items),
+    };
+  }
+
+  return DEFAULT_SERVICES;
+}
+
 export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
   const statsBanner = raw.statsBanner ?? {};
   const work = raw.work ?? {};
@@ -433,11 +509,7 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
       ...(closingCta.posterPath ? { posterPath: closingCta.posterPath } : {}),
     },
     social: raw.social,
-    services: raw.services.map((service) => ({
-      id: service.id,
-      title: service.title,
-      description: service.description,
-    })),
+    services: normalizeServices(raw.services),
     testimonials: {
       visible:
         typeof testimonials.visible === "boolean"

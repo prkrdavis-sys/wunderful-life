@@ -11,11 +11,27 @@ export function ServicesEditor({
       <div>
         <h3 className="font-display text-lg text-brown">Services</h3>
         <p className="mt-1 text-sm text-muted">
-          Titles and descriptions for each offering.
+          The section heading, plus titles and descriptions for each offering.
         </p>
       </div>
+      <label className="block max-w-2xl text-sm">
+        <span className="text-muted">Section title</span>
+        <AutoResizeTextarea
+          value={form.services.heading}
+          onChange={(event) =>
+            setForm((current) => ({
+              ...current,
+              services: {
+                ...current.services,
+                heading: event.target.value,
+              },
+            }))
+          }
+          className={inputClass}
+        />
+      </label>
       <div className="grid gap-4 lg:grid-cols-2">
-        {form.services.map((service, index) => (
+        {form.services.items.map((service, index) => (
           <div
             key={service.id}
             className="space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4"
@@ -29,12 +45,15 @@ export function ServicesEditor({
                 value={service.title}
                 onChange={(event) =>
                   setForm((current) => {
-                    const services = [...current.services];
-                    services[index] = {
-                      ...services[index],
+                    const items = [...current.services.items];
+                    items[index] = {
+                      ...items[index],
                       title: event.target.value,
                     };
-                    return { ...current, services };
+                    return {
+                      ...current,
+                      services: { ...current.services, items },
+                    };
                   })
                 }
                 className={inputClass}
@@ -46,12 +65,15 @@ export function ServicesEditor({
                 value={service.description}
                 onChange={(event) =>
                   setForm((current) => {
-                    const services = [...current.services];
-                    services[index] = {
-                      ...services[index],
+                    const items = [...current.services.items];
+                    items[index] = {
+                      ...items[index],
                       description: event.target.value,
                     };
-                    return { ...current, services };
+                    return {
+                      ...current,
+                      services: { ...current.services, items },
+                    };
                   })
                 }
                 rows={3}

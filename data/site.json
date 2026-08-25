@@ -228,28 +228,31 @@
     "instagram": "#https://www.instagram.com/wunderfull.life777/",
     "email": "mailto:hello@wunderfulife.com"
   },
-  "services": [
-    {
-      "id": "tiktok-reels",
-      "title": "TikTok & Reels",
-      "description": "Short-form vertical video with strong hooks, trending audio, and that effortless Emily energy brands remember."
-    },
-    {
-      "id": "instagram",
-      "title": "Instagram Content",
-      "description": "Static posts, carousels, and Stories with an airy, nature-driven look that still converts."
-    },
-    {
-      "id": "testimonial",
-      "title": "Testimonials",
-      "description": "Talking-head UGC that builds trust — warm, honest, and unmistakably me on camera."
-    },
-    {
-      "id": "unboxing",
-      "title": "Unboxing & Demos",
-      "description": "Product-first content with creative girl charm — polished enough for ads, real enough to relate."
-    }
-  ],
+  "services": {
+    "heading": "Services",
+    "items": [
+      {
+        "id": "tiktok-reels",
+        "title": "TikTok & Reels",
+        "description": "Short-form vertical video with strong hooks, trending audio, and that effortless Emily energy brands remember."
+      },
+      {
+        "id": "instagram",
+        "title": "Instagram Content",
+        "description": "Static posts, carousels, and Stories with an airy, nature-driven look that still converts."
+      },
+      {
+        "id": "testimonial",
+        "title": "Testimonials",
+        "description": "Talking-head UGC that builds trust — warm, honest, and unmistakably me on camera."
+      },
+      {
+        "id": "unboxing",
+        "title": "Unboxing & Demos",
+        "description": "Product-first content with creative girl charm — polished enough for ads, real enough to relate."
+      }
+    ]
+  },
   "testimonials": {
     "visible": true,
     "heading": "Kind Words",

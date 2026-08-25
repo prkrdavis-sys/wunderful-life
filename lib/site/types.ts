@@ -60,6 +60,12 @@ export type BrandItem = {
   url?: string;
 };
 
+export type ServiceItem = {
+  id: string;
+  title: string;
+  description: string;
+};
+
 export type SiteContent = {
   fullName: string;
   name: string;
@@ -116,10 +122,9 @@ export type SiteContent = {
     email: string;
   };
   services: {
-    id: string;
-    title: string;
-    description: string;
-  }[];
+    heading: string;
+    items: ServiceItem[];
+  };
   testimonials: {
     visible: boolean;
     heading: string;

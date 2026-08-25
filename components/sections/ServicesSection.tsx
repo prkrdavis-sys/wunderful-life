@@ -28,7 +28,7 @@ export function ServicesSection() {
             What I offer
           </p>
           <h2 className={`mt-3 font-serif text-3xl sm:text-5xl ${text.heading}`}>
-            Services
+            {site.services.heading}
           </h2>
           <p className={`mx-auto mt-4 max-w-2xl leading-relaxed ${text.body}`}>
             What {site.name} delivers — plus the creative, airy, nature-driven
@@ -37,7 +37,7 @@ export function ServicesSection() {
         </SectionReveal>
 
         <StaggerChildren className="mt-12 grid gap-6 sm:grid-cols-2 sm:gap-8">
-          {site.services.map((service) => (
+          {site.services.items.map((service) => (
             <StaggerItem key={service.id}>
               <article className="service-glass-card h-full rounded-3xl border border-white/70 bg-paper/70 p-6 backdrop-blur-sm transition hover:border-sage/60 hover:shadow-lg sm:p-7">
                 <h3 className="font-serif text-xl text-forest sm:text-2xl">

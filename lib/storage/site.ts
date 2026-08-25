@@ -30,6 +30,17 @@ const SITE_PATH = path.join(process.cwd(), "data", "site.json");
 
 type PhotoFolder = "about-photos" | "home-grid-photos" | "brand-logos";
 
+function hasServices(value: unknown): boolean {
+  if (!value || typeof value !== "object") return false;
+  const services = (value as { services?: unknown }).services;
+  if (Array.isArray(services)) return true;
+  return Boolean(
+    services &&
+      typeof services === "object" &&
+      Array.isArray((services as { items?: unknown }).items),
+  );
+}
+
 function isCompleteSiteContent(value: unknown): value is SiteContent {
   if (!value || typeof value !== "object") return false;
   const site = value as SiteContent;
@@ -45,7 +56,7 @@ function isCompleteSiteContent(value: unknown): value is SiteContent {
     Array.isArray(site.heroLinks) &&
     Boolean(site.social?.instagram) &&
     Boolean(site.social?.email) &&
-    Array.isArray(site.services) &&
+    hasServices(site) &&
     Array.isArray(site.statsBanner?.items) &&
     Boolean(site.work?.heading) &&
     Array.isArray(site.photography?.photos) &&
