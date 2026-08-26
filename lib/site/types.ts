@@ -46,7 +46,7 @@ export type HeroContent = {
   subtitle: string;
 };
 
-/** A single figure in the hero stats banner or the UGC proof stats. */
+/** A single figure in the audience reach section or the UGC proof stats. */
 export type StatItem = {
   id: string;
   value: string;
@@ -123,6 +123,7 @@ export type SiteContent = {
   };
   services: {
     heading: string;
+    subtitle: string;
     items: ServiceItem[];
   };
   testimonials: {

@@ -28,13 +28,13 @@ export function PhotographyEditor({
       <div>
         <h3 className="font-display text-lg text-brown">Photography collage</h3>
         <p className="mt-1 text-sm text-muted">
-          The scrapbook grid under the scalloped photography banner. Shape
-          controls how much room each tile takes.
+          The scrapbook photography section. Shape controls how much room
+          each tile takes.
         </p>
       </div>
 
       <label className="block max-w-2xl text-sm">
-        <span className="text-muted">Banner label</span>
+        <span className="text-muted">Section title</span>
         <AutoResizeTextarea
           value={form.photography.label}
           onChange={(event) =>

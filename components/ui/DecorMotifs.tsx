@@ -73,7 +73,7 @@ const PRESETS: Record<Exclude<MotifPreset, "none">, MotifSpec[]> = {
 
 type DecorMotifsProps = {
   preset?: MotifPreset;
-  /** `ink` reads on light washes, `paper` on the forest bands. */
+  /** `ink` reads on light washes, `paper` on dark forest washes. */
   tone?: "ink" | "paper";
   className?: string;
 };

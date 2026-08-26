@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
+import { motion, useReducedMotion } from "framer-motion";
+import { useCallback, useState } from "react";
 import { AutoplayLoopVideo } from "@/components/ui/AutoplayLoopVideo";
 import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
 import { HeroEntrance } from "@/components/ui/motion";
@@ -8,6 +10,82 @@ import { useSiteContent } from "@/components/admin/AdminViewProvider";
 import { sectionWallpapers } from "@/lib/plants";
 import { lightOnDarkShadow, sectionText } from "@/lib/sectionText";
 import type { MediaIntrinsicSize, VideoObjectFit } from "@/lib/videos/cover-fit";
+
+const HERO_CREATOR_IMAGE = "/hero/creator-placeholder.png";
+
+type MeasuredMedia = {
+  sourceKey: string;
+  size: MediaIntrinsicSize;
+};
+
+function HeroIntro() {
+  const reduceMotion = useReducedMotion();
+  const creatorInitial = reduceMotion
+    ? { opacity: 1, y: 0 }
+    : { opacity: 0, y: "28%" };
+
+  return (
+    <section className="hero-intro relative z-10 isolate min-h-[34rem] overflow-visible bg-paper sm:min-h-[39rem] lg:min-h-[44rem]">
+      <div
+        aria-hidden
+        className="hero-intro-silhouettes absolute inset-x-0 bottom-0 z-0 h-[62%]"
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 z-0 bg-gradient-to-b from-paper via-paper/45 to-transparent"
+      />
+
+      <p className="relative z-20 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 pt-8 font-label text-[clamp(0.7rem,1.4vw,0.95rem)] font-medium tracking-[0.16em] text-brown sm:pt-10">
+        <span>UGC</span>
+        <span aria-hidden className="text-blush-deep">
+          |
+        </span>
+        <span>Social media</span>
+        <span aria-hidden className="text-blush-deep">
+          |
+        </span>
+        <span>marketing</span>
+      </p>
+
+      <div className="relative z-20 mx-auto flex max-w-6xl justify-center px-4 pt-16 sm:px-6 sm:pt-20">
+        <h1 className="text-center leading-[0.82] tracking-[-0.06em]">
+          <span className="block font-serif text-[clamp(4.75rem,13vw,9rem)] text-blush-deep">
+            Creative
+          </span>
+          <span className="-mt-1 block font-display text-[clamp(5rem,15vw,10.5rem)] text-forest">
+            Portfolio
+          </span>
+        </h1>
+      </div>
+
+      <motion.div
+        initial={creatorInitial}
+        animate={{ opacity: 1, y: 0 }}
+        transition={
+          reduceMotion
+            ? { duration: 0 }
+            : {
+                duration: 1.15,
+                delay: 0.18,
+                ease: [0.22, 1, 0.36, 1],
+              }
+        }
+        className="pointer-events-none absolute inset-x-0 bottom-[-9rem] z-10 flex justify-center will-change-transform sm:bottom-[-12rem] lg:bottom-[-15rem]"
+      >
+        <div className="relative h-[31rem] w-[min(86vw,25rem)] sm:h-[36rem] sm:w-[min(58vw,29rem)] lg:h-[42rem] lg:w-[min(42vw,34rem)]">
+          <Image
+            src={HERO_CREATOR_IMAGE}
+            alt="Emily and her partner smiling together"
+            fill
+            priority
+            sizes="(min-width: 1024px) 34rem, (min-width: 640px) 29rem, 86vw"
+            className="object-contain object-bottom"
+          />
+        </div>
+      </motion.div>
+    </section>
+  );
+}
 
 function HeroBackgroundVideo({
   src,
@@ -40,7 +118,7 @@ function HeroBackgroundVideo({
   );
 }
 
-export function HeroSection() {
+function HeroVideoSection() {
   const site = useSiteContent();
   const { wallpaper, overlay } = sectionWallpapers.hero;
   const text = sectionText.hero;
@@ -48,32 +126,32 @@ export function HeroSection() {
   const posterPath = site.hero.posterPath;
   const hasVideo = Boolean(videoPath);
   const hasPoster = Boolean(posterPath);
-  const [mediaSize, setMediaSize] = useState<MediaIntrinsicSize | null>(null);
-
-  useEffect(() => {
-    setMediaSize(null);
-  }, [posterPath, videoPath]);
+  const mediaSourceKey = `${videoPath ?? ""}\u0000${posterPath ?? ""}`;
+  const [mediaSize, setMediaSize] = useState<MeasuredMedia | null>(null);
+  const mediaSizeForSource =
+    mediaSize?.sourceKey === mediaSourceKey ? mediaSize.size : null;
 
   const onIntrinsicSize = useCallback((size: MediaIntrinsicSize) => {
     setMediaSize((current) => {
       if (
-        current &&
-        current.width === size.width &&
-        current.height === size.height
+        current?.sourceKey === mediaSourceKey &&
+        current.size.width === size.width &&
+        current.size.height === size.height
       ) {
         return current;
       }
-      return size;
+      return { sourceKey: mediaSourceKey, size };
     });
-  }, []);
+  }, [mediaSourceKey]);
 
   const isPortraitVideo = Boolean(
-    mediaSize && mediaSize.height > mediaSize.width,
+    mediaSizeForSource &&
+      mediaSizeForSource.height > mediaSizeForSource.width,
   );
   const videoFit: VideoObjectFit = isPortraitVideo ? "contain" : "cover";
 
   return (
-    <section className="relative grid w-full grid-cols-1 overflow-hidden">
+    <section className="relative z-20 grid w-full grid-cols-1 overflow-hidden">
       {/*
         In-flow sizer stacked with the copy. Portrait clips set aspect-ratio
         so the hero grows with the frame instead of cropping top and bottom.
@@ -84,8 +162,10 @@ export function HeroSection() {
           isPortraitVideo ? "" : "min-h-[85svh]"
         }`}
         style={
-          mediaSize
-            ? { aspectRatio: `${mediaSize.width} / ${mediaSize.height}` }
+          mediaSizeForSource
+            ? {
+                aspectRatio: `${mediaSizeForSource.width} / ${mediaSizeForSource.height}`,
+              }
             : undefined
         }
       />
@@ -118,13 +198,13 @@ export function HeroSection() {
               </p>
             </HeroEntrance>
             <HeroEntrance delay={0.14}>
-              <h1
+              <h2
                 className={`font-display text-5xl leading-[1.05] sm:text-6xl md:text-7xl lg:text-8xl ${
                   hasVideo ? `text-paper ${lightOnDarkShadow}` : text.heading
                 }`}
               >
                 {site.fullName}
-              </h1>
+              </h2>
             </HeroEntrance>
           </div>
 
@@ -140,5 +220,14 @@ export function HeroSection() {
         </div>
       </div>
     </section>
+  );
+}
+
+export function HeroSection() {
+  return (
+    <div className="relative overflow-hidden">
+      <HeroIntro />
+      <HeroVideoSection />
+    </div>
   );
 }

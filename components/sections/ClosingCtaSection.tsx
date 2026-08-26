@@ -71,6 +71,8 @@ function CtaVideo({
 export function ClosingCtaSection() {
   const site = useSiteContent();
   const { closingCta, social } = site;
+  const brandName = site.brand.trim();
+  const hasBrandName = brandName.length > 0;
 
   return (
     <section
@@ -123,24 +125,41 @@ export function ClosingCtaSection() {
             </motion.a>
           </div>
 
-          <figure className="mx-auto mt-9 w-[min(100%,13.75rem)] px-1 pt-2 sm:mt-10 sm:w-[16.25rem] lg:mx-0 lg:mt-12 lg:ml-1 lg:w-[18.5rem]">
-            <Image
-              src={SIGNATURE.src}
-              alt="Emily Wunden"
-              width={SIGNATURE.width}
-              height={SIGNATURE.height}
-              sizes="(max-width: 640px) 13.75rem, (max-width: 1024px) 16.25rem, 18.5rem"
-              className="h-auto w-full origin-center -rotate-1 mix-blend-multiply"
-            />
-          </figure>
+          <div
+            className={`mx-auto lg:mx-0 lg:ml-1 ${
+              hasBrandName
+                ? "mt-9 w-[min(100%,18rem)] pb-2 sm:mt-10 sm:w-[22rem] sm:pb-3 lg:mt-12 lg:w-[24rem]"
+                : "mt-9 w-[min(100%,16.5rem)] sm:mt-10 sm:w-[20rem] lg:mt-12 lg:w-[22.5rem]"
+            }`}
+          >
+            <figure className="mx-auto w-[83.5%] px-1 pt-2">
+              <Image
+                src={SIGNATURE.src}
+                alt="Emily Wunden"
+                width={SIGNATURE.width}
+                height={SIGNATURE.height}
+                sizes="(max-width: 640px) 13.75rem, (max-width: 1024px) 16.25rem, 18.5rem"
+                className="h-auto w-full origin-center -rotate-1 mix-blend-multiply"
+              />
+            </figure>
 
-          <figure className="mx-auto mt-2 w-[min(100%,16.5rem)] sm:mt-3 sm:w-[20rem] lg:mx-0 lg:ml-1 lg:w-[22.5rem]">
-            <BrandLogo
-              alt={site.brand}
-              sizes="(max-width: 640px) 16.5rem, (max-width: 1024px) 20rem, 22.5rem"
-              className="h-auto w-full"
-            />
-          </figure>
+            <figure className="mt-2 sm:mt-3">
+              <BrandLogo
+                alt={hasBrandName ? "" : site.fullName || "Logo"}
+                sizes={
+                  hasBrandName
+                    ? "(max-width: 640px) 18rem, (max-width: 1024px) 22rem, 24rem"
+                    : "(max-width: 640px) 16.5rem, (max-width: 1024px) 20rem, 22.5rem"
+                }
+                className="h-auto w-full"
+              />
+              {hasBrandName ? (
+                <figcaption className="mt-3 px-1 text-center font-label text-sm font-semibold tracking-[0.16em] text-forest uppercase sm:mt-4 sm:text-base">
+                  {brandName}
+                </figcaption>
+              ) : null}
+            </figure>
+          </div>
         </SectionReveal>
       </div>
     </section>

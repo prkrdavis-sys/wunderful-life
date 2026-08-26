@@ -31,8 +31,7 @@ export function ServicesSection() {
             {site.services.heading}
           </h2>
           <p className={`mx-auto mt-4 max-w-2xl leading-relaxed ${text.body}`}>
-            What {site.name} delivers — plus the creative, airy, nature-driven
-            personality your audience will remember.
+            {site.services.subtitle}
           </p>
         </SectionReveal>
 

@@ -11,7 +11,8 @@ export function ServicesEditor({
       <div>
         <h3 className="font-display text-lg text-brown">Services</h3>
         <p className="mt-1 text-sm text-muted">
-          The section heading, plus titles and descriptions for each offering.
+          The section heading and subtitle, plus titles and descriptions for
+          each offering.
         </p>
       </div>
       <label className="block max-w-2xl text-sm">
@@ -27,6 +28,23 @@ export function ServicesEditor({
               },
             }))
           }
+          className={inputClass}
+        />
+      </label>
+      <label className="block max-w-2xl text-sm">
+        <span className="text-muted">Subtitle</span>
+        <AutoResizeTextarea
+          value={form.services.subtitle}
+          onChange={(event) =>
+            setForm((current) => ({
+              ...current,
+              services: {
+                ...current.services,
+                subtitle: event.target.value,
+              },
+            }))
+          }
+          rows={3}
           className={inputClass}
         />
       </label>

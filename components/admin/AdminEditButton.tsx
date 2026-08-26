@@ -7,7 +7,7 @@ import {
 
 type AdminEditButtonProps = {
   label: string;
-  /** `light` reads on the forest bands, `dark` on the light washes. */
+  /** `light` reads on dark forest washes, `dark` on the light washes. */
   tone?: "dark" | "light";
   className?: string;
 } & (

@@ -9,7 +9,7 @@ export const SECTIONS: { id: SiteEditorSection; label: string }[] = [
   { id: "services", label: "Services" },
   { id: "brands", label: "Brands" },
   { id: "photography", label: "Photography" },
-  { id: "stats", label: "Stats banner" },
+  { id: "stats", label: "Audience reach" },
   { id: "about", label: "About" },
   { id: "ugc", label: "Why UGC" },
   { id: "testimonials", label: "Testimonials" },

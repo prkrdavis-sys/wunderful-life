@@ -4,15 +4,12 @@
   --cream: #f7f3ec;
   --paper: #fffdf9;
   --white: #ffffff;
-  /* Sage is the primary hue; forest carries the full-bleed bands. */
+  /* Sage is the primary hue; forest is the dark section wash. */
   --sage: #9baa8c;
   --sage-light: #c3cfb4;
   --sage-deep: #6f8262;
   --forest: #33513d;
   --forest-deep: #23392a;
-  --forest-band-gradient:
-    radial-gradient(circle at 12% 0%, rgba(255, 253, 249, 0.09), transparent 20rem),
-    linear-gradient(180deg, #35543f 0%, #2c4735 58%, #23392a 100%);
   --brown: #6b5344;
   --brown-light: #a08060;
   --blush: #e0b6bc;
@@ -228,42 +225,6 @@ body {
   .glass-panel {
     background: rgb(255 253 249 / 0.96);
   }
-}
-
-/*
- * One surface paints the band wash across the body and the hanging
- * scallops. A composite mask cuts the extra strip into half-circles.
- * The rectangle layer overlaps the scallop row by 1px so zoom cannot
- * open a hairline of the page background at the join.
- */
-.scalloped-banner-surface {
-  --scallop-diameter: clamp(4.5rem, 7.5vw, 5.25rem);
-  --scallop-height: calc(var(--scallop-diameter) / 2);
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  bottom: calc(0px - var(--scallop-height));
-  z-index: 0;
-  pointer-events: none;
-  -webkit-mask-image:
-    linear-gradient(#000 0 0),
-    radial-gradient(50% 100% at 50% 0, #000 calc(100% - 0.5px), transparent 100%);
-  -webkit-mask-size:
-    100% calc(100% - var(--scallop-height) + 1px),
-    var(--scallop-diameter) var(--scallop-height);
-  -webkit-mask-position: 0 0, 0 100%;
-  -webkit-mask-repeat: no-repeat, round no-repeat;
-  -webkit-mask-composite: source-over;
-  mask-image:
-    linear-gradient(#000 0 0),
-    radial-gradient(50% 100% at 50% 0, #000 calc(100% - 0.5px), transparent 100%);
-  mask-size:
-    100% calc(100% - var(--scallop-height) + 1px),
-    var(--scallop-diameter) var(--scallop-height);
-  mask-position: 0 0, 0 100%;
-  mask-repeat: no-repeat, round no-repeat;
-  mask-composite: add;
 }
 
 .service-glass-card {
@@ -527,10 +488,16 @@ body {
     linear-gradient(168deg, #3d5f48 0%, #33513d 52%, #23392a 100%);
 }
 
-/* Full-bleed accent band that punctuates the page between light sections. */
-.band-forest {
-  background-color: var(--forest-deep);
-  background-image: var(--forest-band-gradient);
+/*
+ * Nature silhouette layer for the editorial hero intro. The asset stays
+ * decorative so the title and creator cutout remain the accessible content.
+ */
+.hero-intro-silhouettes {
+  background-image: url("/hero/nature-silhouettes.svg");
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.92;
 }
 
 /* Decorative moon / star silhouettes. */

@@ -15,9 +15,9 @@ type SectionSurfaceProps = {
 };
 
 /**
- * Gradient wash that sits behind a section, replacing the old photographic
- * wallpapers. The parent section must be `relative overflow-hidden`, and its
- * content should sit in a `relative z-10` wrapper.
+ * Gradient wash that sits behind a section. The parent must be
+ * `relative overflow-hidden`, and its content should sit in a
+ * `relative z-10` wrapper.
  */
 export function SectionSurface({
   tone,

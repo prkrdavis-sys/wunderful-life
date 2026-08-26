@@ -107,6 +107,8 @@ const DEFAULT_UGC_BENEFITS: SiteContent["ugcBenefits"] = {
 
 const DEFAULT_SERVICES: SiteContent["services"] = {
   heading: "Services",
+  subtitle:
+    "What Emily delivers — plus the creative, airy, nature-driven personality your audience will remember.",
   items: [
     {
       id: "tiktok-reels",
@@ -393,6 +395,7 @@ function normalizeServices(
   if (Array.isArray(raw)) {
     return {
       heading: DEFAULT_SERVICES.heading,
+      subtitle: DEFAULT_SERVICES.subtitle,
       items: normalizeServiceItems(raw),
     };
   }
@@ -400,6 +403,7 @@ function normalizeServices(
   if (raw && typeof raw === "object") {
     return {
       heading: text(raw.heading, DEFAULT_SERVICES.heading),
+      subtitle: text(raw.subtitle, DEFAULT_SERVICES.subtitle),
       items: normalizeServiceItems(raw.items),
     };
   }

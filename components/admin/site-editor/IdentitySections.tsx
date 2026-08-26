@@ -58,6 +58,10 @@ export function ProfileEditor({
             }
             className={inputClass}
           />
+          <span className="mt-1 block text-xs text-muted">
+            Shown under the logo at the bottom of the home page. Leave blank to
+            keep the logo on its own.
+          </span>
         </label>
         <label className="block text-sm sm:col-span-2">
           <span className="text-muted">
@@ -160,17 +164,17 @@ export function StatsEditor({
   return (
     <section className="space-y-4">
       <div>
-        <h3 className="font-display text-lg text-brown">Stats banner</h3>
+        <h3 className="font-display text-lg text-brown">Audience reach</h3>
         <p className="mt-1 text-sm text-muted">
-          The band directly under the hero video. Add as many figures as you
-          like — they spread evenly across the banner.
+          The figures between photography and about. Add as many as you like —
+          they spread evenly across the section.
         </p>
       </div>
 
       <label className="flex max-w-2xl items-center justify-between gap-4 rounded-2xl border border-brown/15 bg-cream/55 p-4 text-sm">
         <span>
           <span className="block font-semibold text-brown">
-            Show the stats banner
+            Show the stats section
           </span>
           <span className="mt-1 block text-muted">
             Admin view still previews it while hidden.
