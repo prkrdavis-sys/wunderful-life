@@ -1,11 +1,40 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
+
+function PasswordVisibilityIcon({ visible }: { visible: boolean }) {
+  return (
+    <svg
+      className="h-5 w-5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      {visible ? (
+        <>
+          <path d="M3 3l18 18" />
+          <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+          <path d="M9.9 5.1A10.7 10.7 0 0 1 12 5c5.5 0 9.5 4.5 10.5 7-.4 1-1.2 2.3-2.4 3.5" />
+          <path d="M6.6 6.6C4.7 8 3.4 9.8 3 12c1 2.5 5 7 9 7 1.3 0 2.6-.4 3.8-1" />
+        </>
+      ) : (
+        <>
+          <path d="M2.5 12S6.5 5 12 5s9.5 7 9.5 7-4 7-9.5 7S2.5 12 2.5 12Z" />
+          <circle cx="12" cy="12" r="3" />
+        </>
+      )}
+    </svg>
+  );
+}
 
 export function AdminUnlockButton() {
   const router = useRouter();
@@ -18,9 +47,16 @@ export function AdminUnlockButton() {
   } = useAdminView();
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const passwordRef = useRef<HTMLInputElement>(null);
+
+  const readPassword = () => {
+    const fromDom = passwordRef.current?.value ?? password;
+    return fromDom.normalize("NFC").replace(/^\uFEFF/, "").trim();
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -49,11 +85,14 @@ export function AdminUnlockButton() {
 
     setError(null);
     setPassword("");
+    setShowPassword(false);
     setOpen(true);
   };
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const submittedPassword = readPassword();
+    setPassword(submittedPassword);
     setLoading(true);
     setError(null);
 
@@ -61,7 +100,8 @@ export function AdminUnlockButton() {
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        credentials: "same-origin",
+        body: JSON.stringify({ password: submittedPassword }),
       });
       const data = (await response.json()) as { error?: string };
 
@@ -124,16 +164,36 @@ export function AdminUnlockButton() {
                   <p className="mt-1 text-sm text-ink/70">
                     Enter the password to edit this site.
                   </p>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    placeholder="Password"
-                    className="mt-4 w-full min-w-0 rounded-xl border border-lavender/40 bg-cream px-3 py-2 text-base text-ink outline-none focus:border-forest/50"
-                    required
-                    autoComplete="current-password"
-                    autoFocus
-                  />
+                  <div className="relative mt-4">
+                    <input
+                      ref={passwordRef}
+                      id="admin-password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      onInput={(event) => setPassword(event.currentTarget.value)}
+                      placeholder="Password"
+                      className="w-full min-w-0 rounded-xl border border-lavender/40 bg-cream py-2 pl-3 pr-12 text-base text-ink outline-none focus:border-forest/50"
+                      required
+                      autoComplete="current-password"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPassword(passwordRef.current?.value ?? password);
+                        setShowPassword((visible) => !visible);
+                      }}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-pressed={showPassword}
+                      className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-ink/45 transition hover:text-ink/75"
+                    >
+                      <PasswordVisibilityIcon visible={showPassword} />
+                    </button>
+                  </div>
                   {error && (
                     <p className="mt-3 rounded-lg bg-blush/15 px-3 py-2 text-xs text-forest">
                       {error}
