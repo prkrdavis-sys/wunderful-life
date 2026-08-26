@@ -100,6 +100,30 @@ export function readVideoDurationSeconds(video: HTMLVideoElement): number {
   return 0;
 }
 
+export async function readFileDurationSeconds(
+  file: File,
+  timeoutMs: number,
+): Promise<number> {
+  if (typeof document === "undefined") return 0;
+
+  const objectUrl = URL.createObjectURL(file);
+  const video = document.createElement("video");
+  attachHiddenVideo(video);
+  video.preload = "metadata";
+  video.src = objectUrl;
+  try {
+    await withTimeout(
+      waitForVideoEvent(video, "loadedmetadata", "Could not load this video."),
+      timeoutMs,
+      "Could not load this video.",
+    );
+    return readVideoDurationSeconds(video);
+  } finally {
+    detachHiddenVideo(video);
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 export async function seekVideo(
   video: HTMLVideoElement,
   time: number,

@@ -7,9 +7,9 @@ import { slugify } from "@/lib/videos/slugify";
 import {
   isAcceptedVideoFile,
   VIDEO_FILE_ACCEPT,
-  VIDEO_UPLOAD_HELP,
   videoUploadErrorMessage,
 } from "@/lib/videos/upload";
+import { videoUploadHelp } from "@/lib/videos/compress-settings";
 import { assetDisplayName } from "@/lib/files";
 import { toErrorMessage } from "@/lib/errors";
 import { readResponseJson } from "@/lib/http/json";
@@ -507,7 +507,7 @@ export function VideoForm({
           kind="video"
           inputRef={videoInputRef}
           accept={VIDEO_FILE_ACCEPT}
-          hint={VIDEO_UPLOAD_HELP}
+          hint={videoUploadHelp("portfolio")}
           selectedName={videoName}
           previewUrl={videoUploadPreviewUrl}
           previewType={videoUploadPreviewType}

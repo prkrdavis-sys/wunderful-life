@@ -1,9 +1,17 @@
 import { toErrorMessage } from "@/lib/errors";
 import { extensionFromFilename } from "@/lib/files";
+import {
+  FFMPEG_SAFE_SOURCE_BYTES,
+  formatMaxDuration,
+  MAX_SOURCE_VIDEO_BYTES,
+  settingsForProfile,
+  type CompressSettings,
+} from "@/lib/videos/compress-settings";
 import { MAX_VIDEO_BYTES } from "@/lib/videos/upload";
 import {
   attachHiddenVideo,
   detachHiddenVideo,
+  readFileDurationSeconds,
   readVideoDurationSeconds,
   seekVideo,
   sleep,
@@ -23,60 +31,7 @@ export type { VideoUploadProfile };
 const FFMPEG_CONVERT_TIMEOUT_MS = 600_000;
 const BROWSER_RECORD_TIMEOUT_MS = 600_000;
 const VIDEO_LOAD_TIMEOUT_MS = 60_000;
-/** iPhone 4K originals for a two-minute clip can exceed 250MB. */
-const MAX_SOURCE_VIDEO_BYTES = 1024 * 1024 * 1024;
-/** Writing a huge file into ffmpeg.wasm often OOM-kills the tab. */
-const FFMPEG_SAFE_SOURCE_BYTES = 120 * 1024 * 1024;
 const SEEK_RECORD_FPS = 24;
-
-type CompressSettings = {
-  /** Short edge, i.e. true 720p / 1080p. Long-edge 720 made portrait clips 406×720. */
-  maxShortEdge: number;
-  crf: number;
-  stripAudio: boolean;
-  maxDurationSec: number | null;
-  skipIfMp4UnderBytes: number;
-  progressMessage: string;
-  bitrate: number;
-  requireMp4: boolean;
-};
-
-const COMPRESS_SETTINGS: Record<VideoUploadProfile, CompressSettings> = {
-  hero: {
-    maxShortEdge: 1080,
-    crf: 23,
-    stripAudio: true,
-    maxDurationSec: 60,
-    skipIfMp4UnderBytes: 20_000_000,
-    progressMessage: "Compressing background video (1080p, muted)…",
-    bitrate: 4_500_000,
-    requireMp4: true,
-  },
-  cta: {
-    maxShortEdge: 1080,
-    crf: 23,
-    stripAudio: false,
-    maxDurationSec: null,
-    skipIfMp4UnderBytes: 12_000_000,
-    progressMessage: "Compressing looping video (1080p)…",
-    bitrate: 5_000_000,
-    requireMp4: false,
-  },
-  portfolio: {
-    maxShortEdge: 720,
-    crf: 26,
-    stripAudio: false,
-    maxDurationSec: null,
-    skipIfMp4UnderBytes: MAX_VIDEO_BYTES,
-    progressMessage: "Compressing video for the web…",
-    bitrate: 2_500_000,
-    requireMp4: false,
-  },
-};
-
-function settingsForProfile(profile: VideoUploadProfile): CompressSettings {
-  return COMPRESS_SETTINGS[profile];
-}
 
 export function isMp4File(file: File): boolean {
   return extensionFromFilename(file.name) === ".mp4" || file.type === "video/mp4";
@@ -177,8 +132,39 @@ function prefersBrowserRecorder(): boolean {
   return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
 }
 
-function shouldPreferRecorder(file: File): boolean {
-  return prefersBrowserRecorder() || file.size > FFMPEG_SAFE_SOURCE_BYTES;
+function canRemuxInWasm(file: File): boolean {
+  // Stream-copy still writeFile()s the source into ffmpeg.wasm.
+  return !prefersBrowserRecorder() && file.size <= FFMPEG_SAFE_SOURCE_BYTES;
+}
+
+type EncodeBackend = "recorder" | "ffmpeg";
+
+type EncodePlan = {
+  first: EncodeBackend;
+  fallback: EncodeBackend | null;
+};
+
+function encodePlan(file: File): EncodePlan {
+  if (file.size > FFMPEG_SAFE_SOURCE_BYTES) {
+    return { first: "recorder", fallback: null };
+  }
+  if (prefersBrowserRecorder()) {
+    return { first: "recorder", fallback: "ffmpeg" };
+  }
+  return { first: "ffmpeg", fallback: "recorder" };
+}
+
+async function exceedsMaxDuration(
+  file: File,
+  maxDurationSec: number | null,
+): Promise<boolean> {
+  if (maxDurationSec === null) return false;
+  try {
+    const duration = await readFileDurationSeconds(file, VIDEO_LOAD_TIMEOUT_MS);
+    return duration > maxDurationSec;
+  } catch {
+    return false;
+  }
 }
 
 function pickRecorderMimeType(includeAudio: boolean): string {
@@ -697,6 +683,24 @@ function assertProfileOutput(file: File, profile: VideoUploadProfile): File {
   return uploadable;
 }
 
+function runEncodeBackend(
+  backend: EncodeBackend,
+  file: File,
+  profile: VideoUploadProfile,
+  onProgress?: (message: string) => void,
+): Promise<File> {
+  switch (backend) {
+    case "recorder":
+      return transcodeWithMediaRecorder(file, profile, onProgress);
+    case "ffmpeg":
+      return transcodeToMp4(file, profile, onProgress);
+    default: {
+      const _exhaustive: never = backend;
+      throw new Error(`Unknown encode backend: ${_exhaustive}`);
+    }
+  }
+}
+
 async function compressForWebUpload(
   file: File,
   profile: VideoUploadProfile,
@@ -709,8 +713,16 @@ async function compressForWebUpload(
   }
 
   const settings = settingsForProfile(profile);
+  const canSkip = !needsWebTranscode(file, profile);
+  const canRemuxContainer =
+    !isMp4File(file) &&
+    file.size <= settings.skipIfMp4UnderBytes &&
+    canRemuxInWasm(file);
+  const trimRequired =
+    (canSkip || canRemuxContainer) &&
+    (await exceedsMaxDuration(file, settings.maxDurationSec));
 
-  if (!needsWebTranscode(file, profile)) {
+  if (canSkip && !trimRequired) {
     if (settings.requireMp4 && isMp4File(file) && !(await mp4HasFastStart(file))) {
       try {
         return await remuxToMp4(file, onProgress);
@@ -722,7 +734,7 @@ async function compressForWebUpload(
     return file;
   }
 
-  if (!isMp4File(file) && file.size <= MAX_VIDEO_BYTES) {
+  if (canRemuxContainer && !trimRequired) {
     try {
       return await remuxToMp4(file, onProgress);
     } catch (error) {
@@ -730,32 +742,22 @@ async function compressForWebUpload(
     }
   }
 
-  const tryRecorder = () => transcodeWithMediaRecorder(file, profile, onProgress);
-  const tryFfmpeg = () => transcodeToMp4(file, profile, onProgress);
+  const plan = encodePlan(file);
+  let compressed: File;
+  try {
+    compressed = await runEncodeBackend(plan.first, file, profile, onProgress);
+  } catch (error) {
+    if (!plan.fallback) throw error;
+    console.warn(
+      plan.first === "recorder"
+        ? "Browser recorder failed, trying converter:"
+        : "Client video transcode failed, trying browser recorder:",
+      error,
+    );
+    compressed = await runEncodeBackend(plan.fallback, file, profile, onProgress);
+  }
 
-  const compress = async (): Promise<File> => {
-    if (shouldPreferRecorder(file)) {
-      try {
-        return await tryRecorder();
-      } catch (error) {
-        if (file.size > FFMPEG_SAFE_SOURCE_BYTES) {
-          throw error;
-        }
-        console.warn("Browser recorder failed, trying converter:", error);
-        return tryFfmpeg();
-      }
-    }
-
-    try {
-      return await tryFfmpeg();
-    } catch (error) {
-      console.warn("Client video transcode failed, trying browser recorder:", error);
-      return tryRecorder();
-    }
-  };
-
-  const compressed = await compress();
-  if (isMp4File(file) && compressed.size >= file.size) {
+  if (isMp4File(file) && compressed.size >= file.size && !trimRequired) {
     if (settings.requireMp4 && !(await mp4HasFastStart(file))) {
       try {
         return await remuxToMp4(file, onProgress);
@@ -781,7 +783,8 @@ export type PrepareVideoOptions = {
  * Browser compression is a best-effort optimization, not a requirement. When
  * every strategy fails we still upload the original clip so a save is never
  * blocked by a codec or autoplay quirk in the admin's browser — except
- * profiles that require an MP4 (hero), which phones cannot play as MOV/WebM.
+ * profiles that require an MP4 (hero), which phones cannot play as MOV/WebM,
+ * and clips that still exceed the profile size or duration cap.
  */
 export async function prepareVideoForWebUpload(
   file: File,
@@ -812,6 +815,16 @@ export async function prepareVideoForWebUpload(
     if (file.size > MAX_VIDEO_BYTES) {
       throw new Error(
         "That clip is still too large after compression. Export a shorter 720p or 1080p MP4 from Photos and try again.",
+      );
+    }
+
+    const maxDurationSec = settings.maxDurationSec;
+    if (
+      maxDurationSec !== null &&
+      (await exceedsMaxDuration(file, maxDurationSec))
+    ) {
+      throw new Error(
+        `That clip is still too long after compression. Export a clip under ${formatMaxDuration(maxDurationSec)} and try again.`,
       );
     }
 
