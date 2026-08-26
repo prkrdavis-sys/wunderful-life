@@ -7,48 +7,48 @@ import { AutoplayLoopVideo } from "@/components/ui/AutoplayLoopVideo";
 import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
 import { HeroEntrance } from "@/components/ui/motion";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
+import { SignatureHalf } from "@/components/ui/BrandLogo";
+import { SectionSurface } from "@/components/ui/SectionSurface";
 import { sectionWallpapers } from "@/lib/plants";
 import { lightOnDarkShadow, sectionText } from "@/lib/sectionText";
 import type { MediaIntrinsicSize, VideoObjectFit } from "@/lib/videos/cover-fit";
 
 const HERO_CREATOR_IMAGE = "/hero/creator-placeholder.png";
 
-function splitPersonName(fullName: string): { first: string; last: string } {
-  const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) {
-    return { first: "Emily", last: "Wunder" };
-  }
-  if (parts.length === 1) {
-    return { first: parts[0], last: "" };
-  }
-  return { first: parts[0], last: parts.slice(1).join(" ") };
-}
-
 type MeasuredMedia = {
   sourceKey: string;
   size: MediaIntrinsicSize;
 };
 
+function HeroForestBelt() {
+  return (
+    <div
+      aria-hidden
+      className="relative z-0 h-14 overflow-hidden sm:h-16"
+    >
+      <SectionSurface tone="forest" motifs="none" />
+    </div>
+  );
+}
+
 function HeroIntro() {
-  const site = useSiteContent();
-  const { first, last } = splitPersonName(site.fullName);
   const reduceMotion = useReducedMotion();
   const creatorInitial = reduceMotion
     ? { opacity: 1, y: 0 }
-    : { opacity: 0, y: "28%" };
+    : { opacity: 0, y: "16%" };
 
   return (
-    <section className="hero-intro relative z-10 isolate min-h-[calc(100svh-var(--site-header-height,4.5rem))] overflow-visible bg-paper">
+    <section className="hero-intro relative z-10 isolate overflow-visible bg-paper">
       <div
         aria-hidden
-        className="hero-intro-silhouettes absolute inset-x-0 bottom-0 z-0 h-[82%]"
+        className="hero-intro-silhouettes absolute inset-x-0 bottom-0 z-0 h-[90%]"
       />
       <div
         aria-hidden
         className="absolute inset-0 z-0 bg-gradient-to-b from-paper via-paper/45 to-transparent"
       />
 
-      <p className="relative z-20 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 pt-6 font-label text-[clamp(0.7rem,1.4vw,0.95rem)] font-medium tracking-[0.16em] text-brown sm:pt-8">
+      <p className="relative z-20 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 pt-4 font-label text-[clamp(0.7rem,1.4vw,0.95rem)] font-medium tracking-[0.16em] text-brown sm:pt-5">
         <span>UGC</span>
         <span aria-hidden className="text-sage-deep">
           |
@@ -60,51 +60,66 @@ function HeroIntro() {
         <span>marketing</span>
       </p>
 
-      <h1 className="pointer-events-none absolute bottom-0 left-0 z-10 max-w-[92%] px-4 pb-2 text-left leading-[0.78] tracking-[-0.04em] sm:max-w-[80%] sm:px-7 sm:pb-3 lg:max-w-[72%] lg:px-10 lg:pb-4">
-        <span className="block font-serif text-[clamp(2.6rem,8vw,5.75rem)] text-sage-deep">
-          Creative
-        </span>
-        <span className="-mt-1 block font-cooper text-[clamp(3.4rem,14vw,9.5rem)] text-forest uppercase">
-          Portfolio
-        </span>
-      </h1>
+      <div className="relative z-20 mx-auto flex w-full max-w-6xl items-center justify-center gap-[clamp(0.35rem,1.4vw,1.1rem)] px-3 pb-7 pt-1 sm:px-6 sm:pb-8">
+        <div
+          aria-hidden
+          className="w-[min(27vw,10.25rem)] shrink-0 sm:w-[11.5rem] lg:w-[13rem]"
+        >
+          <SignatureHalf
+            side="first"
+            alt=""
+            sizes="(min-width: 1024px) 13rem, 27vw"
+            className="w-full"
+          />
+        </div>
 
-      <p className="pointer-events-none absolute inset-x-3 top-[22%] z-20 flex items-start justify-between sm:inset-x-[7%] sm:top-[26%] lg:inset-x-[9%] lg:top-[28%]">
-        <span className="font-signature pb-1 text-[clamp(2.35rem,5.6vw,4.6rem)] leading-[1.15] text-forest">
-          {first}
-        </span>
-        {last ? (
-          <span className="font-signature pb-1 text-right text-[clamp(2.35rem,5.6vw,4.6rem)] leading-[1.15] text-forest">
-            {last}
-          </span>
-        ) : null}
-      </p>
-
-      <motion.div
-        initial={creatorInitial}
-        animate={{ opacity: 1, y: 0 }}
-        transition={
-          reduceMotion
-            ? { duration: 0 }
-            : {
-                duration: 1.15,
-                delay: 0.18,
-                ease: [0.22, 1, 0.36, 1],
-              }
-        }
-        className="pointer-events-none absolute inset-x-0 bottom-[-7rem] z-20 flex justify-center will-change-transform sm:bottom-[-10rem] lg:bottom-[-13rem]"
-      >
-        <div className="relative h-[28rem] w-[min(68vw,21rem)] sm:h-[34rem] sm:w-[min(48vw,27rem)] lg:h-[40rem] lg:w-[min(36vw,32rem)]">
+        <motion.div
+          initial={creatorInitial}
+          animate={{ opacity: 1, y: 0 }}
+          transition={
+            reduceMotion
+              ? { duration: 0 }
+              : {
+                  duration: 1.15,
+                  delay: 0.18,
+                  ease: [0.22, 1, 0.36, 1],
+                }
+          }
+          className="relative z-10 -mb-10 h-[22rem] w-[min(52vw,16.5rem)] shrink-0 will-change-transform sm:-mb-12 sm:h-[26rem] sm:w-[19.5rem] lg:-mb-14 lg:h-[30rem] lg:w-[22.5rem]"
+        >
           <Image
             src={HERO_CREATOR_IMAGE}
             alt="Emily and her partner smiling together"
             fill
             priority
-            sizes="(min-width: 1024px) 32rem, (min-width: 640px) 27rem, 68vw"
+            sizes="(min-width: 1024px) 22.5rem, (min-width: 640px) 19.5rem, 52vw"
             className="object-contain object-bottom"
           />
+        </motion.div>
+
+        <div
+          aria-hidden
+          className="w-[min(32vw,12.25rem)] shrink-0 sm:w-[13.5rem] lg:w-[15.5rem]"
+        >
+          <SignatureHalf
+            side="last"
+            alt=""
+            sizes="(min-width: 1024px) 15.5rem, 32vw"
+            className="w-full"
+          />
         </div>
-      </motion.div>
+
+        <h1 className="pointer-events-none absolute bottom-0 left-0 z-30 max-w-[92%] px-4 pb-1 text-left leading-[0.78] tracking-[-0.04em] sm:max-w-[80%] sm:px-7 sm:pb-2 lg:max-w-[72%] lg:px-10">
+          <span className="block font-serif text-[clamp(2.1rem,7vw,4.6rem)] text-sage-deep">
+            Creative
+          </span>
+          <span className="-mt-1 block font-cooper text-[clamp(2.7rem,12vw,7.5rem)] text-forest uppercase">
+            Portfolio
+          </span>
+        </h1>
+      </div>
+
+      <HeroForestBelt />
     </section>
   );
 }
@@ -173,7 +188,7 @@ function HeroVideoSection() {
   const videoFit: VideoObjectFit = isPortraitVideo ? "contain" : "cover";
 
   return (
-    <section className="relative z-20 grid w-full grid-cols-1 overflow-hidden">
+    <section className="relative z-0 grid w-full grid-cols-1 overflow-hidden">
       {/*
         In-flow sizer stacked with the copy. Portrait clips set aspect-ratio
         so the hero grows with the frame instead of cropping top and bottom.

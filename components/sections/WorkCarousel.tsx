@@ -3,7 +3,6 @@
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { DeferredMount } from "@/components/ui/DeferredMount";
-import { AccentSection } from "@/components/ui/AccentSection";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { PhoneMarquee } from "@/components/phone/PhoneMarquee";
 import { SectionSurface } from "@/components/ui/SectionSurface";
@@ -17,7 +16,7 @@ type WorkCarouselProps = {
   featuredVideos: PortfolioVideo[];
 };
 
-/** Forest title section plus the featured phone carousel below. */
+/** Featured phone carousel with a forest title panel on the sage wash. */
 export function WorkCarousel({ featuredVideos }: WorkCarouselProps) {
   const site = useSiteContent();
   const visibleVideos = uniqueVideosById(featuredVideos);
@@ -25,39 +24,42 @@ export function WorkCarousel({ featuredVideos }: WorkCarouselProps) {
   if (visibleVideos.length === 0) return null;
 
   return (
-    <>
-      <AccentSection>
-        <AdminEditButton target="portfolio" label="Edit videos" tone="light" />
-        <SectionReveal className="relative z-10 mx-auto max-w-4xl">
-          <h2 className="font-script text-4xl leading-tight text-balance text-paper sm:text-6xl">
-            {site.work.heading}
-          </h2>
-        </SectionReveal>
-      </AccentSection>
+    <div className="relative min-h-[28rem] overflow-hidden pt-8 pb-16 sm:min-h-[32rem] sm:pt-10 sm:pb-20">
+      <SectionSurface tone="sage" motifs="scatter" />
+      <SectionButterfly flight="workBand" />
+      <SectionButterfly flight="workMarquee" />
+      <AdminEditButton target="portfolio" label="Edit videos" />
 
-      <div className="relative min-h-[28rem] overflow-hidden pt-10 pb-16 sm:min-h-[32rem] sm:pt-12 sm:pb-20">
-        <SectionSurface tone="sage" motifs="scatter" />
-        <SectionButterfly flight="workBand" />
-        <SectionButterfly flight="workMarquee" />
-        <div className="relative z-10">
-          <DeferredMount className="min-h-[24rem] sm:min-h-[28rem]">
-            <PhoneMarquee
-              videos={visibleVideos}
-              emptyClassName={sectionText.work.empty}
-              captionClasses={sectionText.work.caption}
-            />
-          </DeferredMount>
-        </div>
+      <div className="relative z-10">
+        <SectionReveal className="mx-auto mb-8 w-fit max-w-[calc(100%-2rem)] sm:mb-10">
+          <div className="relative overflow-hidden rounded-[2rem] px-7 py-3.5 text-center shadow-[0_12px_32px_rgba(35,57,42,0.18)] sm:px-10 sm:py-4">
+            <SectionSurface tone="forest" motifs="none" />
+            <h2
+              id="work-heading"
+              className="relative z-10 font-script pb-1 text-3xl leading-[1.15] text-balance text-paper sm:text-5xl"
+            >
+              {site.work.heading}
+            </h2>
+          </div>
+        </SectionReveal>
+
+        <DeferredMount className="min-h-[24rem] sm:min-h-[28rem]">
+          <PhoneMarquee
+            videos={visibleVideos}
+            emptyClassName={sectionText.work.empty}
+            captionClasses={sectionText.work.caption}
+          />
+        </DeferredMount>
 
         <SectionReveal
           delay={0.15}
-          className="relative z-10 mt-10 flex justify-center"
+          className="mt-10 flex justify-center"
         >
           <AnimatedButton href="/work" variant="primary">
             See All of {site.name}&apos;s Work
           </AnimatedButton>
         </SectionReveal>
       </div>
-    </>
+    </div>
   );
 }

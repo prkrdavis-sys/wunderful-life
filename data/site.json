@@ -227,7 +227,7 @@
         "value": "10k"
       }
     ],
-    "visible": false
+    "visible": true
   },
   "ugcBenefits": {
     "stats": [

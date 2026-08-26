@@ -5,16 +5,10 @@ import Image from "next/image";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { useAdminView, useSiteContent } from "@/components/admin/AdminViewProvider";
 import { AutoplayLoopVideo } from "@/components/ui/AutoplayLoopVideo";
-import { BrandLogo } from "@/components/ui/BrandLogo";
+import { BrandLogo, SIGNATURE } from "@/components/ui/BrandLogo";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { SectionSurface } from "@/components/ui/SectionSurface";
 import { SectionReveal } from "@/components/ui/motion";
-
-const SIGNATURE = {
-  src: "/brand/emily-wunden-signature.png",
-  width: 992,
-  height: 292,
-} as const;
 
 function InstagramIcon() {
   return (
