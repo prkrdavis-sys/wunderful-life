@@ -13,7 +13,6 @@ import { videoUploadHelp } from "@/lib/videos/compress-settings";
 import { assetDisplayName } from "@/lib/files";
 import { toErrorMessage } from "@/lib/errors";
 import { readResponseJson } from "@/lib/http/json";
-import { isVercelBlobUrl } from "@/lib/storage/blob";
 import { AutoResizeTextarea } from "@/components/admin/AutoResizeTextarea";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { FileUploadButton } from "@/components/ui/FileUploadButton";
@@ -548,9 +547,7 @@ export function VideoForm({
         {initial?.videoPath && !videoFile && !isMediaUploadBusy(videoUpload) && (
           <p className="flex max-w-full items-start gap-1.5 rounded-full bg-lavender/35 px-2.5 py-1 text-xs font-medium break-words text-ink">
             <span aria-hidden>🌸</span>
-            {isVercelBlobUrl(initial.videoPath)
-              ? "Stored on the old host — re-upload to keep this video cheap to play"
-              : "Live on your site"}
+            Live on your site
           </p>
         )}
       </div>

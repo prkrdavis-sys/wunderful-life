@@ -10,7 +10,10 @@ import {
   PHOTO_KIND_DESCRIPTORS,
   type PhotoKind,
 } from "@/lib/site/photo-slots";
-import { siteVersionFromResponse } from "@/lib/site/response";
+import {
+  siteUpdatedAtFromResponse,
+  siteVersionFromResponse,
+} from "@/lib/site/response";
 import type { SiteContent } from "@/lib/site/types";
 import {
   type VideoSlot,
@@ -32,7 +35,8 @@ function titleCaseNoun(noun: string): string {
 }
 
 export function useSiteEditorController(onSaved?: (site: SiteContent) => void) {
-  const { site, setSite, siteVersion, setSiteVersion } = useAdminView();
+  const { site, setSite, siteVersion, setSiteVersion, setSiteUpdatedAt } =
+    useAdminView();
   const [form, setForm] = useState(site);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -389,6 +393,8 @@ export function useSiteEditorController(onSaved?: (site: SiteContent) => void) {
       setSite(data);
       setForm(data);
       setSiteVersion(siteVersionFromResponse(response));
+      const updatedAt = siteUpdatedAtFromResponse(response);
+      if (updatedAt) setSiteUpdatedAt(updatedAt);
       onSaved?.(data);
       setMessage("Saved.");
     } catch (err) {
@@ -416,6 +422,14 @@ export function useSiteEditorController(onSaved?: (site: SiteContent) => void) {
     removeVideo,
     uploadPhoto,
     removePhoto,
+    applyRestoredSite: (next: SiteContent, version: number, updatedAt?: string) => {
+      setForm(next);
+      setSite(next);
+      setSiteVersion(version);
+      if (updatedAt) setSiteUpdatedAt(updatedAt);
+      setMessage("Restored that earlier save.");
+      setError(null);
+    },
     save,
   };
 }

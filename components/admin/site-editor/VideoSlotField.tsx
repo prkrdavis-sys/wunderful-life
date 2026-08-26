@@ -1,7 +1,6 @@
 import type { RefObject } from "react";
 import { FileUploadButton } from "@/components/ui/FileUploadButton";
 import { UploadProgressBar } from "@/components/ui/UploadProgressBar";
-import { isVercelBlobUrl } from "@/lib/storage/blob";
 import { assetDisplayName } from "@/lib/files";
 import {
   isAcceptedVideoFile,
@@ -80,9 +79,7 @@ export function VideoSlotField({
       )}
       {videoPath && !busy && (
         <LiveOnSiteNote>
-          {isVercelBlobUrl(videoPath)
-            ? "Stored on the old host — re-upload to keep this video cheap to play"
-            : "Live on your site — no Save needed"}
+          Live on your site — no Save needed
         </LiveOnSiteNote>
       )}
     </>

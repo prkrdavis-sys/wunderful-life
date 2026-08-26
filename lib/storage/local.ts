@@ -18,9 +18,14 @@ import {
 import {
   hasSiteDatabaseConfig,
   initializeStoredPortfolioLibrary,
+  listStoredPortfolioLibraryRevisions,
   readStoredPortfolioLibrary,
+  readStoredPortfolioLibraryRevision,
   saveStoredPortfolioLibrary,
+  type ContentRevisionSummary,
+  type StoredPortfolioLibrary,
 } from "./database";
+import { isHostedProduction } from "./runtime";
 import {
   deletePublicMedia,
   hasSupabaseMediaConfig,
@@ -109,6 +114,13 @@ async function readLibraryForWrite(): Promise<LibrarySnapshot> {
     return { videos: normalizeVideos(stored.videos), version: stored.version };
   }
 
+  if (isHostedProduction()) {
+    throw new StorageError(
+      "The video library is missing. Restore it from Supabase history or a backup. Placeholder clips will not be shown.",
+      503,
+    );
+  }
+
   const initialized = await initializeStoredPortfolioLibrary(
     await readVideosFromLocalFile(),
   );
@@ -140,7 +152,7 @@ async function writeVideosFile(
     return;
   }
 
-  if (process.env.VERCEL === "1") {
+  if (isHostedProduction()) {
     throw new StorageError(
       "Video library storage is not configured. Add the Supabase credentials.",
       503,
@@ -384,4 +396,32 @@ export async function reorderVideos(orderedIds: string[]) {
   const reordered = applyOrder(videos, orderedIds);
   await writeVideosFile(reordered, version);
   return reordered;
+}
+
+export async function listPortfolioRevisions(
+  limit = 20,
+): Promise<ContentRevisionSummary[]> {
+  if (!hasSiteDatabaseConfig()) return [];
+  return listStoredPortfolioLibraryRevisions(limit);
+}
+
+export async function restorePortfolioRevision(
+  version: number,
+): Promise<StoredPortfolioLibrary> {
+  if (!hasSiteDatabaseConfig()) {
+    throw new StorageError(
+      "History restore is available after the site is connected to Supabase.",
+      503,
+    );
+  }
+
+  const current = await readStoredPortfolioLibrary();
+  if (!current) {
+    throw new StorageError("The video library is missing.", 503);
+  }
+
+  const videos = normalizeVideos(
+    await readStoredPortfolioLibraryRevision(version),
+  );
+  return saveStoredPortfolioLibrary(videos, current.version);
 }

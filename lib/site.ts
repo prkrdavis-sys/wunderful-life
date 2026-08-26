@@ -4,10 +4,17 @@ import {
   PUBLIC_REVALIDATE_SECONDS,
   SITE_CACHE_TAG,
 } from "@/lib/cache/public";
+import { hasSiteDatabaseConfig } from "@/lib/storage/database";
+import { isHostedProduction, type ContentStoreSource } from "@/lib/storage/runtime";
 import {
   readBundledSiteRecord,
   readSiteRecord,
 } from "@/lib/storage/site";
+import type { StoredSiteContent } from "@/lib/storage/database";
+
+export type PublicSiteRecord = StoredSiteContent & {
+  source: ContentStoreSource;
+};
 
 const loadCachedSiteRecord = unstable_cache(
   async () => readSiteRecord(),
@@ -18,15 +25,29 @@ const loadCachedSiteRecord = unstable_cache(
   },
 );
 
+function withSource(record: StoredSiteContent): PublicSiteRecord {
+  return {
+    ...record,
+    source: hasSiteDatabaseConfig() ? "database" : "local-file",
+  };
+}
+
 export const getSiteContentRecord = cache(async function getSiteContentRecord() {
   try {
-    return await loadCachedSiteRecord();
+    return withSource(await loadCachedSiteRecord());
   } catch (error) {
+    if (isHostedProduction()) {
+      console.error("Site content store unavailable.", error);
+      throw error;
+    }
     console.error(
-      "Site content store unavailable; serving bundled fallback.",
+      "Site content store unavailable; serving local files.",
       error,
     );
-    return readBundledSiteRecord();
+    return {
+      ...(await readBundledSiteRecord()),
+      source: "local-file" as const,
+    };
   }
 });
 

@@ -13,7 +13,9 @@ export async function GET() {
   try {
     const record = await readSiteRecord();
     return NextResponse.json(record.content, {
-      headers: siteResponseHeaders(record.version),
+      headers: siteResponseHeaders(record.version, {
+        updatedAt: record.updatedAt,
+      }),
     });
   } catch (error) {
     if (error instanceof StorageError) {

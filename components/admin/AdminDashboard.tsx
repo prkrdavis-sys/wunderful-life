@@ -7,6 +7,7 @@ import { sortVideos, uniqueVideosById } from "@/lib/videos/sort";
 import { confirmLeaveDuringUpload } from "@/lib/admin/uploadGuard";
 import { VideoForm } from "@/components/admin/VideoForm";
 import { VideoList } from "@/components/admin/VideoList";
+import { RevisionHistory } from "@/components/admin/RevisionHistory";
 
 type AdminDashboardProps = {
   initialVideos: PortfolioVideo[];
@@ -151,6 +152,17 @@ export function AdminDashboard({
                 videos={videos}
                 onEdit={handleEdit}
                 onChange={commitVideos}
+              />
+              <RevisionHistory<PortfolioVideo[]>
+                endpoint="/api/videos/revisions"
+                confirmLabel={(revision) =>
+                  `Restore the video library to version ${revision.version} from ${new Date(revision.createdAt).toLocaleString()}? Your current library stays in history.`
+                }
+                emptyHint="History appears after this site is connected to Supabase."
+                onRestored={(next) => {
+                  commitVideos(next);
+                  router.refresh();
+                }}
               />
             </section>
           ) : (

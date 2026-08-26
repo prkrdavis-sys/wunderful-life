@@ -4,6 +4,7 @@ import {
   PUBLIC_REVALIDATE_SECONDS,
   VIDEOS_CACHE_TAG,
 } from "@/lib/cache/public";
+import { isHostedProduction } from "@/lib/storage/runtime";
 import { listVideos, readBundledPortfolioVideos } from "@/lib/storage/local";
 
 const loadCachedVideos = unstable_cache(
@@ -19,8 +20,12 @@ export const getVideos = cache(async function getVideos() {
   try {
     return await loadCachedVideos();
   } catch (error) {
+    if (isHostedProduction()) {
+      console.error("Video library store unavailable.", error);
+      throw error;
+    }
     console.error(
-      "Video library store unavailable; serving bundled fallback.",
+      "Video library store unavailable; serving local files.",
       error,
     );
     return readBundledPortfolioVideos();

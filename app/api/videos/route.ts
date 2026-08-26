@@ -15,8 +15,19 @@ function revalidateVideoPages() {
 }
 
 export async function GET() {
-  const videos = await listVideos();
-  return NextResponse.json(videos, { headers: VIDEO_LIST_HEADERS });
+  try {
+    const videos = await listVideos();
+    return NextResponse.json(videos, { headers: VIDEO_LIST_HEADERS });
+  } catch (error) {
+    if (error instanceof StorageError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    console.error(error);
+    return NextResponse.json(
+      { error: "Failed to load the video library." },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(request: Request) {

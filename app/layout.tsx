@@ -100,7 +100,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { content: site, version: siteVersion } = await getSiteContentRecord();
+  const record = await getSiteContentRecord();
+  const { content: site, version: siteVersion } = record;
   const initialAuthRequired = isAdminAuthRequired();
 
   return (
@@ -120,6 +121,8 @@ export default async function RootLayout({
         <AppProviders
           initialSite={site}
           initialSiteVersion={siteVersion}
+          initialSiteUpdatedAt={record.updatedAt}
+          initialContentStore={record.source}
           initialAuthenticated={false}
           initialAuthRequired={initialAuthRequired}
         >

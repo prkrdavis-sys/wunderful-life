@@ -1,190 +1,253 @@
 {
-  "fullName": "Emily Wunder",
-  "name": "Emily",
-  "brand": "Wunderful Life",
-  "tagline": "Creative, nature-loving UGC — airy visuals, real personality, content that feels like you already know me.",
   "hero": {
-    "subtitle": "I'm Emily — the face behind the frame. Brands hire me for deliverables; they remember me for the personality.",
-    "videoPath": "/uploads/hero/hero-0ada399a-9d56-4f56-81cb-c5afb7008c6a.mp4"
+    "subtitle": "Aesthetic lifestyle, travel & fitness content that is relatable, informative, and fun! ",
+    "videoPath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/hero/e7b836fc-d5c1-4091-8e4d-87f04000a51d.mp4"
   },
-  "statsBanner": {
-    "visible": true,
-    "items": [
-      {
-        "id": "instagram",
-        "value": "10k",
-        "label": "Instagram"
-      },
-      {
-        "id": "tiktok",
-        "value": "9k",
-        "label": "Tiktok"
-      },
-      {
-        "id": "reach",
-        "value": "300k",
-        "label": "Avg. Reach"
-      },
-      {
-        "id": "engagement",
-        "value": "9.5%",
-        "label": "Avg. Engagement"
-      }
-    ]
-  },
-  "about": {
-    "headline": "About Me",
-    "galleryHeading": "A little more Emily",
-    "paragraphs": [
-      "Hi, I'm Emily — a UGC creator who turns everyday moments into scroll-stopping content. I specialize in warm, relatable storytelling that helps brands connect with real people.",
-      "My work is organic, aesthetic, and a little whimsical: plants on the desk, golden-hour light, handwritten notes in frame. I want viewers to feel your brand and meet the human behind the camera — me.",
-      "Based in the DC area, I love collaborating with wellness, lifestyle, and purpose-driven brands that care about authenticity as much as aesthetics."
-    ],
-    "photos": [
-      {
-        "id": "portrait-main",
-        "caption": "I love the outdoors",
-        "rotate": -3,
-        "imagePath": "/about-photos/portrait-main-3f704aaf-7b62-4d22-af40-32bf7c7d078c.png"
-      },
-      {
-        "id": "creator-desk",
-        "caption": "I'm also a fairy princess",
-        "rotate": 4,
-        "imagePath": "/about-photos/creator-desk-02960e91-5572-45f9-85ad-870acd81e15d.png"
-      },
-      {
-        "id": "outdoors",
-        "caption": "Emily on a nature walk — where ideas bloom",
-        "rotate": -5,
-        "imagePath": "/about-photos/outdoors-6f2b672b-7355-48bc-a798-a82e1b5984d6.png"
-      },
-      {
-        "id": "filming",
-        "caption": "Emily filming UGC — behind the scenes",
-        "rotate": 2,
-        "imagePath": "/about-photos/filming-c44dcede-eefc-4714-8107-fbeb2b7a7262.png"
-      },
-      {
-        "id": "candid",
-        "caption": "Emily candid — personality over perfection",
-        "rotate": -2,
-        "imagePath": "/about-photos/candid-104bf6ba-b0ce-473a-ad48-343518136b3b.png"
-      },
-      {
-        "id": "ugc-moment",
-        "caption": "New UGC moment — upload Emily's fourth gallery photo here",
-        "rotate": 3
-      }
-    ]
-  },
+  "name": "Emily",
   "work": {
     "heading": "My most recent videos"
   },
-  "photography": {
-    "label": "photography",
+  "about": {
     "photos": [
       {
-        "id": "collage-1",
-        "alt": "Photography collage image 1",
-        "shape": "tall"
+        "id": "portrait-main",
+        "rotate": -3,
+        "caption": "Hard at work.",
+        "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/about-photos/4eed26e1-ff0d-4ae3-b187-af055fe150df.jpg"
       },
       {
-        "id": "collage-2",
-        "alt": "Photography collage image 2",
-        "shape": "square"
+        "id": "creator-desk",
+        "rotate": 4,
+        "caption": "Vineyard frolic ",
+        "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/about-photos/ff378780-2754-4754-84cf-0cf74e798180.jpg"
       },
       {
-        "id": "collage-3",
-        "alt": "Photography collage image 3",
-        "shape": "square"
+        "id": "outdoors",
+        "rotate": -5,
+        "caption": "Chasing waterfalls! ",
+        "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/about-photos/1a546ab3-31ce-4617-ae5e-74d93e23da9a.jpg"
       },
       {
-        "id": "collage-4",
-        "alt": "Photography collage image 4",
-        "shape": "wide"
+        "id": "filming",
+        "rotate": 2,
+        "caption": "Chai break :)",
+        "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/about-photos/faa0baa9-9ed9-4aa6-8884-84290419cd14.jpg"
       },
       {
-        "id": "collage-5",
-        "alt": "Photography collage image 5",
-        "shape": "square"
+        "id": "candid",
+        "rotate": -2,
+        "caption": "I love animals! ",
+        "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/about-photos/0dae8cf2-bab3-453d-bb9c-2e2235b60bd1.jpg"
       },
       {
-        "id": "collage-6",
-        "alt": "Photography collage image 6",
-        "shape": "tall"
-      },
-      {
-        "id": "collage-7",
-        "alt": "Photography collage image 7",
-        "shape": "wide"
-      },
-      {
-        "id": "collage-8",
-        "alt": "Photography collage image 8",
-        "shape": "square"
-      },
-      {
-        "id": "collage-9",
-        "alt": "Photography collage image 9",
-        "shape": "square"
-      },
-      {
-        "id": "collage-10",
-        "alt": "Photography collage image 10",
-        "shape": "tall"
+        "id": "ugc-moment",
+        "rotate": 3,
+        "caption": "Adventure together?",
+        "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/about-photos/0fab0872-4739-43a2-9384-937643028e0a.jpg"
       }
-    ]
+    ],
+    "headline": "About Me",
+    "paragraphs": [
+      "Hi, I'm Emily — a UGC creator who turns everyday moments into scroll-stopping content! I specialize in relatable storytelling that helps brands connect with real people.",
+      "I love collaborating with wellness, travel, lifestyle, and purpose-driven brands that care about authenticity as much as aesthetics. ",
+      "I have been working and living in the DC area for the past 3 years, but will be traveling around the world and working for myself as of September! "
+    ],
+    "galleryHeading": "My vibe"
   },
+  "brand": "Wunderful Life",
   "brands": {
-    "visible": true,
-    "heading": "Brands I've worked with",
     "items": [
       {
         "id": "brand-1",
-        "name": "Brand 1"
+        "url": "www.fryingpan.com",
+        "name": "Nike",
+        "logoPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/brand-logos/brand-1-e35179aa-5979-4d74-925b-036127e4158f.png"
       },
       {
         "id": "brand-2",
-        "name": "Brand 2"
+        "name": "District Tattoo",
+        "logoPath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/brand-logos/d709e0d6-1777-43c6-93d4-a1baabe37642.jpg"
       },
       {
         "id": "brand-3",
-        "name": "Brand 3"
+        "name": "Brand 3",
+        "logoPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/brand-logos/brand-3-e0f29c2b-8694-4944-b618-567069a8794e.png"
       },
       {
         "id": "brand-4",
         "name": "Brand 4"
       }
+    ],
+    "heading": "Brands I've worked with",
+    "visible": true
+  },
+  "social": {
+    "email": "mailto:hello@wunderfulife.com",
+    "instagram": "#https://www.instagram.com/wunderfull.life777/"
+  },
+  "tagline": "Content that is relatable, informative, and fun! ",
+  "fullName": "Emily Wunder",
+  "services": [
+    {
+      "id": "tiktok-reels",
+      "title": "TikTok & Reels",
+      "description": "Short-form vertical video with strong hooks, trending audios, and natural energy."
+    },
+    {
+      "id": "instagram",
+      "title": "Instagram Content",
+      "description": "Static posts, carousels, and stories with an aesthetic look and authentic feel."
+    },
+    {
+      "id": "testimonial",
+      "title": "Photography ",
+      "description": "I also specialize in photography! Let me help you capture your brand through photos."
+    },
+    {
+      "id": "unboxing",
+      "title": "Content Strategy",
+      "description": "If you need more than a few videos for your page, consider working with me on social media management and strategies. "
+    }
+  ],
+  "heroLinks": [
+    {
+      "href": "/#about",
+      "label": "About Me"
+    },
+    {
+      "href": "/work",
+      "label": "My Work",
+      "emphasis": "primary",
+      "activePathPrefix": "/work"
+    },
+    {
+      "href": "/#services",
+      "label": "Services"
+    },
+    {
+      "href": "/#ugc",
+      "label": "Why UGC"
+    },
+    {
+      "href": "/#contact",
+      "label": "Contact"
+    }
+  ],
+  "whatIsUgc": {
+    "body": "UGC, or user-generated content, is brand content made to feel like it came from a real customer, or everyday experience! It blends strategy with natural storytelling, helping people understand how a product fits into real life without feeling like a traditional ad.",
+    "heading": "What Is UGC?"
+  },
+  "closingCta": {
+    "body": "Want content that converts and a creator that brands actually want to work with again? Let's chat!",
+    "headline": "Let's work together",
+    "videoPath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/cta/de78f0e7-0f26-49a8-b0b1-ac122ffa3e77.mp4",
+    "emailLabel": "hello@wunderfulife.com"
+  },
+  "photography": {
+    "label": "Photography",
+    "photos": [
+      {
+        "id": "collage-1",
+        "alt": "Photography collage image 1",
+        "shape": "square",
+        "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/home-grid-photos/2bf4b0c7-7224-4196-85e6-fa7b63378ebb.jpg"
+      },
+      {
+        "id": "collage-2",
+        "alt": "Photography collage image 2",
+        "shape": "tall",
+        "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/home-grid-photos/ec42ff05-413f-4880-8a19-095f80d12225.jpg"
+      },
+      {
+        "id": "collage-3",
+        "alt": "Photography collage image 3",
+        "shape": "square",
+        "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/home-grid-photos/023e99ef-7d40-42cc-bad3-0d386966d2c5.jpg"
+      },
+      {
+        "id": "collage-4",
+        "alt": "Photography collage image 4",
+        "shape": "tall",
+        "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/home-grid-photos/e6795b6a-da3b-4acb-a2fc-cd96388f89f5.jpg"
+      },
+      {
+        "id": "collage-7",
+        "alt": "Photography collage image 7",
+        "shape": "tall",
+        "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/home-grid-photos/a9f9e73c-7aa4-4fbd-bb57-9f676a2f5b96.jpg"
+      },
+      {
+        "id": "collage-9",
+        "alt": "Photography collage image 9",
+        "shape": "square",
+        "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/home-grid-photos/9ccab513-f264-4add-ba20-89638039f937.jpg"
+      },
+      {
+        "id": "collage-8",
+        "alt": "Photography collage image 8",
+        "shape": "square",
+        "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/home-grid-photos/15177cf9-0715-42a8-8182-ff09d2206f47.jpg"
+      },
+      {
+        "id": "collage-6",
+        "alt": "Photography collage image 6",
+        "shape": "tall",
+        "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/home-grid-photos/eb1a18dc-9227-48f2-a079-a007bfac4956.jpg"
+      },
+      {
+        "id": "collage-5",
+        "alt": "Photography collage image 5",
+        "shape": "square",
+        "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/home-grid-photos/2ffee7bd-b37b-4306-90d8-4aee21976c84.jpg"
+      },
+      {
+        "id": "collage-10",
+        "alt": "Photography collage image 10",
+        "shape": "square",
+        "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/home-grid-photos/982be942-ebfe-412c-a464-8b1d7b8657a9.jpg"
+      },
+      {
+        "id": "collage-wf8aa2",
+        "alt": "Photography collage image",
+        "shape": "square",
+        "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/home-grid-photos/24284b65-4181-4cf6-ae9c-01fd5cc0a16c.jpg"
+      }
     ]
   },
-  "whatIsUgc": {
-    "heading": "What Is UGC?",
-    "body": "UGC, or user-generated content, is brand content made to feel like it came from a real customer, creator, or everyday experience. It blends strategy with natural storytelling, helping people understand how a product fits into real life without feeling like a traditional ad."
+  "statsBanner": {
+    "items": [
+      {
+        "id": "instagram",
+        "label": "Instagram",
+        "value": "2k"
+      },
+      {
+        "id": "reach",
+        "label": "Avg. Reach",
+        "value": "10k"
+      }
+    ],
+    "visible": false
   },
   "ugcBenefits": {
-    "eyebrow": "The power of real stories",
     "stats": [
       {
         "id": "authentic",
-        "value": "2.4×",
-        "label": "more likely to feel authentic"
+        "label": "more likely to be viewed as authentic",
+        "value": "2.4×"
       },
       {
         "id": "trustworthy",
-        "value": "73%",
-        "label": "say UGC builds brand trust"
+        "label": "of shoppers say UGC makes a brand feel more trustworthy",
+        "value": "73%"
       },
       {
         "id": "influences",
-        "value": "79%",
-        "label": "say UGC influences what they buy"
+        "label": "of people say UGC strongly influences what they buy",
+        "value": "79%"
       }
     ],
-    "calloutLabel": "Did you know?",
-    "calloutValue": "93%",
-    "calloutBody": "of marketers say authentic content performs better than traditional brand-made content.",
-    "benefitsHeading": "Content that feels like a recommendation.",
+    "eyebrow": "The power of real stories",
     "benefits": [
       "Builds trust with real stories",
       "Creates natural engagement",
@@ -192,84 +255,29 @@
       "Makes your brand feel human",
       "Authentic by design — the product lives in a believable moment",
       "Ready for organic social, paid ads, product pages, and launches"
-    ]
-  },
-  "heroLinks": [
-    {
-      "label": "About Me",
-      "href": "/#about"
-    },
-    {
-      "label": "My Work",
-      "href": "/work",
-      "emphasis": "primary",
-      "activePathPrefix": "/work"
-    },
-    {
-      "label": "Services",
-      "href": "/#services"
-    },
-    {
-      "label": "Why UGC",
-      "href": "/#ugc"
-    },
-    {
-      "label": "Contact",
-      "href": "/#contact"
-    }
-  ],
-  "closingCta": {
-    "headline": "Let's work together",
-    "body": "Want content that converts and a creator brands actually want to work with again? Hi — I'm Emily. Let's chat.",
-    "emailLabel": "hello@wunderfulife.com",
-    "videoPath": "/uploads/cta/cta-a154203e-36d1-4ad5-832a-f15e3adb85b9.mp4"
-  },
-  "social": {
-    "instagram": "#https://www.instagram.com/wunderfull.life777/",
-    "email": "mailto:hello@wunderfulife.com"
-  },
-  "services": {
-    "heading": "Services",
-    "items": [
-      {
-        "id": "tiktok-reels",
-        "title": "TikTok & Reels",
-        "description": "Short-form vertical video with strong hooks, trending audio, and that effortless Emily energy brands remember."
-      },
-      {
-        "id": "instagram",
-        "title": "Instagram Content",
-        "description": "Static posts, carousels, and Stories with an airy, nature-driven look that still converts."
-      },
-      {
-        "id": "testimonial",
-        "title": "Testimonials",
-        "description": "Talking-head UGC that builds trust — warm, honest, and unmistakably me on camera."
-      },
-      {
-        "id": "unboxing",
-        "title": "Unboxing & Demos",
-        "description": "Product-first content with creative girl charm — polished enough for ads, real enough to relate."
-      }
-    ]
+    ],
+    "calloutBody": "of marketers say authentic content performs better than traditional brand-made content.",
+    "calloutLabel": "Did you know?",
+    "calloutValue": "93%",
+    "benefitsHeading": "Content that feels like a recommendation."
   },
   "testimonials": {
-    "visible": true,
-    "heading": "Kind Words",
     "intro": "A few example notes to show how client feedback can live here once Emily starts collecting testimonials.",
     "items": [
       {
         "id": "warm-natural",
-        "quote": "Emily brought such a warm, natural presence to the content. The video felt polished without losing that real-life charm.",
         "name": "Sample Brand Partner",
-        "role": "Lifestyle campaign"
+        "role": "Lifestyle campaign",
+        "quote": "Emily brought such a warm, natural presence to the content. The video felt polished without losing that real-life charm."
       },
       {
         "id": "easy-collaboration",
-        "quote": "The creative direction was thoughtful, on-brand, and easy to use across our social channels.",
         "name": "Example Client",
-        "role": "Wellness launch"
+        "role": "Wellness launch",
+        "quote": "The creative direction was thoughtful, on-brand, and easy to use across our social channels."
       }
-    ]
+    ],
+    "heading": "Testimonials ",
+    "visible": true
   }
 }

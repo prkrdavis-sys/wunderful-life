@@ -3,15 +3,41 @@
 import { useAdminView } from "@/components/admin/AdminViewProvider";
 import { EditorPanelIcon } from "@/components/ui/EditorPanelIcon";
 
+function formatSavedAt(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime()) || date.getTime() === 0) {
+    return "not yet saved to the database";
+  }
+  return `last saved ${date.toLocaleString()}`;
+}
+
 export function AdminModeBanner() {
-  const { viewMode, setPanelOpen, exitAdminView } = useAdminView();
+  const {
+    viewMode,
+    setPanelOpen,
+    exitAdminView,
+    contentStore,
+    siteVersion,
+    siteUpdatedAt,
+  } = useAdminView();
 
   if (viewMode !== "admin") return null;
+
+  const live = contentStore === "database";
 
   return (
     <div className="relative z-0 border-b border-lavender/35 bg-forest/92 px-4 py-2 text-center text-sm text-paper backdrop-blur-sm">
       <span className="inline-flex flex-wrap items-center justify-center gap-2">
         <span>Admin view is on.</span>
+        <span
+          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+            live ? "bg-paper/20 text-paper" : "bg-blush/80 text-brown"
+          }`}
+        >
+          {live
+            ? `Live from your saved site · v${siteVersion} · ${formatSavedAt(siteUpdatedAt)}`
+            : "Local files only — not the live site"}
+        </span>
         <button
           type="button"
           onClick={() => setPanelOpen(true)}

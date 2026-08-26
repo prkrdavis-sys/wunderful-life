@@ -1,4 +1,3 @@
-import { get } from "@vercel/blob";
 import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
@@ -9,16 +8,16 @@ import {
   videoSlotDescriptor,
 } from "@/lib/site/video-slots";
 import {
-  getUseBlobStorage,
-  SITE_METADATA_BLOB_PATH,
-} from "./blob";
-import {
   hasSiteDatabaseConfig,
   initializeStoredSiteContent,
+  listStoredSiteContentRevisions,
   readStoredSiteContent,
+  readStoredSiteContentRevision,
   saveStoredSiteContent,
+  type ContentRevisionSummary,
   type StoredSiteContent,
 } from "./database";
+import { isHostedProduction } from "./runtime";
 import {
   deletePublicMedia,
   hasSupabaseMediaConfig,
@@ -81,42 +80,6 @@ export async function readBundledSiteRecord(): Promise<StoredSiteContent> {
   };
 }
 
-async function readSiteFromBlob(): Promise<SiteContent | null> {
-  if (!getUseBlobStorage()) return null;
-
-  try {
-    const result = await get(SITE_METADATA_BLOB_PATH, { access: "public" });
-    if (!result || result.statusCode !== 200 || !result.stream) {
-      return null;
-    }
-
-    const text = await new Response(result.stream).text();
-    const parsed = JSON.parse(text) as SiteContent;
-    return isCompleteSiteContent(parsed) ? normalizeSiteContent(parsed) : null;
-  } catch (error) {
-    throw new StorageError(
-      error instanceof Error && error.message
-        ? `Could not load site content from Vercel Blob: ${error.message}`
-        : "Could not load site content from Vercel Blob.",
-      503,
-    );
-  }
-}
-
-async function readLegacySiteContent(): Promise<SiteContent> {
-  const blobSite = await readSiteFromBlob();
-  if (blobSite !== null) return blobSite;
-
-  if (process.env.VERCEL === "1") {
-    throw new StorageError(
-      "Production site content is unavailable. Check the connected Blob store.",
-      503,
-    );
-  }
-
-  return readSiteFromFile();
-}
-
 export async function readSiteRecord(): Promise<StoredSiteContent> {
   if (hasSiteDatabaseConfig()) {
     const stored = await readStoredSiteContent();
@@ -127,17 +90,25 @@ export async function readSiteRecord(): Promise<StoredSiteContent> {
       };
     }
 
-    const legacy = await readLegacySiteContent();
-    const initialized = await initializeStoredSiteContent(legacy);
+    if (isHostedProduction()) {
+      throw new StorageError(
+        "Production site content is missing. Restore it from Supabase history or a backup. Placeholder copy will not be shown.",
+        503,
+      );
+    }
+
+    const initialized = await initializeStoredSiteContent(
+      await readSiteFromFile(),
+    );
     return {
       ...initialized,
       content: normalizeSiteContent(initialized.content),
     };
   }
 
-  if (process.env.VERCEL === "1") {
+  if (isHostedProduction()) {
     throw new StorageError(
-      "Production site content storage is not configured. Add the transactional database credentials.",
+      "Production site content storage is not configured. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
       503,
     );
   }
@@ -334,7 +305,7 @@ export async function uploadAboutPhoto(
   return setPhotoImagePath(photoId, imagePath, "about", expectedVersion);
 }
 
-/** Production path: the file was client-uploaded to Blob; persist its URL. */
+/** Production path: the file was client-uploaded to Supabase; persist its URL. */
 export async function setAboutPhotoUrl(
   photoId: string,
   url: string,
@@ -575,7 +546,7 @@ export async function uploadCollagePhoto(
   return setPhotoImagePath(photoId, imagePath, "collage", expectedVersion);
 }
 
-/** Production path: the file was client-uploaded to Blob; persist its URL. */
+/** Production path: the file was client-uploaded to Supabase; persist its URL. */
 export async function setCollagePhotoUrl(
   photoId: string,
   url: string,
@@ -624,7 +595,7 @@ export async function uploadBrandLogo(
   return setBrandLogoUrl(brandId, logoPath, expectedVersion);
 }
 
-/** Production path: the file was client-uploaded to Blob; persist its URL. */
+/** Production path: the file was client-uploaded to Supabase; persist its URL. */
 export async function setBrandLogoUrl(
   brandId: string,
   logoPath: string,
@@ -688,4 +659,31 @@ export async function clearBrandLogo(
     await deleteStoredPhoto(current.logoPath);
   }
   return site;
+}
+
+export async function listSiteContentRevisions(
+  limit = 20,
+): Promise<ContentRevisionSummary[]> {
+  if (!hasSiteDatabaseConfig()) return [];
+  return listStoredSiteContentRevisions(limit);
+}
+
+export async function restoreSiteContentRevision(
+  version: number,
+  expectedVersion: number,
+): Promise<StoredSiteContent> {
+  if (!hasSiteDatabaseConfig()) {
+    throw new StorageError(
+      "History restore is available after the site is connected to Supabase.",
+      503,
+    );
+  }
+
+  const content = normalizeSiteContent(
+    await readStoredSiteContentRevision(version),
+  );
+  if (!isCompleteSiteContent(content)) {
+    throw new StorageError("That saved version is missing required fields.", 400);
+  }
+  return saveStoredSiteContent(content, expectedVersion, "restore");
 }

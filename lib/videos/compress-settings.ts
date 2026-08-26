@@ -1,4 +1,3 @@
-import { MAX_VIDEO_BYTES } from "@/lib/videos/upload";
 import type { VideoUploadProfile } from "@/lib/videos/profile";
 
 export type CompressSettings = {
@@ -24,7 +23,7 @@ export const COMPRESS_SETTINGS: Record<VideoUploadProfile, CompressSettings> = {
     crf: 23,
     stripAudio: true,
     maxDurationSec: 60,
-    skipIfMp4UnderBytes: 20_000_000,
+    skipIfMp4UnderBytes: 8_000_000,
     progressMessage: "Compressing background video (1080p, muted)…",
     bitrate: 4_500_000,
     requireMp4: true,
@@ -34,20 +33,20 @@ export const COMPRESS_SETTINGS: Record<VideoUploadProfile, CompressSettings> = {
     crf: 23,
     stripAudio: false,
     maxDurationSec: null,
-    skipIfMp4UnderBytes: 12_000_000,
+    skipIfMp4UnderBytes: 8_000_000,
     progressMessage: "Compressing looping video (1080p)…",
     bitrate: 5_000_000,
-    requireMp4: false,
+    requireMp4: true,
   },
   portfolio: {
     maxShortEdge: 720,
     crf: 26,
     stripAudio: false,
     maxDurationSec: 120,
-    skipIfMp4UnderBytes: MAX_VIDEO_BYTES,
+    skipIfMp4UnderBytes: 8_000_000,
     progressMessage: "Compressing video for the web…",
     bitrate: 2_500_000,
-    requireMp4: false,
+    requireMp4: true,
   },
 };
 
@@ -72,5 +71,5 @@ export function videoUploadHelp(profile: VideoUploadProfile): string {
     settings.maxDurationSec === null
       ? ""
       : `, including clips up to ${formatMaxDuration(settings.maxDurationSec)} (longer clips are trimmed)`;
-  return `MP4, MOV, and M4V supported${duration}. MP4s already under ${skipMb}MB upload as-is; larger originals are compressed in the browser.`;
+  return `MP4, MOV, and M4V are accepted${duration}. Clips are converted to a web MP4 before they go live. Files already under ${skipMb}MB MP4 may upload as-is.`;
 }

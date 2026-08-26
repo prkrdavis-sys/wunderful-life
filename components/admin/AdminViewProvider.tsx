@@ -11,6 +11,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import type { SiteContent } from "@/lib/site/types";
+import type { ContentStoreSource } from "@/lib/storage/runtime";
 
 export type ViewMode = "regular" | "admin";
 export type SiteEditorSection =
@@ -69,6 +70,9 @@ type AdminViewContextValue = {
   setSite: (site: SiteContent) => void;
   siteVersion: number;
   setSiteVersion: (version: number) => void;
+  siteUpdatedAt: string;
+  setSiteUpdatedAt: (updatedAt: string) => void;
+  contentStore: ContentStoreSource;
 };
 
 const AdminViewContext = createContext<AdminViewContextValue | null>(null);
@@ -77,6 +81,8 @@ type AdminViewProviderProps = {
   children: ReactNode;
   initialSite: SiteContent;
   initialSiteVersion: number;
+  initialSiteUpdatedAt: string;
+  initialContentStore: ContentStoreSource;
   initialAuthenticated: boolean;
   initialAuthRequired: boolean;
 };
@@ -85,6 +91,8 @@ export function AdminViewProvider({
   children,
   initialSite,
   initialSiteVersion,
+  initialSiteUpdatedAt,
+  initialContentStore,
   initialAuthenticated,
   initialAuthRequired,
 }: AdminViewProviderProps) {
@@ -98,6 +106,8 @@ export function AdminViewProvider({
   const [location, setLocation] = useState<EditorLocation>(DEFAULT_LOCATION);
   const [site, setSite] = useState(initialSite);
   const [siteVersion, setSiteVersion] = useState(initialSiteVersion);
+  const [siteUpdatedAt, setSiteUpdatedAt] = useState(initialSiteUpdatedAt);
+  const [contentStore] = useState(initialContentStore);
 
   const refreshSession = useCallback(async () => {
     const response = await fetch("/api/admin/session");
@@ -216,6 +226,9 @@ export function AdminViewProvider({
       setSite,
       siteVersion,
       setSiteVersion,
+      siteUpdatedAt,
+      setSiteUpdatedAt,
+      contentStore,
     }),
     [
       viewMode,
@@ -234,6 +247,9 @@ export function AdminViewProvider({
       refreshSession,
       site,
       siteVersion,
+      siteUpdatedAt,
+      setSiteUpdatedAt,
+      contentStore,
     ],
   );
 

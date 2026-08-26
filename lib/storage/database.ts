@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { describeUnknownError } from "./runtime";
 import { StorageError } from "./types";
 import type { SiteContent } from "@/lib/site/types";
 import type { PortfolioVideo } from "@/lib/videos/types";
@@ -84,10 +85,37 @@ function storageError(error: unknown, fallback: string): StorageError {
       409,
     );
   }
-  return new StorageError(
-    error instanceof Error && error.message ? error.message : fallback,
-    503,
-  );
+  return new StorageError(describeUnknownError(error, fallback), 503);
+}
+
+export type ContentRevisionSummary = {
+  version: number;
+  createdAt: string;
+  updatedBy: string | null;
+};
+
+type SiteRevisionRow = {
+  version: number;
+  created_at: string;
+  updated_by: string | null;
+  content: SiteContent;
+};
+
+type PortfolioRevisionRow = {
+  version: number;
+  created_at: string;
+  updated_by: string | null;
+  videos: PortfolioVideo[];
+};
+
+function toRevisionSummary(
+  row: Pick<SiteRevisionRow, "version" | "created_at" | "updated_by">,
+): ContentRevisionSummary {
+  return {
+    version: row.version,
+    createdAt: row.created_at,
+    updatedBy: row.updated_by,
+  };
 }
 
 export type StoredSiteContent = {
@@ -236,4 +264,84 @@ function unwrapPortfolioRow(
     throw new StorageError("Video library storage returned no record.", 503);
   }
   return row;
+}
+
+export async function listStoredSiteContentRevisions(
+  limit = 20,
+): Promise<ContentRevisionSummary[]> {
+  try {
+    const { data, error } = await getSiteDatabase()
+      .from("site_content_revisions")
+      .select("version, created_at, updated_by")
+      .eq("site_id", "singleton")
+      .order("version", { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return (data ?? []).map((row) => toRevisionSummary(row as SiteRevisionRow));
+  } catch (error) {
+    throw storageError(error, "Could not load site content history.");
+  }
+}
+
+export async function readStoredSiteContentRevision(
+  version: number,
+): Promise<SiteContent> {
+  try {
+    const { data, error } = await getSiteDatabase()
+      .from("site_content_revisions")
+      .select("content, version")
+      .eq("site_id", "singleton")
+      .eq("version", version)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) {
+      throw new StorageError("That site save was not found.", 404);
+    }
+    return (data as SiteRevisionRow).content;
+  } catch (error) {
+    throw storageError(error, "Could not load that site save.");
+  }
+}
+
+export async function listStoredPortfolioLibraryRevisions(
+  limit = 20,
+): Promise<ContentRevisionSummary[]> {
+  try {
+    const { data, error } = await getSiteDatabase()
+      .from("portfolio_library_revisions")
+      .select("version, created_at, updated_by")
+      .eq("library_id", "singleton")
+      .order("version", { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return (data ?? []).map((row) =>
+      toRevisionSummary(row as PortfolioRevisionRow),
+    );
+  } catch (error) {
+    throw storageError(error, "Could not load video library history.");
+  }
+}
+
+export async function readStoredPortfolioLibraryRevision(
+  version: number,
+): Promise<PortfolioVideo[]> {
+  try {
+    const { data, error } = await getSiteDatabase()
+      .from("portfolio_library_revisions")
+      .select("videos, version")
+      .eq("library_id", "singleton")
+      .eq("version", version)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) {
+      throw new StorageError("That video library save was not found.", 404);
+    }
+    return (data as PortfolioRevisionRow).videos;
+  } catch (error) {
+    throw storageError(error, "Could not load that video library save.");
+  }
 }

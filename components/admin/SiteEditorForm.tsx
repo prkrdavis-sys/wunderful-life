@@ -11,6 +11,11 @@ import {
 import { SECTIONS } from "@/components/admin/site-editor/constants";
 import { SiteEditorSectionView } from "@/components/admin/site-editor/SiteEditorSectionView";
 import { useSiteEditorController } from "@/components/admin/site-editor/useSiteEditorController";
+import { RevisionHistory } from "@/components/admin/RevisionHistory";
+import {
+  siteUpdatedAtFromResponse,
+  siteVersionFromResponse,
+} from "@/lib/site/response";
 
 type SiteEditorFormProps = {
   onSaved?: (site: SiteContent) => void;
@@ -25,7 +30,7 @@ export function SiteEditorForm({
   portfolioVideosLoaded = false,
   onUploadBusyChange,
 }: SiteEditorFormProps) {
-  const { location, setEditorSection } = useAdminView();
+  const { location, setEditorSection, siteVersion } = useAdminView();
   const activeSection = location.section;
   const focusedPhotoId =
     location.focus?.kind === "photography-photo" ? location.focus.photoId : null;
@@ -143,6 +148,24 @@ export function SiteEditorForm({
           >
             {editor.loading ? "Saving…" : "Save site content"}
           </AnimatedButton>
+          <div className="mt-3 max-h-56 overflow-y-auto">
+            <RevisionHistory<SiteContent>
+              endpoint="/api/site/revisions"
+              currentVersion={siteVersion}
+              versionHeader="X-Site-Version"
+              confirmLabel={(revision) =>
+                `Restore the site to version ${revision.version} from ${new Date(revision.createdAt).toLocaleString()}? Your current save stays in history.`
+              }
+              emptyHint="History appears after this site is connected to Supabase."
+              onRestored={(next, response) => {
+                editor.applyRestoredSite(
+                  next,
+                  siteVersionFromResponse(response),
+                  siteUpdatedAtFromResponse(response) ?? undefined,
+                );
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>

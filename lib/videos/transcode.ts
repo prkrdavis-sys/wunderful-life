@@ -780,11 +780,10 @@ export type PrepareVideoOptions = {
 };
 
 /**
- * Browser compression is a best-effort optimization, not a requirement. When
- * every strategy fails we still upload the original clip so a save is never
- * blocked by a codec or autoplay quirk in the admin's browser — except
- * profiles that require an MP4 (hero), which phones cannot play as MOV/WebM,
- * and clips that still exceed the profile size or duration cap.
+ * Browser compression is required to produce a web MP4. When every encode
+ * strategy fails we only keep the original if it is already an MP4 under the
+ * size and duration caps. QuickTime / WebM originals are rejected so Chrome
+ * and phones can play the clip.
  */
 export async function prepareVideoForWebUpload(
   file: File,

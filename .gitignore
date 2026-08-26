@@ -42,3 +42,11 @@ next-env.d.ts
 
 # user uploads (local storage v1)
 /public/uploads/
+
+# one-time production repair artifacts
+/scripts/repair-source.json
+/scripts/repair-url-map.json
+/scripts/.env.repair.local
+
+# supabase CLI
+/supabase/.temp/

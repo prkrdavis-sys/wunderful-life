@@ -3,6 +3,12 @@ import type { NextRequest } from "next/server";
 import { ADMIN_COOKIE, canAccessAdmin, isAdminAuthRequired } from "@/lib/auth";
 
 function isProtectedApiRoute(pathname: string, method: string): boolean {
+  if (
+    pathname.startsWith("/api/site/revisions") ||
+    pathname.startsWith("/api/videos/revisions")
+  ) {
+    return true;
+  }
   if (pathname.startsWith("/api/site")) {
     return method !== "GET";
   }
