@@ -5,6 +5,7 @@ import { AddRowButton, moveItem, RowControls, uniqueId } from "@/components/admi
 import { LiveOnSiteNote } from "@/components/admin/site-editor/LiveOnSiteNote";
 import type { SiteEditorFieldsProps } from "@/components/admin/site-editor/types";
 import { FileUploadButton } from "@/components/ui/FileUploadButton";
+import { MAX_BRANDS } from "@/lib/site/types";
 
 export function BrandsEditor({
   form,
@@ -157,18 +158,24 @@ export function BrandsEditor({
       </div>
 
       <AddRowButton
-        label="Add brand"
+        label={`Add brand (${form.brands.items.length} of ${MAX_BRANDS})`}
+        disabled={form.brands.items.length >= MAX_BRANDS}
         onClick={() =>
-          setForm((current) => ({
-            ...current,
-            brands: {
-              ...current.brands,
-              items: [
-                ...current.brands.items,
-                { id: uniqueId("brand"), name: "New brand" },
-              ],
-            },
-          }))
+          setForm((current) => {
+            if (current.brands.items.length >= MAX_BRANDS) {
+              return current;
+            }
+            return {
+              ...current,
+              brands: {
+                ...current.brands,
+                items: [
+                  ...current.brands.items,
+                  { id: uniqueId("brand"), name: "New brand" },
+                ],
+              },
+            };
+          })
         }
       />
     </section>

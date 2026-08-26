@@ -71,8 +71,6 @@ function CtaVideo({
 export function ClosingCtaSection() {
   const site = useSiteContent();
   const { closingCta, social } = site;
-  const brandName = site.brand.trim();
-  const hasBrandName = brandName.length > 0;
 
   return (
     <section
@@ -125,13 +123,7 @@ export function ClosingCtaSection() {
             </motion.a>
           </div>
 
-          <div
-            className={`mx-auto lg:mx-0 lg:ml-1 ${
-              hasBrandName
-                ? "mt-9 w-[min(100%,18rem)] pb-2 sm:mt-10 sm:w-[22rem] sm:pb-3 lg:mt-12 lg:w-[24rem]"
-                : "mt-9 w-[min(100%,16.5rem)] sm:mt-10 sm:w-[20rem] lg:mt-12 lg:w-[22.5rem]"
-            }`}
-          >
+          <div className="mx-auto mt-9 w-[min(100%,16.5rem)] sm:mt-10 sm:w-[20rem] lg:mx-0 lg:mt-12 lg:ml-1 lg:w-[22.5rem]">
             <figure className="mx-auto w-[83.5%] px-1 pt-2">
               <Image
                 src={SIGNATURE.src}
@@ -145,19 +137,10 @@ export function ClosingCtaSection() {
 
             <figure className="mt-2 sm:mt-3">
               <BrandLogo
-                alt={hasBrandName ? "" : site.fullName || "Logo"}
-                sizes={
-                  hasBrandName
-                    ? "(max-width: 640px) 18rem, (max-width: 1024px) 22rem, 24rem"
-                    : "(max-width: 640px) 16.5rem, (max-width: 1024px) 20rem, 22.5rem"
-                }
+                alt={site.fullName || "Logo"}
+                sizes="(max-width: 640px) 16.5rem, (max-width: 1024px) 20rem, 22.5rem"
                 className="h-auto w-full"
               />
-              {hasBrandName ? (
-                <figcaption className="mt-3 px-1 text-center font-label text-sm font-semibold tracking-[0.16em] text-forest uppercase sm:mt-4 sm:text-base">
-                  {brandName}
-                </figcaption>
-              ) : null}
             </figure>
           </div>
         </SectionReveal>

@@ -3,10 +3,10 @@
 import Image from "next/image";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
+import { AccentSection } from "@/components/ui/AccentSection";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
-import { SectionHeading } from "@/components/ui/SectionHeading";
 import { SectionSurface } from "@/components/ui/SectionSurface";
-import { StaggerChildren, StaggerItem } from "@/components/ui/motion";
+import { SectionReveal, StaggerChildren, StaggerItem } from "@/components/ui/motion";
 import type { CollagePhotoShape } from "@/lib/site/types";
 
 /** Row/column spans that give the collage its irregular, scrapbook rhythm. */
@@ -27,76 +27,85 @@ export function PhotographyCollage() {
     <section
       id="photography"
       aria-labelledby="photography-heading"
-      className="scroll-section-anchor relative overflow-hidden px-4 pt-16 pb-16 sm:px-6 sm:pt-20 sm:pb-20"
+      className="scroll-section-anchor relative"
     >
-      <SectionSurface tone="blush" motifs="right" />
-      <SectionButterfly flight="photography" />
-      <SectionButterfly flight="photographyLow" />
-      <AdminEditButton section="photography" label="Edit photos" />
+      <AccentSection>
+        <AdminEditButton section="photography" label="Edit photos" tone="light" />
+        <SectionReveal className="relative z-10 mx-auto max-w-4xl">
+          <h2
+            id="photography-heading"
+            className="font-script text-4xl leading-tight text-balance text-paper sm:text-6xl"
+          >
+            {site.photography.label}
+          </h2>
+        </SectionReveal>
+      </AccentSection>
 
-      <div className="relative z-10 mx-auto max-w-5xl">
-        <SectionHeading id="photography-heading">
-          {site.photography.label}
-        </SectionHeading>
+      <div className="relative overflow-hidden px-4 pt-16 pb-16 sm:px-6 sm:pt-20 sm:pb-20">
+        <SectionSurface tone="blush" motifs="right" />
+        <SectionButterfly flight="photography" />
+        <SectionButterfly flight="photographyLow" />
 
-        {/* Dense flow backfills the holes that tall/wide tiles leave behind. */}
-        <StaggerChildren className="mt-10 grid auto-rows-[minmax(0,7rem)] grid-flow-row-dense grid-cols-3 gap-2 sm:mt-12 sm:auto-rows-[minmax(0,9rem)] sm:grid-cols-4 sm:gap-3">
-          {photos.map((photo) => {
-            const tile = (
-              <>
-                {photo.imagePath ? (
-                  <Image
-                    src={photo.imagePath}
-                    alt={photo.alt}
-                    fill
-                    sizes="(max-width: 640px) 33vw, 25vw"
-                    className="object-cover"
-                  />
-                ) : (
-                  // Empty tiles stay as soft washes so visitors see a
-                  // complete collage rather than "missing photo" chrome.
-                  <div className="flex h-full items-center justify-center bg-gradient-to-br from-paper/80 via-blush/25 to-lavender/25 p-3 text-center">
-                    {isAdminView && (
-                      <p className="font-label text-[10px] font-semibold tracking-[0.14em] text-brown/70 uppercase">
-                        Upload photo
-                      </p>
-                    )}
-                  </div>
-                )}
-              </>
-            );
+        <div className="relative z-10 mx-auto max-w-5xl">
+          {/* Dense flow backfills the holes that tall/wide tiles leave behind. */}
+          <StaggerChildren className="grid auto-rows-[minmax(0,7rem)] grid-flow-row-dense grid-cols-3 gap-2 sm:auto-rows-[minmax(0,9rem)] sm:grid-cols-4 sm:gap-3">
+            {photos.map((photo) => {
+              const tile = (
+                <>
+                  {photo.imagePath ? (
+                    <Image
+                      src={photo.imagePath}
+                      alt={photo.alt}
+                      fill
+                      sizes="(max-width: 640px) 33vw, 25vw"
+                      className="object-cover"
+                    />
+                  ) : (
+                    // Empty tiles stay as soft washes so visitors see a
+                    // complete collage rather than "missing photo" chrome.
+                    <div className="flex h-full items-center justify-center bg-gradient-to-br from-paper/80 via-blush/25 to-lavender/25 p-3 text-center">
+                      {isAdminView && (
+                        <p className="font-label text-[10px] font-semibold tracking-[0.14em] text-brown/70 uppercase">
+                          Upload photo
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </>
+              );
 
-            return (
-              <StaggerItem
-                key={photo.id}
-                className={`${SHAPE_SPAN[photo.shape]} min-h-0`}
-              >
-                {isAdminView ? (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      openSiteEditor("photography", {
-                        kind: "photography-photo",
-                        photoId: photo.id,
-                      })
-                    }
-                    aria-label={`Edit ${photo.alt}`}
-                    className="group relative h-full w-full overflow-hidden rounded-2xl border border-white/60 bg-paper/40 shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
-                  >
-                    {tile}
-                    <span className="absolute inset-x-2 bottom-2 rounded-full border border-white/50 bg-paper/80 px-2 py-1 text-center font-label text-[10px] font-semibold tracking-[0.12em] text-forest uppercase opacity-0 backdrop-blur-md transition group-hover:opacity-100 group-focus-visible:opacity-100">
-                      Edit
-                    </span>
-                  </button>
-                ) : (
-                  <div className="relative h-full w-full overflow-hidden rounded-2xl border border-white/60 bg-paper/40 shadow-sm">
-                    {tile}
-                  </div>
-                )}
-              </StaggerItem>
-            );
-          })}
-        </StaggerChildren>
+              return (
+                <StaggerItem
+                  key={photo.id}
+                  className={`${SHAPE_SPAN[photo.shape]} min-h-0`}
+                >
+                  {isAdminView ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openSiteEditor("photography", {
+                          kind: "photography-photo",
+                          photoId: photo.id,
+                        })
+                      }
+                      aria-label={`Edit ${photo.alt}`}
+                      className="group relative h-full w-full overflow-hidden rounded-2xl border border-white/60 bg-paper/40 shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+                    >
+                      {tile}
+                      <span className="absolute inset-x-2 bottom-2 rounded-full border border-white/50 bg-paper/80 px-2 py-1 text-center font-label text-[10px] font-semibold tracking-[0.12em] text-forest uppercase opacity-0 backdrop-blur-md transition group-hover:opacity-100 group-focus-visible:opacity-100">
+                        Edit
+                      </span>
+                    </button>
+                  ) : (
+                    <div className="relative h-full w-full overflow-hidden rounded-2xl border border-white/60 bg-paper/40 shadow-sm">
+                      {tile}
+                    </div>
+                  )}
+                </StaggerItem>
+              );
+            })}
+          </StaggerChildren>
+        </div>
       </div>
     </section>
   );

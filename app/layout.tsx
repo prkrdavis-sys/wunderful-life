@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import {
   Bricolage_Grotesque,
+  Calistoga,
   DM_Sans,
   Fraunces,
+  Great_Vibes,
   Instrument_Sans,
   Niconne,
 } from "next/font/google";
@@ -59,6 +61,20 @@ const niconne = Niconne({
   display: "swap",
 });
 
+const calistoga = Calistoga({
+  variable: "--font-calistoga",
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const greatVibes = Great_Vibes({
+  variable: "--font-great-vibes",
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+});
+
 export async function generateMetadata(): Promise<Metadata> {
   const { content: site } = await getSiteContentRecord();
   const title = `${site.fullName} · ${site.brand}`;
@@ -107,7 +123,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bricolage.variable} ${dmSans.variable} ${fraunces.variable} ${instrumentSans.variable} ${niconne.variable} h-full scroll-smooth`}
+      className={`${bricolage.variable} ${dmSans.variable} ${fraunces.variable} ${instrumentSans.variable} ${niconne.variable} ${calistoga.variable} ${greatVibes.variable} h-full scroll-smooth`}
     >
       {site.hero.posterPath ? (
         <link

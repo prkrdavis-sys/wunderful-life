@@ -59,8 +59,7 @@ export function ProfileEditor({
             className={inputClass}
           />
           <span className="mt-1 block text-xs text-muted">
-            Shown under the logo at the bottom of the home page. Leave blank to
-            keep the logo on its own.
+            Used in the site header, footer, and page titles.
           </span>
         </label>
         <label className="block text-sm sm:col-span-2">

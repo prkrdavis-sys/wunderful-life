@@ -18,6 +18,9 @@ export type CollagePhotoShape = "square" | "tall" | "wide";
 /** Hard cap for collage tiles in the editor and on save. */
 export const MAX_COLLAGE_TILES = 20;
 
+/** Hard cap for brand logos in the editor, on save, and on the public page. */
+export const MAX_BRANDS = 30;
+
 export type CollagePhoto = {
   id: string;
   alt: string;

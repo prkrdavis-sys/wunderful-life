@@ -1,4 +1,5 @@
 import {
+  MAX_BRANDS,
   MAX_COLLAGE_TILES,
   type AboutPhoto,
   type BrandItem,
@@ -356,7 +357,8 @@ function normalizeBrands(items: unknown): BrandItem[] {
         ...(brand.url ? { url: brand.url } : {}),
       };
     })
-    .filter((brand): brand is BrandItem => brand !== null);
+    .filter((brand): brand is BrandItem => brand !== null)
+    .slice(0, MAX_BRANDS);
 }
 
 function normalizeStringList(value: unknown, fallback: string[]): string[] {

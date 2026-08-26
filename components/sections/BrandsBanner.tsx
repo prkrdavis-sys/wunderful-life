@@ -6,7 +6,7 @@ import { useAdminView } from "@/components/admin/AdminViewProvider";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { DecorMotifs } from "@/components/ui/DecorMotifs";
 import { SectionReveal } from "@/components/ui/motion";
-import type { BrandItem } from "@/lib/site/types";
+import { MAX_BRANDS, type BrandItem } from "@/lib/site/types";
 
 function BrandMark({ brand }: { brand: BrandItem }) {
   if (brand.logoPath) {
@@ -16,14 +16,13 @@ function BrandMark({ brand }: { brand: BrandItem }) {
         alt={brand.name}
         width={160}
         height={48}
-        // Logos vary wildly, so normalize height and let width follow.
-        className="h-8 w-auto object-contain opacity-90 sm:h-10"
+        className="max-h-full max-w-full object-contain opacity-90"
       />
     );
   }
 
   return (
-    <span className="font-label text-sm font-bold tracking-[0.06em] text-forest sm:text-base">
+    <span className="line-clamp-2 text-center font-label text-xs font-bold tracking-[0.06em] text-forest sm:text-sm">
       {brand.name}
     </span>
   );
@@ -32,7 +31,8 @@ function BrandMark({ brand }: { brand: BrandItem }) {
 export function BrandsBanner() {
   const { site, viewMode } = useAdminView();
   const isAdminView = viewMode === "admin";
-  const { visible, heading, items } = site.brands;
+  const { visible, heading, items: allItems } = site.brands;
+  const items = allItems.slice(0, MAX_BRANDS);
 
   if (!isAdminView && (!visible || items.length === 0)) return null;
 
@@ -63,11 +63,11 @@ export function BrandsBanner() {
         ) : (
           <SectionReveal
             delay={0.12}
-            className="ugc-benefits-card mx-auto mt-10 max-w-4xl rounded-[2rem] border border-paper/40 p-6 text-ink shadow-xl sm:mt-12 sm:p-8"
+            className="ugc-benefits-card mx-auto mt-10 max-w-5xl rounded-[2rem] border border-paper/40 p-6 text-ink shadow-xl sm:mt-12 sm:p-8"
           >
-            <ul className="flex flex-wrap items-center justify-center gap-x-10 gap-y-5 sm:justify-between">
+            <ul className="ugc-brands-list">
               {items.map((brand) => (
-                <li key={brand.id} className="flex items-center">
+                <li key={brand.id} className="ugc-brands-item">
                   {brand.url ? (
                     <a
                       href={brand.url}

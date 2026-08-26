@@ -13,50 +13,72 @@ import type { MediaIntrinsicSize, VideoObjectFit } from "@/lib/videos/cover-fit"
 
 const HERO_CREATOR_IMAGE = "/hero/creator-placeholder.png";
 
+function splitPersonName(fullName: string): { first: string; last: string } {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) {
+    return { first: "Emily", last: "Wunder" };
+  }
+  if (parts.length === 1) {
+    return { first: parts[0], last: "" };
+  }
+  return { first: parts[0], last: parts.slice(1).join(" ") };
+}
+
 type MeasuredMedia = {
   sourceKey: string;
   size: MediaIntrinsicSize;
 };
 
 function HeroIntro() {
+  const site = useSiteContent();
+  const { first, last } = splitPersonName(site.fullName);
   const reduceMotion = useReducedMotion();
   const creatorInitial = reduceMotion
     ? { opacity: 1, y: 0 }
     : { opacity: 0, y: "28%" };
 
   return (
-    <section className="hero-intro relative z-10 isolate min-h-[34rem] overflow-visible bg-paper sm:min-h-[39rem] lg:min-h-[44rem]">
+    <section className="hero-intro relative z-10 isolate min-h-[calc(100svh-var(--site-header-height,4.5rem))] overflow-visible bg-paper">
       <div
         aria-hidden
-        className="hero-intro-silhouettes absolute inset-x-0 bottom-0 z-0 h-[62%]"
+        className="hero-intro-silhouettes absolute inset-x-0 bottom-0 z-0 h-[82%]"
       />
       <div
         aria-hidden
         className="absolute inset-0 z-0 bg-gradient-to-b from-paper via-paper/45 to-transparent"
       />
 
-      <p className="relative z-20 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 pt-8 font-label text-[clamp(0.7rem,1.4vw,0.95rem)] font-medium tracking-[0.16em] text-brown sm:pt-10">
+      <p className="relative z-20 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 pt-6 font-label text-[clamp(0.7rem,1.4vw,0.95rem)] font-medium tracking-[0.16em] text-brown sm:pt-8">
         <span>UGC</span>
-        <span aria-hidden className="text-blush-deep">
+        <span aria-hidden className="text-sage-deep">
           |
         </span>
         <span>Social media</span>
-        <span aria-hidden className="text-blush-deep">
+        <span aria-hidden className="text-sage-deep">
           |
         </span>
         <span>marketing</span>
       </p>
 
-      <div className="relative z-20 mx-auto flex max-w-6xl justify-center px-4 pt-16 sm:px-6 sm:pt-20">
-        <h1 className="text-center leading-[0.82] tracking-[-0.06em]">
-          <span className="block font-serif text-[clamp(4.75rem,13vw,9rem)] text-blush-deep">
-            Creative
+      <h1 className="pointer-events-none absolute bottom-0 left-0 z-10 max-w-[92%] px-4 pb-2 text-left leading-[0.78] tracking-[-0.04em] sm:max-w-[80%] sm:px-7 sm:pb-3 lg:max-w-[72%] lg:px-10 lg:pb-4">
+        <span className="block font-serif text-[clamp(2.6rem,8vw,5.75rem)] text-sage-deep">
+          Creative
+        </span>
+        <span className="-mt-1 block font-cooper text-[clamp(3.4rem,14vw,9.5rem)] text-forest uppercase">
+          Portfolio
+        </span>
+      </h1>
+
+      <p className="pointer-events-none absolute inset-x-3 top-[22%] z-20 flex items-start justify-between sm:inset-x-[7%] sm:top-[26%] lg:inset-x-[9%] lg:top-[28%]">
+        <span className="font-signature pb-1 text-[clamp(2.35rem,5.6vw,4.6rem)] leading-[1.15] text-forest">
+          {first}
+        </span>
+        {last ? (
+          <span className="font-signature pb-1 text-right text-[clamp(2.35rem,5.6vw,4.6rem)] leading-[1.15] text-forest">
+            {last}
           </span>
-          <span className="-mt-1 block font-display text-[clamp(5rem,15vw,10.5rem)] text-forest">
-            Portfolio
-          </span>
-        </h1>
-      </div>
+        ) : null}
+      </p>
 
       <motion.div
         initial={creatorInitial}
@@ -70,15 +92,15 @@ function HeroIntro() {
                 ease: [0.22, 1, 0.36, 1],
               }
         }
-        className="pointer-events-none absolute inset-x-0 bottom-[-9rem] z-10 flex justify-center will-change-transform sm:bottom-[-12rem] lg:bottom-[-15rem]"
+        className="pointer-events-none absolute inset-x-0 bottom-[-7rem] z-20 flex justify-center will-change-transform sm:bottom-[-10rem] lg:bottom-[-13rem]"
       >
-        <div className="relative h-[31rem] w-[min(86vw,25rem)] sm:h-[36rem] sm:w-[min(58vw,29rem)] lg:h-[42rem] lg:w-[min(42vw,34rem)]">
+        <div className="relative h-[28rem] w-[min(68vw,21rem)] sm:h-[34rem] sm:w-[min(48vw,27rem)] lg:h-[40rem] lg:w-[min(36vw,32rem)]">
           <Image
             src={HERO_CREATOR_IMAGE}
             alt="Emily and her partner smiling together"
             fill
             priority
-            sizes="(min-width: 1024px) 34rem, (min-width: 640px) 29rem, 86vw"
+            sizes="(min-width: 1024px) 32rem, (min-width: 640px) 27rem, 68vw"
             className="object-contain object-bottom"
           />
         </div>

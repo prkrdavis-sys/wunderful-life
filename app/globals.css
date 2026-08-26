@@ -51,6 +51,8 @@
   --font-serif: var(--font-fraunces);
   --font-label: var(--font-instrument);
   --font-script: var(--font-niconne);
+  --font-cooper: var(--font-calistoga);
+  --font-signature: var(--font-great-vibes);
 }
 
 html {
@@ -261,6 +263,39 @@ body {
     radial-gradient(circle at 18% 22%, rgb(255 253 249 / 0.14), transparent 20rem),
     radial-gradient(circle at 82% 78%, rgb(35 57 42 / 0.18), transparent 22rem),
     linear-gradient(145deg, #82956f 0%, #8fa37c 42%, #7a8f68 100%);
+}
+
+/* Predicted logo cells: wrap to a new row when the current row is full. */
+.ugc-brands-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  column-gap: clamp(1rem, 2.4vw, 2rem);
+  row-gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.ugc-brands-item {
+  display: flex;
+  width: clamp(5.75rem, 18vw, 8rem);
+  height: clamp(2.25rem, 7.5vw, 3rem);
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+}
+
+.ugc-brands-item a,
+.ugc-brands-item img {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.ugc-brands-item a {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
 }
 
 .ugc-stat {
@@ -489,15 +524,15 @@ body {
 }
 
 /*
- * Nature silhouette layer for the editorial hero intro. The asset stays
- * decorative so the title and creator cutout remain the accessible content.
+ * Homogeneous sage silhouettes (rolling hills and trees) for the
+ * editorial hero intro. One hue (--sage-deep), layered only by opacity.
  */
 .hero-intro-silhouettes {
   background-image: url("/hero/nature-silhouettes.svg");
   background-position: center bottom;
   background-repeat: no-repeat;
   background-size: cover;
-  opacity: 0.92;
+  opacity: 0.94;
 }
 
 /* Decorative moon / star silhouettes. */
