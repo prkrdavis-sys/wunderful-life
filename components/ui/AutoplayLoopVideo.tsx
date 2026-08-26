@@ -156,13 +156,13 @@ export function AutoplayLoopVideo({
   const decodeFailedRef = useRef(false);
   const playInFlightRef = useRef(false);
   const [inView, setInView] = useState(eager);
-  const [idleReady, setIdleReady] = useState(false);
+  const [idleReady, setIdleReady] = useState(eager);
   const [muted, setMuted] = useState(mutedProp);
   const [playing, setPlaying] = useState(false);
   const [hasFrame, setHasFrame] = useState(Boolean(poster));
   const [appliedSrc, setAppliedSrc] = useState(src);
   const [appliedPoster, setAppliedPoster] = useState(poster);
-  const activeSrc = idleReady && (eager || inView) ? src : null;
+  const activeSrc = (eager || (idleReady && inView)) ? src : null;
   const showCover = !playing;
   const hasPoster = Boolean(poster);
 
@@ -179,9 +179,10 @@ export function AutoplayLoopVideo({
   }, [src, poster]);
 
   useEffect(() => {
+    if (eager) return;
     if (!shouldLoadDecorativeVideo()) return;
     return scheduleIdle(() => setIdleReady(true));
-  }, [src]);
+  }, [eager, src]);
 
   useEffect(() => {
     const node = containerRef.current;

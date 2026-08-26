@@ -55,7 +55,7 @@ export type HeroContent = {
   titleAccent: string;
   /** Three offerings shown above the intro title, separated by pipes. */
   services: HeroIntroServices;
-  /** PNG cutout of the creator; falls back to the bundled placeholder. */
+  /** Creator cutout; falls back to the bundled WebP placeholder. */
   creatorImagePath?: string;
 };
 

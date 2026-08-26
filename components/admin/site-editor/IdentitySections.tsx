@@ -189,7 +189,8 @@ export function HeroEditor({
             className={inputClass}
           />
           <span className="mt-1 block text-xs text-muted">
-            Shown in all caps, in the display script.
+            Shown in all caps, in the display script. Remember to press
+            &ldquo;Save site content&rdquo; after editing the services or title.
           </span>
         </label>
       </div>

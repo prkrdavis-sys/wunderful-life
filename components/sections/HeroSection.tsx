@@ -60,7 +60,7 @@ function HeroIntro() {
       />
 
       {services.length > 0 ? (
-        <p className="relative z-20 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 px-4 pt-4 font-label text-[clamp(0.82rem,2.8vw,1.45rem)] font-medium tracking-[0.1em] text-brown sm:gap-x-4 sm:pt-5 sm:tracking-[0.16em]">
+        <p className="relative z-20 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3 pt-4 font-label text-[clamp(0.75rem,2.6vw,1.45rem)] font-medium tracking-[0.08em] text-brown sm:gap-x-4 sm:px-4 sm:pt-5 sm:tracking-[0.16em]">
           {services.map((service, index) => (
             <span key={`${service}-${index}`} className="contents">
               {index > 0 ? (
@@ -112,7 +112,7 @@ function HeroIntro() {
                 height={HERO_CREATOR_FALLBACK.height}
                 preload
                 sizes="(min-width: 1024px) 22.5rem, 42vw"
-                className="h-auto w-full"
+                className="h-auto w-full object-contain object-top"
               />
             </motion.div>
           </div>
@@ -182,6 +182,7 @@ function HeroBackgroundVideo({
         src={src}
         poster={poster}
         muted
+        eager
         aria-hidden
         tabIndex={-1}
         fit={fit}
@@ -228,15 +229,16 @@ function HeroVideoSection() {
       mediaSizeForSource.height > mediaSizeForSource.width,
   );
   const useExactRatio = Boolean(
-    mediaSizeForSource && (isPortraitVideo || isPortraitOrientation),
+    hasVideo && (isPortraitVideo || isPortraitOrientation),
   );
   const videoFit: VideoObjectFit = useExactRatio ? "contain" : "cover";
+  const sizerSize = mediaSizeForSource ?? { width: 9, height: 16 };
 
   return (
     <section
       className="hero-video-band relative z-20 w-full overflow-hidden bg-forest-deep"
       data-exact={useExactRatio ? "true" : "false"}
-      data-has-ratio={mediaSizeForSource ? "true" : "false"}
+      data-has-ratio={hasVideo ? "true" : "false"}
     >
       <div className="relative z-10 grid w-full grid-cols-1">
         {/*
@@ -245,13 +247,12 @@ function HeroVideoSection() {
           left portrait clips in an 85svh cover box and cropped them.
         */}
         <div className="hero-video-sizers col-start-1 row-start-1 min-w-0">
-          {mediaSizeForSource ? (
+          {hasVideo ? (
             <div
               aria-hidden
               className="hero-video-sizer-exact w-full"
               style={{
-                ["--hero-ratio-padding" as string]:
-                  ratioPaddingTop(mediaSizeForSource),
+                ["--hero-ratio-padding" as string]: ratioPaddingTop(sizerSize),
               }}
             />
           ) : null}

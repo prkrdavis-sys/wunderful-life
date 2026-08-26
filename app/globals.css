@@ -627,12 +627,12 @@ body {
 
 .hero-intro-creator-slot {
   /* Show the top of the 2:3 cutout; the rest hangs behind the belt. */
-  --creator-visible: 0.7;
+  --creator-visible: 0.64;
   position: relative;
   z-index: 2;
   overflow: visible;
   width: 100%;
-  aspect-ratio: 1024 / calc(1536 * var(--creator-visible));
+  aspect-ratio: 2 / calc(3 * var(--creator-visible));
 }
 
 .hero-intro-creator-image {
@@ -664,8 +664,8 @@ body {
 
 @container hero-intro (max-width: 40rem) {
   .hero-intro-composer {
-    grid-template-columns: minmax(0, 1fr) minmax(38%, 14.5rem) minmax(0, 1.15fr);
-    column-gap: 0.1rem;
+    grid-template-columns: minmax(0, 1fr) minmax(34%, 13rem) minmax(0, 1.25fr);
+    column-gap: 0.2rem;
   }
 
   .hero-intro-signature-first,
@@ -674,30 +674,34 @@ body {
   }
 
   .hero-intro-signature-first {
-    transform: translateX(16%);
+    transform: translateX(8%);
   }
 
   .hero-intro-signature-last {
-    transform: translateX(-12%);
+    transform: translateX(-6%);
   }
 
   .hero-intro-creator-slot {
-    --creator-visible: 0.64;
+    --creator-visible: 0.54;
   }
 }
 
 @container hero-intro (max-width: 24rem) {
   .hero-intro-composer {
-    grid-template-columns: minmax(0, 1fr) minmax(40%, 11.25rem) minmax(0, 1.1fr);
-    padding-inline: 0.55rem;
+    grid-template-columns: minmax(0, 0.95fr) minmax(34%, 9.25rem) minmax(0, 1.2fr);
+    padding-inline: 0.4rem;
   }
 
   .hero-intro-signature-first {
-    transform: translateX(20%);
+    transform: translateX(6%);
   }
 
   .hero-intro-signature-last {
-    transform: translateX(-16%);
+    transform: translateX(-4%);
+  }
+
+  .hero-intro-creator-slot {
+    --creator-visible: 0.5;
   }
 
   .hero-intro-title {
