@@ -281,11 +281,13 @@ export function useSiteEditorController(onSaved?: (site: SiteContent) => void) {
 
     try {
       const prepared = await preparePhotoForUpload(file, {
-        preferJpeg: kind !== "brandLogo",
+        preferJpeg: kind === "about" || kind === "collage",
         maxEdge: kind === "brandLogo" ? 800 : 1920,
       });
       const payload = new FormData();
-      const endpoint = `${descriptor.endpoint}/${photoId}`;
+      const endpoint = descriptor.singleton
+        ? descriptor.endpoint
+        : `${descriptor.endpoint}/${photoId}`;
       const config = await getMediaUploadConfig();
 
       if (config.clientUpload) {
@@ -320,7 +322,13 @@ export function useSiteEditorController(onSaved?: (site: SiteContent) => void) {
       applySavedMedia(data, siteVersionFromResponse(response), (draft) =>
         mergePhotoMedia(draft, data, kind, photoId),
       );
-      setMessage(kind === "brandLogo" ? "Logo uploaded." : "Photo uploaded.");
+      setMessage(
+        kind === "brandLogo"
+          ? "Logo uploaded."
+          : kind === "heroCreator"
+            ? "Creator photo is on your site now — no need to press Save."
+            : "Photo uploaded.",
+      );
     } catch (err) {
       setError(toErrorMessage(err, `Failed to upload ${descriptor.noun}.`));
     } finally {
@@ -336,10 +344,15 @@ export function useSiteEditorController(onSaved?: (site: SiteContent) => void) {
     setMessage(null);
 
     try {
-      const response = await fetch(`${descriptor.endpoint}/${photoId}`, {
-        method: "DELETE",
-        headers: { "X-Site-Version": String(version) },
-      });
+      const response = await fetch(
+        descriptor.singleton
+          ? descriptor.endpoint
+          : `${descriptor.endpoint}/${photoId}`,
+        {
+          method: "DELETE",
+          headers: { "X-Site-Version": String(version) },
+        },
+      );
       const data = await readResponseJson<SiteContent & { error?: string }>(
         response,
         { payload: "photo" },
@@ -356,7 +369,13 @@ export function useSiteEditorController(onSaved?: (site: SiteContent) => void) {
       applySavedMedia(data, siteVersionFromResponse(response), (draft) =>
         mergePhotoMedia(draft, data, kind, photoId),
       );
-      setMessage(kind === "brandLogo" ? "Logo removed." : "Photo removed.");
+      setMessage(
+        kind === "brandLogo"
+          ? "Logo removed."
+          : kind === "heroCreator"
+            ? "Creator photo removed."
+            : "Photo removed.",
+      );
     } catch (err) {
       setError(toErrorMessage(err, `Failed to remove ${descriptor.noun}.`));
     } finally {

@@ -6,6 +6,11 @@ const nextConfig: NextConfig = {
     root: path.join(process.cwd()),
   },
   images: {
+    formats: ["image/avif", "image/webp"],
+    // This site never needs 2K/4K variants; smaller srcset keeps HTML and
+    // image optimization off the critical path.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1600],
+    imageSizes: [32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
       {
         protocol: "https",
@@ -53,7 +58,7 @@ const nextConfig: NextConfig = {
       ],
     },
     {
-      source: "/:folder(plants|about-photos|brand|mockify|home-grid-photos|butterfly)/:path*",
+      source: "/:folder(plants|about-photos|brand|mockify|home-grid-photos|hero-photos|hero|butterfly)/:path*",
       headers: [
         {
           key: "Cache-Control",

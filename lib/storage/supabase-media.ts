@@ -48,6 +48,8 @@ function defaultExtensionForDir(dir: MediaUploadDir): string {
     case "home-grid-photos":
     case "brand-logos":
       return ".jpg";
+    case "hero-photos":
+      return ".png";
     default: {
       const _exhaustive: never = dir;
       return _exhaustive;

@@ -7,6 +7,7 @@ import {
   type CollagePhotoShape,
   type GridPhoto,
   type ServiceItem,
+  type HeroIntroServices,
   type SiteContent,
   type StatItem,
 } from "@/lib/site/types";
@@ -17,6 +18,14 @@ const DEFAULT_CTA_EMAIL_LABEL = "email@email.com";
 function defaultHeroSubtitle(name: string): string {
   return `I'm ${name} — the face behind the frame. Brands hire me for deliverables; they remember me for the personality.`;
 }
+
+const DEFAULT_HERO_TITLE_LINE = "Creative";
+const DEFAULT_HERO_TITLE_ACCENT = "Portfolio";
+const DEFAULT_HERO_SERVICES: HeroIntroServices = [
+  "UGC",
+  "Social Media",
+  "Marketing",
+];
 
 const DEFAULT_STATS_BANNER: SiteContent["statsBanner"] = {
   visible: true,
@@ -243,6 +252,16 @@ function normalizeAboutPhotos(photos: AboutPhoto[]): AboutPhoto[] {
   return normalized;
 }
 
+function normalizeHeroServices(value: unknown): HeroIntroServices {
+  if (!Array.isArray(value)) return [...DEFAULT_HERO_SERVICES];
+
+  return [
+    typeof value[0] === "string" ? value[0] : DEFAULT_HERO_SERVICES[0],
+    typeof value[1] === "string" ? value[1] : DEFAULT_HERO_SERVICES[1],
+    typeof value[2] === "string" ? value[2] : DEFAULT_HERO_SERVICES[2],
+  ];
+}
+
 function normalizeHeroLinks(
   links: SiteContent["heroLinks"],
 ): SiteContent["heroLinks"] {
@@ -430,8 +449,14 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
     tagline: raw.tagline,
     hero: {
       subtitle: text(raw.hero?.subtitle, defaultHeroSubtitle(raw.name)),
+      titleLine: text(raw.hero?.titleLine, DEFAULT_HERO_TITLE_LINE),
+      titleAccent: text(raw.hero?.titleAccent, DEFAULT_HERO_TITLE_ACCENT),
+      services: normalizeHeroServices(raw.hero?.services),
       ...(raw.hero?.videoPath ? { videoPath: raw.hero.videoPath } : {}),
       ...(raw.hero?.posterPath ? { posterPath: raw.hero.posterPath } : {}),
+      ...(raw.hero?.creatorImagePath
+        ? { creatorImagePath: raw.hero.creatorImagePath }
+        : {}),
     },
     statsBanner: {
       visible:

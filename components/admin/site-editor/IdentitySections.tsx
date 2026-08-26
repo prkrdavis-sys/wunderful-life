@@ -1,11 +1,14 @@
 import { AutoResizeTextarea } from "@/components/admin/AutoResizeTextarea";
 import { cardClass, inputClass } from "@/components/admin/site-editor/constants";
 import { AddRowButton, moveItem, RowControls, uniqueId } from "@/components/admin/site-editor/list";
+import { LiveOnSiteNote } from "@/components/admin/site-editor/LiveOnSiteNote";
 import { VideoSlotField } from "@/components/admin/site-editor/VideoSlotField";
 import type {
   SiteEditorFieldsProps,
   SiteEditorVideoProps,
 } from "@/components/admin/site-editor/types";
+import { FileUploadButton } from "@/components/ui/FileUploadButton";
+import type { HeroIntroServices } from "@/lib/site/types";
 
 export function ProfileEditor({
   form,
@@ -84,10 +87,26 @@ export function ProfileEditor({
   );
 }
 
+const HERO_SERVICE_LABELS = ["First", "Second", "Third"] as const;
+
+function withHeroService(
+  services: HeroIntroServices,
+  index: number,
+  value: string,
+): HeroIntroServices {
+  return [
+    index === 0 ? value : services[0],
+    index === 1 ? value : services[1],
+    index === 2 ? value : services[2],
+  ];
+}
+
 export function HeroEditor({
   form,
   setForm,
   loading,
+  uploadPhoto,
+  removePhoto,
   videoFiles,
   videoUploads,
   videoPreviewUrls,
@@ -102,9 +121,115 @@ export function HeroEditor({
       <div>
         <h3 className="font-display text-lg text-brown">Hero</h3>
         <p className="mt-1 text-sm text-muted">
-          The full-width background video at the top of the home page, plus the
-          cursive subtitle shown at the bottom of the hero.
+          The intro at the top of the home page — the three services, title, and
+          creator cutout — plus the background video and cursive subtitle.
         </p>
+      </div>
+
+      <div className="max-w-2xl space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4">
+        <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+          Services at the top
+        </p>
+        <p className="text-sm text-muted">
+          The three offerings shown above the title, separated by pipes. Leave a
+          field blank to hide that one.
+        </p>
+        <div className="grid min-w-0 gap-3 sm:grid-cols-3">
+          {form.hero.services.map((service, index) => (
+            <label key={HERO_SERVICE_LABELS[index]} className="block text-sm">
+              <span className="text-muted">
+                {HERO_SERVICE_LABELS[index]} service
+              </span>
+              <AutoResizeTextarea
+                value={service}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    hero: {
+                      ...current.hero,
+                      services: withHeroService(
+                        current.hero.services,
+                        index,
+                        event.target.value,
+                      ),
+                    },
+                  }))
+                }
+                className={inputClass}
+              />
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid max-w-2xl min-w-0 gap-4 sm:grid-cols-2">
+        <label className="block text-sm">
+          <span className="text-muted">Title, first line</span>
+          <AutoResizeTextarea
+            value={form.hero.titleLine}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                hero: { ...current.hero, titleLine: event.target.value },
+              }))
+            }
+            className={inputClass}
+          />
+        </label>
+        <label className="block text-sm">
+          <span className="text-muted">Title, second line</span>
+          <AutoResizeTextarea
+            value={form.hero.titleAccent}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                hero: { ...current.hero, titleAccent: event.target.value },
+              }))
+            }
+            className={inputClass}
+          />
+          <span className="mt-1 block text-xs text-muted">
+            Shown in all caps, in the display script.
+          </span>
+        </label>
+      </div>
+
+      <div className="max-w-2xl space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4">
+        <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+          Creator photo
+        </p>
+        <p className="text-sm text-muted">
+          The cutout standing in the intro. A PNG with a transparent background
+          is highly suggested so the silhouette and forest belt sit cleanly
+          behind the figure. Goes live as soon as you pick a file — no need to
+          press &ldquo;Save site content&rdquo;.
+        </p>
+        <div className="block text-sm">
+          <span className="text-muted">Photo</span>
+          <FileUploadButton
+            className="mt-1"
+            kind="photo"
+            accept="image/png,image/*"
+            hint="PNG with a transparent background is highly suggested"
+            buttonLabel="Add creator photo"
+            selectedName={form.hero.creatorImagePath}
+            previewUrl={form.hero.creatorImagePath}
+            disabled={loading}
+            onChange={(file) => {
+              if (file) void uploadPhoto("creator", file, "heroCreator");
+            }}
+            onRemove={
+              form.hero.creatorImagePath
+                ? () => {
+                    void removePhoto("creator", "heroCreator");
+                  }
+                : undefined
+            }
+          />
+          {form.hero.creatorImagePath && (
+            <LiveOnSiteNote>Live on your site</LiveOnSiteNote>
+          )}
+        </div>
       </div>
 
       <label className="block max-w-2xl text-sm">

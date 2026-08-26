@@ -1,6 +1,6 @@
 import type { MediaUploadDir } from "@/lib/storage/media-upload";
 
-export const PHOTO_KINDS = ["about", "collage", "brandLogo"] as const;
+export const PHOTO_KINDS = ["about", "collage", "brandLogo", "heroCreator"] as const;
 export type PhotoKind = (typeof PHOTO_KINDS)[number];
 
 export type PhotoKindDescriptor = {
@@ -8,6 +8,8 @@ export type PhotoKindDescriptor = {
   endpoint: string;
   folder: MediaUploadDir;
   noun: string;
+  /** When true, POST/DELETE the endpoint itself instead of `endpoint/:id`. */
+  singleton?: boolean;
 };
 
 export const PHOTO_KIND_DESCRIPTORS: Record<PhotoKind, PhotoKindDescriptor> = {
@@ -28,6 +30,13 @@ export const PHOTO_KIND_DESCRIPTORS: Record<PhotoKind, PhotoKindDescriptor> = {
     endpoint: "/api/site/brand-logos",
     folder: "brand-logos",
     noun: "logo",
+  },
+  heroCreator: {
+    kind: "heroCreator",
+    endpoint: "/api/site/hero-creator",
+    folder: "hero-photos",
+    noun: "creator photo",
+    singleton: true,
   },
 };
 

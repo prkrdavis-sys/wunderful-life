@@ -2,10 +2,10 @@
 
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
-import { AccentSection } from "@/components/ui/AccentSection";
-import { StaggerChildren, StaggerItem } from "@/components/ui/motion";
+import { SectionSurface } from "@/components/ui/SectionSurface";
+import { SectionReveal, StaggerChildren, StaggerItem } from "@/components/ui/motion";
 
-/** Reach and engagement figures, shown as a section after photography. */
+/** Reach and engagement figures, shown as a forest panel after photography. */
 export function StatsBannerSection() {
   const { site, viewMode } = useAdminView();
   const isAdminView = viewMode === "admin";
@@ -14,30 +14,36 @@ export function StatsBannerSection() {
   if (!isAdminView && (!visible || items.length === 0)) return null;
 
   return (
-    <section aria-label="Audience stats" className="relative">
-      <AccentSection>
+    <section
+      aria-label="Audience stats"
+      className="relative px-4 py-8 sm:px-6 sm:py-10"
+    >
+      <SectionReveal className="relative mx-auto w-full max-w-3xl overflow-hidden rounded-[2rem] px-6 py-8 text-center shadow-[0_12px_32px_rgba(35,57,42,0.18)] sm:px-10 sm:py-9">
+        <SectionSurface tone="forest" motifs="none" />
         <AdminEditButton section="stats" label="Edit stats" tone="light" />
-        {items.length === 0 ? (
-          <p className="text-center font-label text-sm text-paper/70">
-            No stats yet — add some in the site editor.
-          </p>
-        ) : (
-          <StaggerChildren className="grid grid-cols-2 gap-x-4 gap-y-7 sm:flex sm:items-start sm:justify-around sm:gap-8">
-            {items.map((stat) => (
-              <StaggerItem key={stat.id} className="text-center">
-                <p className="font-script pb-1 text-4xl leading-[1.15] text-paper sm:text-5xl">
-                  {stat.value}
-                </p>
-                <p className="mt-2 font-label text-[11px] font-bold tracking-[0.08em] text-paper/90 sm:text-sm">
-                  {stat.label}
-                </p>
-              </StaggerItem>
-            ))}
-          </StaggerChildren>
-        )}
-      </AccentSection>
+        <div className="relative z-10">
+          {items.length === 0 ? (
+            <p className="font-label text-sm text-paper/70">
+              No stats yet. Add some in the site editor.
+            </p>
+          ) : (
+            <StaggerChildren className="grid grid-cols-2 gap-x-4 gap-y-7 sm:flex sm:items-start sm:justify-around sm:gap-8">
+              {items.map((stat) => (
+                <StaggerItem key={stat.id} className="text-center">
+                  <p className="font-script pb-1 text-4xl leading-[1.15] text-paper sm:text-5xl">
+                    {stat.value}
+                  </p>
+                  <p className="mt-2 font-label text-[11px] font-bold tracking-[0.08em] text-paper/90 sm:text-sm">
+                    {stat.label}
+                  </p>
+                </StaggerItem>
+              ))}
+            </StaggerChildren>
+          )}
+        </div>
+      </SectionReveal>
       {isAdminView && !visible && (
-        <p className="bg-honey/30 py-2 text-center font-label text-xs tracking-[0.14em] text-brown uppercase">
+        <p className="mx-auto mt-3 max-w-3xl text-center font-label text-xs tracking-[0.14em] text-brown uppercase">
           Stats section hidden from visitors
         </p>
       )}

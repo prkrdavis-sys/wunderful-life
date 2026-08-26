@@ -351,10 +351,17 @@ export function AutoplayLoopVideo({
       onIntrinsicSize({ width, height });
     };
 
+    let videoReported = false;
+    const reportFrom = (width: number, height: number, source: "poster" | "video") => {
+      if (source === "poster" && videoReported) return;
+      if (source === "video") videoReported = true;
+      report(width, height);
+    };
+
     if (poster) {
       const image = new Image();
       const reportPoster = () =>
-        report(image.naturalWidth, image.naturalHeight);
+        reportFrom(image.naturalWidth, image.naturalHeight, "poster");
       image.onload = reportPoster;
       image.src = poster;
       if (image.complete) reportPoster();
@@ -363,7 +370,7 @@ export function AutoplayLoopVideo({
     const video = videoRef.current;
     const reportVideo = () => {
       if (!video) return;
-      report(video.videoWidth, video.videoHeight);
+      reportFrom(video.videoWidth, video.videoHeight, "video");
     };
     video?.addEventListener("loadedmetadata", reportVideo);
     video?.addEventListener("loadeddata", reportVideo);

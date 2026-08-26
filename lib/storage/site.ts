@@ -27,7 +27,11 @@ import { StorageError } from "./types";
 
 const SITE_PATH = path.join(process.cwd(), "data", "site.json");
 
-type PhotoFolder = "about-photos" | "home-grid-photos" | "brand-logos";
+type PhotoFolder =
+  | "about-photos"
+  | "home-grid-photos"
+  | "brand-logos"
+  | "hero-photos";
 
 function hasServices(value: unknown): boolean {
   if (!value || typeof value !== "object") return false;
@@ -168,6 +172,7 @@ async function deleteStoredPhoto(imagePath: string) {
     imagePath.startsWith("/about-photos/") ||
     imagePath.startsWith("/home-grid-photos/") ||
     imagePath.startsWith("/brand-logos/") ||
+    imagePath.startsWith("/hero-photos/") ||
     imagePath.startsWith("/uploads/photos/") ||
     imagePath.startsWith("/uploads/hero/") ||
     imagePath.startsWith("/uploads/cta/")
@@ -379,13 +384,16 @@ function applySlotMedia(
   posterPath?: string,
 ) {
   switch (slot) {
-    case "hero":
-      site.hero = {
-        subtitle: site.hero.subtitle,
-        videoPath,
-        ...(posterPath ? { posterPath } : {}),
-      };
+    case "hero": {
+      const hero = { ...site.hero, videoPath };
+      if (posterPath) {
+        hero.posterPath = posterPath;
+      } else {
+        delete hero.posterPath;
+      }
+      site.hero = hero;
       return;
+    }
     case "cta":
       site.closingCta = {
         ...site.closingCta,
@@ -405,9 +413,13 @@ function applySlotMedia(
 
 function clearSlotMedia(site: SiteContent, slot: VideoSlot) {
   switch (slot) {
-    case "hero":
-      site.hero = { subtitle: site.hero.subtitle };
+    case "hero": {
+      const hero = { ...site.hero };
+      delete hero.videoPath;
+      delete hero.posterPath;
+      site.hero = hero;
       return;
+    }
     case "cta": {
       const closingCta = { ...site.closingCta };
       delete closingCta.videoPath;
@@ -659,6 +671,62 @@ export async function clearBrandLogo(
     await deleteStoredPhoto(current.logoPath);
   }
   return site;
+}
+
+async function setHeroCreatorImagePath(
+  imagePath: string | undefined,
+  expectedVersion?: number,
+): Promise<SiteContent> {
+  const record = await readSiteRecord();
+  if (expectedVersion !== undefined && record.version !== expectedVersion) {
+    if (imagePath) await deleteStoredPhoto(imagePath);
+    throw new StorageError(
+      "This editor is out of date. The latest site content was saved elsewhere.",
+      409,
+    );
+  }
+  const site = structuredClone(record.content);
+  const previous = site.hero.creatorImagePath;
+  const hero = { ...site.hero };
+  if (imagePath) {
+    hero.creatorImagePath = imagePath;
+  } else {
+    delete hero.creatorImagePath;
+  }
+  site.hero = hero;
+
+  try {
+    await writeSiteContent(site, record.version);
+  } catch (error) {
+    if (imagePath && imagePath !== previous) {
+      await deleteStoredPhoto(imagePath);
+    }
+    throw error;
+  }
+  if (previous && previous !== imagePath) {
+    await deleteStoredPhoto(previous);
+  }
+  return site;
+}
+
+export async function uploadHeroCreatorPhoto(
+  file: File,
+  expectedVersion?: number,
+) {
+  const imagePath = await savePhotoFile("creator", file, "hero-photos");
+  return setHeroCreatorImagePath(imagePath, expectedVersion);
+}
+
+/** Production path: the file was client-uploaded to Supabase; persist its URL. */
+export async function setHeroCreatorPhotoUrl(
+  url: string,
+  expectedVersion?: number,
+) {
+  return setHeroCreatorImagePath(url, expectedVersion);
+}
+
+export async function clearHeroCreatorPhoto(expectedVersion?: number) {
+  return setHeroCreatorImagePath(undefined, expectedVersion);
 }
 
 export async function listSiteContentRevisions(

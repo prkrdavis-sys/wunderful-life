@@ -91,6 +91,15 @@ export function mergePhotoMedia(
         },
       };
     }
+    case "heroCreator": {
+      const hero = { ...draft.hero };
+      if (saved.hero.creatorImagePath) {
+        hero.creatorImagePath = saved.hero.creatorImagePath;
+      } else {
+        delete hero.creatorImagePath;
+      }
+      return { ...draft, hero };
+    }
     default: {
       const _exhaustive: never = kind;
       return _exhaustive;

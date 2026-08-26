@@ -48,7 +48,7 @@ export function SiteNav() {
           <BrandLogo
             alt=""
             sizes="56px"
-            preload
+            loading="eager"
             className="h-12 w-auto shrink-0 transition duration-200 group-hover:opacity-80 sm:h-14"
           />
           <span className="flex min-w-0 flex-col">

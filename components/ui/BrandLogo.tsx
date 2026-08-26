@@ -2,8 +2,8 @@ import Image from "next/image";
 
 export const BRAND_LOGO = {
   src: "/brand/logo.png",
-  width: 1254,
-  height: 1254,
+  width: 512,
+  height: 512,
 } as const;
 
 export const SIGNATURE = {
@@ -32,11 +32,15 @@ export function SignatureHalf({
   alt,
   sizes,
   className,
+  preload,
+  loading,
 }: {
   side: "first" | "last";
   alt: string;
   sizes: string;
   className?: string;
+  preload?: boolean;
+  loading?: "lazy" | "eager";
 }) {
   const sliceWidth = signatureSliceWidth(side);
   const objectPosition = side === "first" ? "left center" : "right center";
@@ -51,6 +55,8 @@ export function SignatureHalf({
         alt={alt}
         fill
         sizes={sizes}
+        preload={preload}
+        loading={preload ? undefined : loading}
         className="object-cover mix-blend-multiply"
         style={{ objectPosition }}
       />
@@ -63,9 +69,16 @@ type BrandLogoProps = {
   sizes: string;
   className?: string;
   preload?: boolean;
+  loading?: "lazy" | "eager";
 };
 
-export function BrandLogo({ alt, sizes, className, preload }: BrandLogoProps) {
+export function BrandLogo({
+  alt,
+  sizes,
+  className,
+  preload,
+  loading,
+}: BrandLogoProps) {
   return (
     <Image
       src={BRAND_LOGO.src}
@@ -74,6 +87,7 @@ export function BrandLogo({ alt, sizes, className, preload }: BrandLogoProps) {
       height={BRAND_LOGO.height}
       sizes={sizes}
       preload={preload}
+      loading={preload ? undefined : loading}
       className={`bg-transparent ${className ?? ""}`.trim()}
     />
   );

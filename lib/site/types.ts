@@ -42,11 +42,21 @@ export type Testimonial = {
   role: string;
 };
 
+export type HeroIntroServices = [string, string, string];
+
 export type HeroContent = {
   videoPath?: string;
   /** First-frame still shown while the hero video buffers. */
   posterPath?: string;
   subtitle: string;
+  /** Serif first line of the hero intro title (e.g. "Creative"). */
+  titleLine: string;
+  /** Display title second line, shown in all caps (e.g. "Portfolio"). */
+  titleAccent: string;
+  /** Three offerings shown above the intro title, separated by pipes. */
+  services: HeroIntroServices;
+  /** PNG cutout of the creator; falls back to the bundled placeholder. */
+  creatorImagePath?: string;
 };
 
 /** A single figure in the audience reach section or the UGC proof stats. */

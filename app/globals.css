@@ -52,7 +52,6 @@
   --font-label: var(--font-instrument);
   --font-script: var(--font-niconne);
   --font-cooper: var(--font-calistoga);
-  --font-signature: var(--font-great-vibes);
 }
 
 html {
@@ -151,6 +150,47 @@ body {
   transform: translateZ(0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+}
+
+/*
+ * Hero video band: only one sizer is visible. Exact ratio uses padding-top %
+ * so a vertical clip lengthens the section instead of cover-cropping.
+ */
+.hero-video-sizer-exact {
+  display: none;
+  padding-top: var(--hero-ratio-padding);
+}
+
+.hero-video-sizer-cover {
+  display: block;
+}
+
+.hero-video-band[data-exact="true"] .hero-video-sizer-exact {
+  display: block;
+}
+
+.hero-video-band[data-exact="true"] .hero-video-sizer-cover {
+  display: none;
+}
+
+@media (orientation: portrait) {
+  .hero-video-band[data-has-ratio="true"] .hero-video-sizer-exact {
+    display: block;
+  }
+
+  .hero-video-band[data-has-ratio="true"] .hero-video-sizer-cover {
+    display: none;
+  }
+}
+
+/*
+ * Landscape desktops: keep the real ratio via contain, but do not let a
+ * 9:16 full-bleed grow to 2–3 viewports or the centered copy falls off-screen.
+ */
+@media (orientation: landscape) {
+  .hero-video-sizer-exact {
+    padding-top: min(var(--hero-ratio-padding), 100svh);
+  }
 }
 
 .autoplay-loop-video {
@@ -533,6 +573,143 @@ body {
   background-repeat: no-repeat;
   background-size: cover;
   opacity: 0.94;
+}
+
+/*
+ * Hero intro stacking. container-type makes this a stacking context, so
+ * the video sibling (z-20) can cover the cutout where it hangs below.
+ *   0  silhouettes
+ *   1  signature halves
+ *   2  creator cutout (hangs behind the belt and video)
+ *  20  forest belt, UGC labels
+ *  30  Creative Portfolio title
+ */
+.hero-intro {
+  overflow: visible;
+  container-type: inline-size;
+  container-name: hero-intro;
+}
+
+.hero-intro-stage {
+  position: relative;
+  overflow: visible;
+}
+
+.hero-intro-composer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(34%, 22.5rem) minmax(0, 1.15fr);
+  align-items: center;
+  column-gap: clamp(0.15rem, 1.4vw, 1.1rem);
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: clamp(0.65rem, 3vw, 2.25rem);
+  padding-top: 0.15rem;
+  padding-bottom: clamp(1.55rem, 4.2vw, 2.25rem);
+}
+
+.hero-intro-signature {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+.hero-intro-signature-first {
+  justify-self: end;
+  max-width: 13rem;
+}
+
+.hero-intro-signature-last {
+  justify-self: start;
+  max-width: 15.5rem;
+}
+
+.hero-intro-creator-slot {
+  /* Show the top of the 2:3 cutout; the rest hangs behind the belt. */
+  --creator-visible: 0.7;
+  position: relative;
+  z-index: 2;
+  overflow: visible;
+  width: 100%;
+  aspect-ratio: 1024 / calc(1536 * var(--creator-visible));
+}
+
+.hero-intro-creator-image {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  z-index: 0;
+  width: 100%;
+  pointer-events: none;
+}
+
+.hero-intro-title {
+  pointer-events: none;
+  position: absolute;
+  z-index: 30;
+  bottom: 0;
+  left: 0;
+  max-width: min(94%, 46rem);
+  padding-inline: clamp(0.85rem, 4vw, 2.5rem);
+  padding-bottom: 0.2rem;
+  line-height: 0.78;
+  letter-spacing: -0.04em;
+  text-align: left;
+}
+
+.hero-intro-belt {
+  isolation: isolate;
+}
+
+@container hero-intro (max-width: 40rem) {
+  .hero-intro-composer {
+    grid-template-columns: minmax(0, 1fr) minmax(38%, 14.5rem) minmax(0, 1.15fr);
+    column-gap: 0.1rem;
+  }
+
+  .hero-intro-signature-first,
+  .hero-intro-signature-last {
+    max-width: none;
+  }
+
+  .hero-intro-signature-first {
+    transform: translateX(16%);
+  }
+
+  .hero-intro-signature-last {
+    transform: translateX(-12%);
+  }
+
+  .hero-intro-creator-slot {
+    --creator-visible: 0.64;
+  }
+}
+
+@container hero-intro (max-width: 24rem) {
+  .hero-intro-composer {
+    grid-template-columns: minmax(0, 1fr) minmax(40%, 11.25rem) minmax(0, 1.1fr);
+    padding-inline: 0.55rem;
+  }
+
+  .hero-intro-signature-first {
+    transform: translateX(20%);
+  }
+
+  .hero-intro-signature-last {
+    transform: translateX(-16%);
+  }
+
+  .hero-intro-title {
+    max-width: 96%;
+  }
+}
+
+@media (max-height: 40rem) and (orientation: landscape) {
+  .hero-intro-creator-slot {
+    --creator-visible: 0.56;
+    max-height: 48dvh;
+  }
 }
 
 /* Decorative moon / star silhouettes. */

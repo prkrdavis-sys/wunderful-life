@@ -16,7 +16,11 @@ const WEB_SAFE_PHOTO_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".gif"] as 
 const MAX_PHOTO_EDGE = 1920;
 const COMPRESS_PHOTO_OVER_BYTES = 300_000;
 
-type PhotoFolder = "about-photos" | "home-grid-photos" | "brand-logos";
+type PhotoFolder =
+  | "about-photos"
+  | "home-grid-photos"
+  | "brand-logos"
+  | "hero-photos";
 
 function isHeicLike(file: Pick<File, "name" | "type">): boolean {
   const mime = file.type.toLowerCase();
