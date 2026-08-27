@@ -18,7 +18,7 @@ export function StatsBannerSection() {
       aria-label="Audience stats"
       className="relative px-4 py-8 sm:px-6 sm:py-10"
     >
-      <SectionReveal className="relative mx-auto w-full max-w-3xl overflow-hidden rounded-[2rem] px-6 py-8 text-center shadow-[0_12px_32px_rgba(35,57,42,0.18)] sm:px-10 sm:py-9">
+      <SectionReveal variant="fadeUp" className="relative mx-auto w-full max-w-3xl overflow-hidden rounded-[2rem] px-6 py-8 text-center shadow-[0_12px_32px_rgba(35,57,42,0.18)] sm:px-10 sm:py-9">
         <SectionSurface tone="forest" motifs="none" />
         <AdminEditButton section="stats" label="Edit stats" tone="light" />
         <div className="relative z-10">
@@ -29,7 +29,7 @@ export function StatsBannerSection() {
           ) : (
             <StaggerChildren className="grid grid-cols-2 gap-x-4 gap-y-7 sm:flex sm:items-start sm:justify-around sm:gap-8">
               {items.map((stat) => (
-                <StaggerItem key={stat.id} className="text-center">
+                <StaggerItem key={stat.id} variant="fadeUp" className="text-center">
                   <p className="font-script pb-1 text-4xl leading-[1.15] text-paper sm:text-5xl">
                     {stat.value}
                   </p>

@@ -28,16 +28,6 @@ export const COMPRESS_SETTINGS: Record<VideoUploadProfile, CompressSettings> = {
     bitrate: 4_500_000,
     requireMp4: true,
   },
-  cta: {
-    maxShortEdge: 1080,
-    crf: 23,
-    stripAudio: false,
-    maxDurationSec: null,
-    skipIfMp4UnderBytes: 8_000_000,
-    progressMessage: "Compressing looping video (1080p)…",
-    bitrate: 5_000_000,
-    requireMp4: true,
-  },
   portfolio: {
     maxShortEdge: 720,
     crf: 26,

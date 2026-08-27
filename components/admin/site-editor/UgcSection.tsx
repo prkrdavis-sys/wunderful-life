@@ -14,7 +14,7 @@ export function UgcEditor({
   return (
     <section className="space-y-4">
       <div>
-        <h3 className="font-display text-lg text-brown">Why UGC</h3>
+        <h3 className="font-display text-lg text-brown">What is UGC</h3>
         <p className="mt-1 text-sm text-muted">
           The merged explainer section: definition copy, proof stats, the big
           callout, and the benefits checklist.

@@ -9,6 +9,9 @@ import {
 import { type ComponentProps, type ReactNode } from "react";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
+const REVEAL_DURATION = 0.78;
+const STAGGER_ITEM_DURATION = 0.72;
+const VIEWPORT = { once: true, amount: 0.22 } as const;
 
 export type RevealVariant =
   | "fade"
@@ -28,19 +31,19 @@ const revealStates: Record<
     visible: { opacity: 1 },
   },
   fadeUp: {
-    hidden: { opacity: 0, y: 48 },
+    hidden: { opacity: 0, y: 36 },
     visible: { opacity: 1, y: 0 },
   },
   fadeDown: {
-    hidden: { opacity: 0, y: -28 },
+    hidden: { opacity: 0, y: -24 },
     visible: { opacity: 1, y: 0 },
   },
   fadeLeft: {
-    hidden: { opacity: 0, x: -48 },
+    hidden: { opacity: 0, x: -36 },
     visible: { opacity: 1, x: 0 },
   },
   fadeRight: {
-    hidden: { opacity: 0, x: 48 },
+    hidden: { opacity: 0, x: 36 },
     visible: { opacity: 1, x: 0 },
   },
   scale: {
@@ -53,7 +56,7 @@ const revealStates: Record<
   },
 };
 
-function useRevealTransition(delay = 0, duration = 0.72): Transition {
+function useRevealTransition(delay = 0, duration = REVEAL_DURATION): Transition {
   const reduceMotion = useReducedMotion();
 
   if (reduceMotion) {
@@ -63,42 +66,35 @@ function useRevealTransition(delay = 0, duration = 0.72): Transition {
   return { duration, delay, ease: EASE };
 }
 
-function getRevealProps(
-  variant: RevealVariant,
-  reduceMotion: boolean | null,
-) {
-  const states = revealStates[variant];
-  const visible = states.visible;
-
-  return {
-    initial: reduceMotion ? visible : { ...states.hidden, opacity: 1 },
-    animate: visible,
-  };
-}
-
 export function HeroEntrance({
   children,
   className = "",
   delay = 0,
   variant = "fadeUp",
+  duration = 0.85,
+  as = "div",
 }: {
   children: ReactNode;
   className?: string;
   delay?: number;
   variant?: RevealVariant;
+  duration?: number;
+  as?: "div" | "span";
 }) {
   const reduceMotion = useReducedMotion();
-  const { initial, animate } = getRevealProps(variant, reduceMotion);
+  const states = revealStates[variant];
+  const revealTransition = useRevealTransition(delay, duration);
+  const MotionTag = as === "span" ? motion.span : motion.div;
 
   return (
-    <motion.div
-      initial={initial}
-      animate={animate}
-      transition={useRevealTransition(delay)}
+    <MotionTag
+      initial={reduceMotion ? states.visible : states.hidden}
+      animate={states.visible}
+      transition={revealTransition}
       className={className}
     >
       {children}
-    </motion.div>
+    </MotionTag>
   );
 }
 
@@ -107,7 +103,7 @@ export function SectionReveal({
   className = "",
   delay = 0,
   variant = "fadeUp",
-  duration = 0.6,
+  duration = REVEAL_DURATION,
 }: {
   children: ReactNode;
   className?: string;
@@ -115,13 +111,16 @@ export function SectionReveal({
   variant?: RevealVariant;
   duration?: number;
 }) {
+  const reduceMotion = useReducedMotion();
   const states = revealStates[variant];
   const revealTransition = useRevealTransition(delay, duration);
+  const visible = states.visible;
 
   return (
     <motion.div
-      initial={states.visible}
-      animate={states.visible}
+      initial={reduceMotion ? visible : states.hidden}
+      whileInView={visible}
+      viewport={VIEWPORT}
       transition={revealTransition}
       className={className}
     >
@@ -134,18 +133,21 @@ export function StaggerChildren({
   children,
   className = "",
   stagger = 0.12,
-}: ComponentProps<"div"> & { stagger?: number }) {
+  delayChildren = 0.06,
+}: ComponentProps<"div"> & { stagger?: number; delayChildren?: number }) {
   const reduceMotion = useReducedMotion();
 
   return (
     <motion.div
-      initial={false}
-      animate="visible"
+      initial={reduceMotion ? "visible" : "hidden"}
+      whileInView="visible"
+      viewport={VIEWPORT}
       variants={{
         hidden: {},
         visible: {
           transition: {
             staggerChildren: reduceMotion ? 0 : stagger,
+            delayChildren: reduceMotion ? 0 : delayChildren,
           },
         },
       }}
@@ -174,15 +176,15 @@ export function StaggerItem({
         visible: states.visible,
       }
     : {
-        hidden: { ...states.hidden, opacity: 1 },
+        hidden: states.hidden,
         visible: {
           ...states.visible,
-          transition: { duration: 0.62, ease: EASE },
+          transition: { duration: STAGGER_ITEM_DURATION, ease: EASE },
         },
       };
 
   return (
-    <motion.div initial={false} variants={variants} className={className}>
+    <motion.div variants={variants} className={className}>
       {children}
     </motion.div>
   );

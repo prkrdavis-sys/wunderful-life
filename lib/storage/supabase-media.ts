@@ -41,12 +41,12 @@ function defaultExtensionForDir(dir: MediaUploadDir): string {
   switch (dir) {
     case "videos":
     case "hero":
-    case "cta":
       return ".mp4";
     case "thumbnails":
     case "about-photos":
     case "home-grid-photos":
     case "brand-logos":
+    case "cta-photos":
       return ".jpg";
     case "hero-photos":
       return ".png";

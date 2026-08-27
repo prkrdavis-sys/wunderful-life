@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
+import { HeroEntrance } from "@/components/ui/motion";
 import { SectionSurface } from "@/components/ui/SectionSurface";
 import { isRemoteMediaUrl } from "@/lib/media/urls";
 
@@ -29,20 +30,32 @@ function HeroLockup({
   first,
   second,
   className,
+  delay = 0,
 }: {
   as: "h1" | "p";
   first: string;
   second: string;
   className: string;
+  delay?: number;
 }) {
   return (
     <Tag className={className}>
-      <span className="block font-serif text-[clamp(1.45rem,7vw,4.6rem)] text-sage-deep">
+      <HeroEntrance
+        as="span"
+        variant="fadeLeft"
+        delay={delay}
+        className="block font-serif text-[clamp(1.45rem,7vw,4.6rem)] text-sage-deep"
+      >
         {first}
-      </span>
-      <span className="-mt-1 block font-cooper text-[clamp(1.75rem,10.5vw,7.5rem)] text-forest uppercase">
+      </HeroEntrance>
+      <HeroEntrance
+        as="span"
+        variant="fadeRight"
+        delay={delay + 0.1}
+        className="-mt-1 block font-cooper text-[clamp(1.75rem,10.5vw,7.5rem)] text-forest uppercase"
+      >
         {second}
-      </span>
+      </HeroEntrance>
     </Tag>
   );
 }
@@ -55,9 +68,15 @@ function HeroForestBelt({ subtitle }: { subtitle: string }) {
     >
       <SectionSurface tone="forest" motifs="none" />
       {subtitle ? (
-        <p className="hero-intro-belt-copy relative z-10 text-center font-script text-paper">
-          {subtitle}
-        </p>
+        <HeroEntrance
+          variant="fadeUp"
+          delay={0.48}
+          className="relative z-10 w-full"
+        >
+          <p className="hero-intro-belt-copy text-center font-script text-paper">
+            {subtitle}
+          </p>
+        </HeroEntrance>
       ) : null}
     </div>
   );
@@ -68,7 +87,7 @@ export function HeroIntro() {
   const reduceMotion = useReducedMotion();
   const creatorInitial = reduceMotion
     ? { opacity: 1, y: 0 }
-    : { opacity: 1, y: "16%" };
+    : { opacity: 1, y: "42%" };
   const services = site.hero.services.filter((service) => service.trim());
   const creatorImage = site.hero.creatorImagePath ?? HERO_CREATOR_FALLBACK.src;
   const subtitle = site.hero.subtitle.trim();
@@ -100,18 +119,24 @@ export function HeroIntro() {
         />
 
         {services.length > 0 ? (
-          <p className="relative z-20 flex w-full min-w-0 flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3 pt-4 font-label text-[clamp(0.7rem,2.4vw,1.45rem)] font-medium tracking-[0.06em] text-brown sm:gap-x-4 sm:px-4 sm:pt-5 sm:tracking-[0.16em]">
-            {services.map((service, index) => (
-              <span key={`${service}-${index}`} className="contents">
-                {index > 0 ? (
-                  <span aria-hidden className="text-sage-deep">
-                    |
-                  </span>
-                ) : null}
-                <span>{service}</span>
-              </span>
-            ))}
-          </p>
+          <HeroEntrance
+            variant="fadeDown"
+            delay={0.06}
+            className="relative z-20 w-full min-w-0"
+          >
+            <p className="flex w-full min-w-0 flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3 pt-4 font-label text-[clamp(0.7rem,2.4vw,1.45rem)] font-medium tracking-[0.06em] text-brown sm:gap-x-4 sm:px-4 sm:pt-5 sm:tracking-[0.16em]">
+              {services.map((service, index) => (
+                <span key={`${service}-${index}`} className="contents">
+                  {index > 0 ? (
+                    <span aria-hidden className="text-sage-deep">
+                      |
+                    </span>
+                  ) : null}
+                  <span>{service}</span>
+                </span>
+              ))}
+            </p>
+          </HeroEntrance>
         ) : null}
 
         <div className="hero-intro-stage">
@@ -124,9 +149,11 @@ export function HeroIntro() {
                   reduceMotion
                     ? { duration: 0 }
                     : {
-                        duration: 1.15,
-                        delay: 0.18,
-                        ease: [0.22, 1, 0.36, 1],
+                        type: "spring",
+                        stiffness: 46,
+                        damping: 18,
+                        mass: 1.15,
+                        delay: 0.08,
                       }
                 }
                 className="hero-intro-creator-image will-change-transform"
@@ -138,7 +165,7 @@ export function HeroIntro() {
                   width={HERO_CREATOR_FALLBACK.width}
                   height={HERO_CREATOR_FALLBACK.height}
                   preload
-                  sizes="(min-width: 1024px) 22.5rem, 42vw"
+                  sizes="(min-width: 1024px) 25rem, 58vw"
                   unoptimized={isRemoteMediaUrl(creatorImage)}
                   className="h-full w-full object-cover object-top"
                 />
@@ -151,12 +178,14 @@ export function HeroIntro() {
           as="h1"
           first={nameFirst}
           second={nameLast}
+          delay={0.16}
           className="hero-intro-lockup hero-intro-name"
         />
         <HeroLockup
           as="p"
           first={site.hero.titleLine}
           second={site.hero.titleAccent}
+          delay={0.32}
           className="hero-intro-lockup hero-intro-title"
         />
       </div>

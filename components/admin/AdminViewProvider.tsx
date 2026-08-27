@@ -20,14 +20,14 @@ export type SiteEditorSection =
   | "profile"
   | "hero"
   | "about"
-  | "photography"
   | "stats"
   | "work"
   | "services"
+  | "photography"
   | "brands"
-  | "ugc"
   | "testimonials"
   | "photos"
+  | "ugc"
   | "cta";
 
 export type SiteEditorFocus = {

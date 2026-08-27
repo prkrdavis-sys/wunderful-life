@@ -86,9 +86,8 @@ export type HeroContent = {
   posterPath?: string;
   /** Cursive line in the forest belt between the intro and the hero video. */
   subtitle: string;
-  /** Serif first line of the bottom-left hero title (e.g. "Creative"). */
+  /** Kept for saved site content; the hero now shows the profile name. */
   titleLine: string;
-  /** Display title second line, shown in all caps (e.g. "Portfolio"). */
   titleAccent: string;
   /** Three offerings shown above the intro title, separated by pipes. */
   services: HeroIntroServices;
@@ -167,9 +166,7 @@ export type SiteContent = {
     headline: string;
     body: string;
     emailLabel: string;
-    videoPath?: string;
-    /** First-frame still shown while the CTA video buffers. */
-    posterPath?: string;
+    photo: AboutPhoto;
   };
   social: {
     instagram: string;

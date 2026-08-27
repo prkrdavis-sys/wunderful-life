@@ -14,31 +14,27 @@ function omitLogoPath<T extends { logoPath?: string }>(item: T): T {
   return next;
 }
 
-/** Keep unsaved text edits; copy only the persisted hero/CTA media paths. */
+/** Keep unsaved text edits; copy only the persisted hero video paths. */
 export function mergeSlotVideo(
   draft: SiteContent,
   saved: SiteContent,
   slot: VideoSlot,
 ): SiteContent {
-  if (slot === "hero") {
-    return {
-      ...draft,
-      hero: {
-        ...draft.hero,
-        videoPath: saved.hero.videoPath,
-        posterPath: saved.hero.posterPath,
-      },
-    };
+  switch (slot) {
+    case "hero":
+      return {
+        ...draft,
+        hero: {
+          ...draft.hero,
+          videoPath: saved.hero.videoPath,
+          posterPath: saved.hero.posterPath,
+        },
+      };
+    default: {
+      const _exhaustive: never = slot;
+      return _exhaustive;
+    }
   }
-
-  return {
-    ...draft,
-    closingCta: {
-      ...draft.closingCta,
-      videoPath: saved.closingCta.videoPath,
-      posterPath: saved.closingCta.posterPath,
-    },
-  };
 }
 
 /** Keep unsaved text edits; copy only the persisted image/logo for one row. */
@@ -99,6 +95,18 @@ export function mergePhotoMedia(
         delete hero.creatorImagePath;
       }
       return { ...draft, hero };
+    }
+    case "ctaPhoto": {
+      const photo = { ...draft.closingCta.photo };
+      if (saved.closingCta.photo.imagePath) {
+        photo.imagePath = saved.closingCta.photo.imagePath;
+      } else {
+        delete photo.imagePath;
+      }
+      return {
+        ...draft,
+        closingCta: { ...draft.closingCta, photo },
+      };
     }
     default: {
       const _exhaustive: never = kind;

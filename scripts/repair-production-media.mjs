@@ -198,7 +198,7 @@ async function transcodeIfMov(url, profile) {
   await download(url, dest);
   console.log(`Transcoding ${profile}…`);
   transcode(dest, out, profile);
-  const folder = profile === "hero" ? "hero" : profile === "cta" ? "cta" : "videos";
+  const folder = profile === "hero" ? "hero" : "videos";
   const objectPath = `${folder}/${randomUUID()}.mp4`;
   const uploaded = await uploadFile(objectPath, out, "video/mp4");
   console.log(`${url} -> ${uploaded}`);
@@ -279,16 +279,6 @@ async function main() {
       },
     };
   }
-  if (site.closingCta?.videoPath) {
-    site = {
-      ...site,
-      closingCta: {
-        ...site.closingCta,
-        videoPath: await transcodeIfMov(site.closingCta.videoPath, "cta"),
-      },
-    };
-  }
-
   const videos = [];
   for (const video of libraryRow.videos ?? []) {
     videos.push({

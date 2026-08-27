@@ -1,6 +1,12 @@
 import type { MediaUploadDir } from "@/lib/storage/media-upload";
 
-export const PHOTO_KINDS = ["about", "collage", "brandLogo", "heroCreator"] as const;
+export const PHOTO_KINDS = [
+  "about",
+  "collage",
+  "brandLogo",
+  "heroCreator",
+  "ctaPhoto",
+] as const;
 export type PhotoKind = (typeof PHOTO_KINDS)[number];
 
 export type PhotoKindDescriptor = {
@@ -36,6 +42,13 @@ export const PHOTO_KIND_DESCRIPTORS: Record<PhotoKind, PhotoKindDescriptor> = {
     endpoint: "/api/site/hero-creator",
     folder: "hero-photos",
     noun: "creator photo",
+    singleton: true,
+  },
+  ctaPhoto: {
+    kind: "ctaPhoto",
+    endpoint: "/api/site/cta-photo",
+    folder: "cta-photos",
+    noun: "CTA photo",
     singleton: true,
   },
 };

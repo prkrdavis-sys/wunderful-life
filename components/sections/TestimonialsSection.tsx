@@ -27,13 +27,13 @@ export function TestimonialsSection() {
       <SectionButterfly flight="testimonialsLow" />
       <div className="relative z-10 mx-auto max-w-6xl">
         {hiddenFromVisitors && (
-          <SectionReveal className="mx-auto mb-6 max-w-xl rounded-full border border-forest/20 bg-paper/80 px-5 py-2 text-center text-sm font-medium text-forest shadow-sm backdrop-blur-md">
+          <SectionReveal variant="fadeUp" className="mx-auto mb-6 max-w-xl rounded-full border border-forest/20 bg-paper/80 px-5 py-2 text-center text-sm font-medium text-forest shadow-sm backdrop-blur-md">
             Hidden from regular view. Toggle this on in the admin editor when
             testimonials are ready.
           </SectionReveal>
         )}
 
-        <SectionReveal className="mx-auto max-w-3xl text-center">
+        <SectionReveal variant="fadeUp" className="mx-auto max-w-3xl text-center">
           <p className="font-label text-xs font-semibold tracking-[0.18em] text-ink/75 uppercase">
             {site.testimonials.eyebrow}
           </p>
@@ -46,8 +46,11 @@ export function TestimonialsSection() {
         </SectionReveal>
 
         <StaggerChildren className="mx-auto mt-10 grid max-w-5xl gap-6 md:grid-cols-2">
-          {site.testimonials.items.map((testimonial) => (
-            <StaggerItem key={testimonial.id}>
+          {site.testimonials.items.map((testimonial, index) => (
+            <StaggerItem
+              key={testimonial.id}
+              variant={index % 2 === 0 ? "fadeLeft" : "fadeRight"}
+            >
               <figure className="glass-panel h-full rounded-[2rem] border border-white/55 px-6 py-7 text-left ring-1 ring-white/40 sm:px-8">
                 <blockquote className="font-serif text-xl leading-relaxed text-forest sm:text-2xl">
                   &ldquo;{testimonial.quote}&rdquo;

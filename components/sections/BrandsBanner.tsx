@@ -51,7 +51,7 @@ export function BrandsBanner() {
       <SectionButterfly flight="brandsBand" />
 
       <div className="relative z-10 mx-auto max-w-6xl">
-        <SectionReveal className="mx-auto max-w-2xl text-center">
+        <SectionReveal variant="fadeUp" className="mx-auto max-w-2xl text-center">
           <h2
             id="brands-heading"
             className="font-serif text-4xl tracking-tight text-paper sm:text-6xl"
@@ -66,6 +66,7 @@ export function BrandsBanner() {
           </p>
         ) : (
           <SectionReveal
+            variant="fadeUp"
             delay={0.12}
             className="ugc-benefits-card mx-auto mt-10 max-w-5xl rounded-[2rem] border border-paper/40 px-4 py-5 text-ink shadow-xl sm:mt-12 sm:px-6 sm:py-6 lg:p-8"
           >

@@ -7,9 +7,16 @@ import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { DeferredMount } from "@/components/ui/DeferredMount";
 import { DecorMotifs } from "@/components/ui/DecorMotifs";
 import { SectionSurface } from "@/components/ui/SectionSurface";
-import { SectionReveal, StaggerChildren, StaggerItem } from "@/components/ui/motion";
+import {
+  SectionReveal,
+  StaggerChildren,
+  StaggerItem,
+  type RevealVariant,
+} from "@/components/ui/motion";
 import { isRemoteMediaUrl } from "@/lib/media/urls";
 import type { CollagePhotoShape } from "@/lib/site/types";
+
+const COLLAGE_REVEALS: RevealVariant[] = ["fadeUp", "fadeLeft", "fadeRight"];
 
 /** Row/column spans that give the collage its irregular, scrapbook rhythm. */
 const SHAPE_SPAN: Record<CollagePhotoShape, string> = {
@@ -29,7 +36,7 @@ export function PhotographyCollage() {
     <section
       id="photography"
       aria-labelledby="photography-heading"
-      className="scroll-section-anchor relative overflow-hidden px-4 pt-8 pb-16 sm:px-6 sm:pt-10 sm:pb-20"
+      className="photography-about-band scroll-section-anchor relative overflow-hidden px-4 pt-8 pb-16 sm:px-6 sm:pt-10 sm:pb-20"
     >
       <DecorMotifs preset="right" />
       <AdminEditButton section="photography" label="Edit photos" />
@@ -37,7 +44,7 @@ export function PhotographyCollage() {
       <SectionButterfly flight="photographyLow" />
 
       <div className="relative z-10 mx-auto max-w-5xl">
-        <SectionReveal className="mx-auto mb-8 w-fit max-w-full sm:mb-10">
+        <SectionReveal variant="fadeUp" className="mx-auto mb-8 w-fit max-w-full sm:mb-10">
           <div className="relative overflow-hidden rounded-[2rem] px-7 py-3.5 text-center shadow-[0_12px_32px_rgba(35,57,42,0.18)] sm:px-10 sm:py-4">
             <SectionSurface tone="forest" motifs="none" />
             <h2
@@ -52,7 +59,7 @@ export function PhotographyCollage() {
         {/* Dense flow backfills the holes that tall/wide tiles leave behind. */}
         <DeferredMount className="min-h-[28rem] sm:min-h-[36rem]">
           <StaggerChildren className="grid auto-rows-[minmax(0,7rem)] grid-flow-row-dense grid-cols-3 gap-2 sm:auto-rows-[minmax(0,9rem)] sm:grid-cols-4 sm:gap-3">
-          {photos.map((photo) => {
+          {photos.map((photo, index) => {
             const tile = (
               <>
                 {photo.imagePath ? (
@@ -82,6 +89,7 @@ export function PhotographyCollage() {
             return (
               <StaggerItem
                 key={photo.id}
+                variant={COLLAGE_REVEALS[index % COLLAGE_REVEALS.length] ?? "fadeUp"}
                 className={`${SHAPE_SPAN[photo.shape]} min-h-0`}
               >
                 {isAdminView ? (

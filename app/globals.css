@@ -318,7 +318,7 @@ body {
     linear-gradient(145deg, #9baa8c 0%, #b3bfa4 48%, #82956f 100%);
 }
 
-/* Continues the UGC forest band so the gradient does not restart. */
+/* Forest brand-logo band. Stands alone after photography. */
 .ugc-brands-section {
   background:
     radial-gradient(circle at 18% 22%, rgb(255 253 249 / 0.14), transparent 20rem),
@@ -632,9 +632,9 @@ body {
 }
 
 /*
- * Shared wash behind photography, stats, and about. Same layered recipe as
- * the UGC and recent-videos bands: paper highlight, a darker corner, then
- * an angled linear so the long band reads as one gradient.
+ * Shared wash behind the about/stats band and the photography collage.
+ * Same layered recipe as the UGC and recent-videos bands: paper highlight,
+ * a darker corner, then an angled linear so the band reads as one gradient.
  */
 .photography-about-band {
   background:
@@ -644,7 +644,7 @@ body {
 }
 
 /*
- * Homogeneous sage silhouettes (rolling hills, a few pines) for the
+ * Homogeneous sage silhouettes (rolling hills) for the
  * editorial hero intro. One hue (--sage-deep), layered only by opacity.
  */
 .hero-intro-silhouettes {
@@ -657,15 +657,15 @@ body {
 
 /*
  * Hero intro stacking. Hills and title stay in .hero-intro-visual, above
- * the forest belt. The 2:3 cutout only reserves 85% of its height in flow
- * so the bottom 15% hangs behind the belt and the video band.
+ * the forest belt. The 2:3 cutout only reserves 75% of its height in flow
+ * so the bottom 25% hangs behind the belt and the video band.
  * container-type lives on the section (not the stage) so inline-size
  * containment cannot clip that hang on the block axis.
  *   0  silhouettes
  *   2  creator cutout
  *   5  butterfly
  *  20  forest belt, UGC labels, video sibling
- *  30  name (top right) and title (bottom left)
+ *  30  name (bottom left)
  */
 .hero-intro {
   overflow: visible;
@@ -687,20 +687,20 @@ body {
 .hero-intro-composer {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(32%, 20rem) minmax(0, 1.25fr);
+  grid-template-columns: minmax(0, 1fr) minmax(40%, 25rem) minmax(0, 1.25fr);
   align-items: start;
   column-gap: clamp(0.2rem, 1.4vw, 1.1rem);
   width: 100%;
   max-width: 72rem;
   margin-inline: auto;
   padding-inline: clamp(0.55rem, 3vw, 2.25rem);
-  padding-top: clamp(0.45rem, 1.6vw, 1rem);
+  padding-top: clamp(1.1rem, 3.2vw, 2.25rem);
   padding-bottom: 0;
 }
 
 .hero-intro-creator-slot {
-  /* In-flow box is the visible 85%. The image is taller and hangs below. */
-  --creator-visible: 0.85;
+  /* In-flow box is the visible 75%. The image is taller and hangs below. */
+  --creator-visible: 0.75;
   position: relative;
   z-index: 2;
   overflow: visible;
@@ -736,17 +736,6 @@ body {
   left: 0;
   padding-bottom: 0.35rem;
   text-align: left;
-}
-
-.hero-intro-name {
-  top: 0;
-  right: 0;
-  padding-top: clamp(0.45rem, 1.6vw, 1rem);
-  text-align: right;
-}
-
-.hero-intro-visual--services .hero-intro-name {
-  top: clamp(2.2rem, 6.4vw, 3.35rem);
 }
 
 .hero-intro-belt {
@@ -800,21 +789,16 @@ body {
 
   .hero-intro-creator-slot {
     grid-column: 1;
-    width: min(48%, 14rem);
-  }
-
-  .hero-intro-visual--services .hero-intro-name {
-    top: clamp(2.7rem, 11vw, 4rem);
+    width: min(58%, 17rem);
   }
 }
 
 @container hero-intro (max-width: 24rem) {
   .hero-intro-creator-slot {
-    width: min(44%, 10rem);
+    width: min(54%, 12.5rem);
   }
 
-  .hero-intro-title,
-  .hero-intro-name {
+  .hero-intro-title {
     max-width: 96%;
     padding-inline: 0.7rem;
   }
@@ -826,7 +810,7 @@ body {
   }
 
   .hero-intro-creator-slot {
-    max-width: 9.5rem;
+    max-width: 11.5rem;
   }
 }
 

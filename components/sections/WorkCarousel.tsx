@@ -31,7 +31,7 @@ export function WorkCarousel({ featuredVideos }: WorkCarouselProps) {
       <AdminEditButton target="portfolio" label="Edit videos" />
 
       <div className="relative z-10">
-        <SectionReveal className="mx-auto mb-8 w-fit max-w-[calc(100%-2rem)] sm:mb-10">
+        <SectionReveal variant="fadeUp" className="mx-auto mb-8 w-fit max-w-[calc(100%-2rem)] sm:mb-10">
           <div className="relative overflow-hidden rounded-[2rem] px-7 py-3.5 text-center shadow-[0_12px_32px_rgba(35,57,42,0.18)] sm:px-10 sm:py-4">
             <SectionSurface tone="forest" motifs="none" />
             <h2
@@ -52,11 +52,15 @@ export function WorkCarousel({ featuredVideos }: WorkCarouselProps) {
         </DeferredMount>
 
         <SectionReveal
+          variant="fadeUp"
           delay={0.15}
-          className="mt-10 flex justify-center"
+          className="mt-10 flex justify-center px-4"
         >
-          <AnimatedButton href="/work" variant="primary">
+          <AnimatedButton href="/work" variant="inverse">
             See All of {site.name}&apos;s Work
+            <span aria-hidden="true" className="translate-y-px text-[1.05em]">
+              →
+            </span>
           </AnimatedButton>
         </SectionReveal>
       </div>

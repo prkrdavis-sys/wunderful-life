@@ -2,8 +2,8 @@
   "hero": {
     "subtitle": "Aesthetic lifestyle, travel & fitness content that is relatable, informative, and fun! ",
     "videoPath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/hero/e7b836fc-d5c1-4091-8e4d-87f04000a51d.mp4",
-    "titleLine": "Creative",
-    "titleAccent": "Portfolio",
+    "titleLine": "Emily",
+    "titleAccent": "Wunder",
     "services": ["UGC", "Social Media", "Marketing"]
   },
   "name": "Emily",
@@ -141,8 +141,12 @@
       "label": "Services"
     },
     {
+      "href": "/#testimonials",
+      "label": "Testimonials"
+    },
+    {
       "href": "/#ugc",
-      "label": "Why UGC"
+      "label": "What is UGC"
     },
     {
       "href": "/#contact",
@@ -156,8 +160,14 @@
   "closingCta": {
     "body": "Want content that converts and a creator that brands actually want to work with again? Let's chat!",
     "headline": "Let's work together",
-    "videoPath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/cta/de78f0e7-0f26-49a8-b0b1-ac122ffa3e77.mp4",
-    "emailLabel": "hello@wunderfulife.com"
+    "emailLabel": "hello@wunderfulife.com",
+    "photo": {
+      "id": "cta-photo",
+      "caption": "",
+      "showCaption": true,
+      "rotate": 0,
+      "frame": "rounded"
+    }
   },
   "photography": {
     "label": "Photography",

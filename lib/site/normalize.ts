@@ -21,8 +21,8 @@ function defaultHeroSubtitle(name: string): string {
   return `I'm ${name} — the face behind the frame. Brands hire me for deliverables; they remember me for the personality.`;
 }
 
-const DEFAULT_HERO_TITLE_LINE = "Creative";
-const DEFAULT_HERO_TITLE_ACCENT = "Portfolio";
+const DEFAULT_HERO_TITLE_LINE = "Emily";
+const DEFAULT_HERO_TITLE_ACCENT = "Wunder";
 const DEFAULT_HERO_SERVICES: HeroIntroServices = [
   "UGC",
   "Social Media",
@@ -196,7 +196,7 @@ const DEFAULT_FOURTH_GALLERY_PHOTO: AboutPhoto = {
   frame: "polaroid",
 };
 
-/** Public navbar order, matching the live site tabs. */
+/** Public navbar order, matching homepage section flow. */
 const CANONICAL_HERO_LINKS: SiteContent["heroLinks"] = [
   { label: "About Me", href: "/#about" },
   {
@@ -206,7 +206,8 @@ const CANONICAL_HERO_LINKS: SiteContent["heroLinks"] = [
     activePathPrefix: "/work",
   },
   { label: "Services", href: "/#services" },
-  { label: "Why UGC", href: "/#ugc" },
+  { label: "Testimonials", href: "/#testimonials" },
+  { label: "What is UGC", href: "/#ugc" },
   { label: "Contact", href: "/#contact" },
 ];
 
@@ -234,7 +235,11 @@ type SiteContentInput = Omit<
   brands?: Partial<SiteContent["brands"]>;
   whatIsUgc?: Partial<SiteContent["whatIsUgc"]>;
   ugcBenefits?: Partial<SiteContent["ugcBenefits"]>;
-  closingCta?: Partial<SiteContent["closingCta"]>;
+  closingCta?: Partial<SiteContent["closingCta"]> & {
+    /** Superseded by `photo`; still read so old saves migrate. */
+    videoPath?: string;
+    posterPath?: string;
+  };
   /** Legacy saves stored a bare service array. */
   services?: ServiceItem[] | Partial<SiteContent["services"]>;
   testimonials?: Partial<SiteContent["testimonials"]>;
@@ -263,6 +268,34 @@ function slugId(value: string, fallback: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
   return slug || fallback;
+}
+
+const DEFAULT_CTA_PHOTO: AboutPhoto = {
+  id: "cta-photo",
+  caption: "",
+  showCaption: true,
+  rotate: 0,
+  frame: "rounded",
+};
+
+function normalizeCtaPhoto(
+  photo: Partial<AboutPhoto> | undefined,
+  posterFallback?: string,
+): AboutPhoto {
+  const imagePath = photo?.imagePath || posterFallback;
+  return {
+    id: text(photo?.id, DEFAULT_CTA_PHOTO.id),
+    caption: typeof photo?.caption === "string" ? photo.caption : "",
+    showCaption: photo?.showCaption !== false,
+    rotate:
+      typeof photo?.rotate === "number" && Number.isFinite(photo.rotate)
+        ? photo.rotate
+        : DEFAULT_CTA_PHOTO.rotate,
+    frame: isAboutPhotoFrame(photo?.frame)
+      ? photo.frame
+      : DEFAULT_CTA_PHOTO.frame,
+    ...(imagePath ? { imagePath } : {}),
+  };
 }
 
 function normalizeAboutPhotos(photos: AboutPhoto[]): AboutPhoto[] {
@@ -551,8 +584,7 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
         defaultCtaBody(raw.name),
       ),
       emailLabel: text(closingCta.emailLabel, DEFAULT_CTA_EMAIL_LABEL),
-      ...(closingCta.videoPath ? { videoPath: closingCta.videoPath } : {}),
-      ...(closingCta.posterPath ? { posterPath: closingCta.posterPath } : {}),
+      photo: normalizeCtaPhoto(closingCta.photo, closingCta.posterPath),
     },
     social: raw.social,
     services: normalizeServices(raw.services),

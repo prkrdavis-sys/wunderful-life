@@ -4,10 +4,9 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { useAdminView, useSiteContent } from "@/components/admin/AdminViewProvider";
-import { AutoplayLoopVideo } from "@/components/ui/AutoplayLoopVideo";
 import { BrandLogo, SIGNATURE } from "@/components/ui/BrandLogo";
-import { DeferredMount } from "@/components/ui/DeferredMount";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
+import { EmilyPhoto } from "@/components/ui/EmilyPhoto";
 import { SectionSurface } from "@/components/ui/SectionSurface";
 import { SectionReveal } from "@/components/ui/motion";
 
@@ -30,42 +29,11 @@ function InstagramIcon() {
   );
 }
 
-function CtaVideo({
-  videoPath,
-  posterPath,
-}: {
-  videoPath?: string;
-  posterPath?: string;
-}) {
-  const { viewMode } = useAdminView();
-
-  if (!videoPath) {
-    if (viewMode !== "admin") return null;
-    return (
-      <div className="flex aspect-[4/5] w-full items-center justify-center rounded-[2rem] border border-white/70 bg-paper/60 p-6 text-center shadow-lg backdrop-blur-sm">
-        <p className="font-label text-xs font-semibold tracking-[0.16em] text-brown/70 uppercase">
-          Upload a video in the site editor
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="autoplay-loop-clip relative aspect-[4/5] w-full overflow-hidden rounded-[2rem] border border-white/70 shadow-xl">
-      <AutoplayLoopVideo
-        src={videoPath}
-        poster={posterPath}
-        muted
-        showMuteToggle
-        className="object-cover object-center"
-      />
-    </div>
-  );
-}
-
 export function ClosingCtaSection() {
   const site = useSiteContent();
+  const { viewMode } = useAdminView();
   const { closingCta, social } = site;
+  const showPhoto = Boolean(closingCta.photo.imagePath) || viewMode === "admin";
 
   return (
     <section
@@ -78,17 +46,18 @@ export function ClosingCtaSection() {
       <SectionButterfly flight="closingFar" />
       <AdminEditButton section="cta" label="Edit CTA" />
 
-      <div className="relative z-10 mx-auto grid max-w-5xl items-center gap-10 sm:gap-14 lg:grid-cols-[0.85fr_1.15fr]">
-        <div className="mx-auto w-full max-w-xs lg:max-w-none">
-          <DeferredMount className="min-h-[20rem] sm:min-h-[24rem]">
-            <CtaVideo
-              videoPath={closingCta.videoPath}
-              posterPath={closingCta.posterPath}
-            />
-          </DeferredMount>
-        </div>
+      <div
+        className={`relative z-10 mx-auto grid max-w-5xl items-center gap-10 sm:gap-14 ${
+          showPhoto ? "lg:grid-cols-[0.85fr_1.15fr]" : ""
+        }`}
+      >
+        {showPhoto ? (
+          <SectionReveal variant="fadeLeft" className="mx-auto w-full max-w-xs lg:max-w-none">
+            <EmilyPhoto photo={closingCta.photo} size="lg" />
+          </SectionReveal>
+        ) : null}
 
-        <SectionReveal delay={0.12} className="text-center lg:text-left">
+        <SectionReveal variant="fadeRight" delay={0.12} className="text-center lg:text-left">
           <h2
             id="closing-cta-heading"
             className="font-script pb-1 text-5xl leading-[1.15] text-forest sm:text-7xl"

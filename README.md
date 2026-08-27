@@ -7,7 +7,7 @@ live in **Supabase**. Vercel only hosts the Next.js app.
 
 | Data | Production store |
 |------|------------------|
-| Site copy, photos, logos, hero/CTA videos | Supabase Postgres `site_content` + Storage bucket `site-media` |
+| Site copy, photos, logos, hero video | Supabase Postgres `site_content` + Storage bucket `site-media` |
 | Portfolio clips | Supabase Postgres `portfolio_library` + `site-media` |
 | Version history | `site_content_revisions` and `portfolio_library_revisions` |
 | Laptop backup only | [`data/site.json`](data/site.json) and [`data/videos.json`](data/videos.json) |
@@ -31,7 +31,7 @@ edits write to the same database as production.
 ## Admin
 
 1. Open **Menu → Admin** (password required when `ADMIN_PASSWORD` is set)
-2. **Site** — copy, photos, logos, hero/CTA video
+2. **Site** — copy, photos, logos, hero video
 3. **Videos** — portfolio library
 4. **Restore an earlier save** — rolls back to a previous version. The current
    save stays in history.

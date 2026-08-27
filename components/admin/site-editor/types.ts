@@ -18,7 +18,6 @@ export type SiteEditorVideoProps = {
   videoUploads: Record<VideoSlot, MediaUploadState>;
   videoPreviewUrls: Record<VideoSlot, string | null>;
   heroVideoInputRef: RefObject<HTMLInputElement | null>;
-  ctaVideoInputRef: RefObject<HTMLInputElement | null>;
   startVideoUpload: (slot: VideoSlot, file: File) => void;
   rejectVideo: (slot: VideoSlot) => void;
   removeVideo: (slot: VideoSlot) => void;

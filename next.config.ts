@@ -67,7 +67,7 @@ const nextConfig: NextConfig = {
       ],
     },
     {
-      source: "/:folder(plants|about-photos|brand|mockify|home-grid-photos|hero-photos|hero|butterfly)/:path*",
+      source: "/:folder(plants|about-photos|brand|mockify|home-grid-photos|hero-photos|cta-photos|hero|butterfly)/:path*",
       headers: [
         {
           key: "Cache-Control",

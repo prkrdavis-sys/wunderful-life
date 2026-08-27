@@ -1,4 +1,10 @@
 import { AutoResizeTextarea } from "@/components/admin/AutoResizeTextarea";
+import { useAdminView } from "@/components/admin/AdminViewProvider";
+import { AboutPhotoEditorCard } from "@/components/admin/site-editor/AboutPhotoEditorCard";
+import {
+  applyAboutSite,
+  withCtaPhoto,
+} from "@/components/admin/site-editor/aboutPhotos";
 import { cardClass, inputClass } from "@/components/admin/site-editor/constants";
 import { AddRowButton, moveItem, RowControls, uniqueId } from "@/components/admin/site-editor/list";
 import { LiveOnSiteNote } from "@/components/admin/site-editor/LiveOnSiteNote";
@@ -121,9 +127,10 @@ export function HeroEditor({
       <div>
         <h3 className="font-display text-lg text-brown">Hero</h3>
         <p className="mt-1 text-sm text-muted">
-          The intro at the top of the home page: the three services, title,
-          creator cutout, and the cursive subtitle in the forest belt above the
-          video. The background video sits below with no overlay.
+          The intro at the top of the home page: the three services, her name
+          in the bottom left, creator cutout, and the cursive subtitle in the
+          forest belt above the video. The background video sits below with no
+          overlay. Edit the name under Profile.
         </p>
       </div>
 
@@ -132,8 +139,9 @@ export function HeroEditor({
           Services at the top
         </p>
         <p className="text-sm text-muted">
-          The three offerings shown above the title, separated by pipes. Leave a
-          field blank to hide that one.
+          The three offerings shown above the name, separated by pipes. Leave a
+          field blank to hide that one. Remember to press &ldquo;Save site
+          content&rdquo; after editing.
         </p>
         <div className="grid min-w-0 gap-3 sm:grid-cols-3">
           {form.hero.services.map((service, index) => (
@@ -161,39 +169,6 @@ export function HeroEditor({
             </label>
           ))}
         </div>
-      </div>
-
-      <div className="grid max-w-2xl min-w-0 gap-4 sm:grid-cols-2">
-        <label className="block text-sm">
-          <span className="text-muted">Bottom-left title, first line</span>
-          <AutoResizeTextarea
-            value={form.hero.titleLine}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                hero: { ...current.hero, titleLine: event.target.value },
-              }))
-            }
-            className={inputClass}
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="text-muted">Bottom-left title, second line</span>
-          <AutoResizeTextarea
-            value={form.hero.titleAccent}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                hero: { ...current.hero, titleAccent: event.target.value },
-              }))
-            }
-            className={inputClass}
-          />
-          <span className="mt-1 block text-xs text-muted">
-            Shown in all caps, in the display script. Remember to press
-            &ldquo;Save site content&rdquo; after editing the services or title.
-          </span>
-        </label>
       </div>
 
       <div className="max-w-2xl space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4">
@@ -413,22 +388,18 @@ export function CtaEditor({
   form,
   setForm,
   loading,
-  videoFiles,
-  videoUploads,
-  videoPreviewUrls,
-  ctaVideoInputRef,
-  startVideoUpload,
-  rejectVideo,
-  removeVideo,
-  setError,
-}: SiteEditorFieldsProps & SiteEditorVideoProps) {
+  uploadPhoto,
+  removePhoto,
+}: SiteEditorFieldsProps) {
+  const { setSite } = useAdminView();
+
   return (
     <section className="space-y-4">
       <div>
         <h3 className="font-display text-lg text-brown">Contact</h3>
         <p className="mt-1 text-sm text-muted">
           The &ldquo;Let&apos;s work together&rdquo; section at the bottom of
-          the home page — headline, message, video, and links.
+          the home page — headline, message, photo, and links.
         </p>
       </div>
       <label className="block max-w-2xl text-sm">
@@ -465,28 +436,37 @@ export function CtaEditor({
         />
       </label>
 
-      <div className="max-w-2xl space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4">
-        <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
-          CTA video
-        </p>
-        <p className="text-sm text-muted">
-          Plays muted on a loop next to the headline. Visitors can unmute it. Use
-          the original 1080p (or higher) vertical or 4:5 clip so it fills the
-          frame without stretching. Goes live as soon as you pick a file — no
-          need to press &ldquo;Save site content&rdquo;.
-        </p>
-        <VideoSlotField
-          slot="cta"
-          videoPath={form.closingCta.videoPath}
-          file={videoFiles.cta}
-          previewUrl={videoPreviewUrls.cta}
-          state={videoUploads.cta}
-          inputRef={ctaVideoInputRef}
-          disabled={loading}
-          onError={setError}
-          onSelect={(file) => void startVideoUpload("cta", file)}
-          onReject={() => rejectVideo("cta")}
-          onRemove={() => void removeVideo("cta")}
+      <div className="max-w-2xl">
+        <AboutPhotoEditorCard
+          photo={form.closingCta.photo}
+          heading="CTA photo"
+          loading={loading}
+          onCaptionChange={(caption) =>
+            applyAboutSite(setForm, setSite, (current) =>
+              withCtaPhoto(current, { caption }),
+            )
+          }
+          onShowCaptionChange={(showCaption) =>
+            applyAboutSite(setForm, setSite, (current) =>
+              withCtaPhoto(current, { showCaption }),
+            )
+          }
+          onFrameChange={(frame) =>
+            applyAboutSite(setForm, setSite, (current) =>
+              withCtaPhoto(current, { frame }),
+            )
+          }
+          onRotateChange={(rotate) =>
+            applyAboutSite(setForm, setSite, (current) =>
+              withCtaPhoto(current, { rotate }),
+            )
+          }
+          onUpload={(file) => {
+            void uploadPhoto(form.closingCta.photo.id, file, "ctaPhoto");
+          }}
+          onRemove={() => {
+            void removePhoto(form.closingCta.photo.id, "ctaPhoto");
+          }}
         />
       </div>
 

@@ -27,15 +27,25 @@ export function MoreEmilySection() {
       <SectionButterfly flight="aboutFar" />
       <AdminEditButton section="photos" label="Edit My vibe" />
       <div className="relative z-10 mx-auto max-w-5xl">
-        <SectionReveal className="text-center">
+        <SectionReveal variant="fadeUp" className="text-center">
           <h2 className={`font-serif text-3xl sm:text-5xl ${text.heading}`}>
             {site.about.galleryHeading}
           </h2>
         </SectionReveal>
         <DeferredMount className="min-h-[20rem] sm:min-h-[24rem]">
           <StaggerChildren className="mx-auto mt-8 grid max-w-5xl grid-cols-2 justify-items-center gap-x-6 gap-y-10 sm:mt-10 sm:gap-x-10 lg:grid-cols-4">
-            {galleryPhotos.map((photo) => (
-              <StaggerItem key={photo.id} className="w-full max-w-[260px] sm:max-w-[290px]">
+            {galleryPhotos.map((photo, index) => (
+              <StaggerItem
+                key={photo.id}
+                variant={
+                  index % 4 === 0
+                    ? "fadeLeft"
+                    : index % 4 === 3
+                      ? "fadeRight"
+                      : "fadeUp"
+                }
+                className="w-full max-w-[260px] sm:max-w-[290px]"
+              >
                 <EmilyPhoto photo={photo} size="md" className="mx-auto" />
               </StaggerItem>
             ))}

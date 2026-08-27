@@ -43,25 +43,20 @@ export function useSiteEditorController(onSaved?: (site: SiteContent) => void) {
   const [message, setMessage] = useState<string | null>(null);
   const [videoFiles, setVideoFiles] = useState<Record<VideoSlot, File | null>>({
     hero: null,
-    cta: null,
   });
   const [videoUploads, setVideoUploads] = useState<
     Record<VideoSlot, MediaUploadState>
   >({
     hero: idleMediaUpload(),
-    cta: idleMediaUpload(),
   });
-  const videoUploadGenRef = useRef<Record<VideoSlot, number>>({ hero: 0, cta: 0 });
+  const videoUploadGenRef = useRef<Record<VideoSlot, number>>({ hero: 0 });
   const heroVideoInputRef = useRef<HTMLInputElement>(null);
-  const ctaVideoInputRef = useRef<HTMLInputElement>(null);
 
-  const uploadBusy =
-    isMediaUploadBusy(videoUploads.hero) || isMediaUploadBusy(videoUploads.cta);
+  const uploadBusy = isMediaUploadBusy(videoUploads.hero);
 
   const videoPreviewUrls = useMemo(
     () => ({
       hero: videoFiles.hero ? URL.createObjectURL(videoFiles.hero) : null,
-      cta: videoFiles.cta ? URL.createObjectURL(videoFiles.cta) : null,
     }),
     [videoFiles],
   );
@@ -78,12 +73,10 @@ export function useSiteEditorController(onSaved?: (site: SiteContent) => void) {
     const generations = videoUploadGenRef.current;
     return () => {
       generations.hero += 1;
-      generations.cta += 1;
     };
   }, []);
 
-  const videoInputRef = (slot: VideoSlot) =>
-    slot === "hero" ? heroVideoInputRef : ctaVideoInputRef;
+  const videoInputRef = (_slot: VideoSlot) => heroVideoInputRef;
 
   const setSlotUpload = (slot: VideoSlot, state: MediaUploadState) =>
     setVideoUploads((current) => ({ ...current, [slot]: state }));
@@ -225,8 +218,7 @@ export function useSiteEditorController(onSaved?: (site: SiteContent) => void) {
       return;
     }
 
-    const livePath =
-      slot === "hero" ? form.hero.videoPath : form.closingCta.videoPath;
+    const livePath = form.hero.videoPath;
     if (!livePath) {
       setError(null);
       setMessage(null);
@@ -281,7 +273,7 @@ export function useSiteEditorController(onSaved?: (site: SiteContent) => void) {
 
     try {
       const prepared = await preparePhotoForUpload(file, {
-        preferJpeg: kind === "about" || kind === "collage",
+        preferJpeg: kind === "about" || kind === "collage" || kind === "ctaPhoto",
         maxEdge: kind === "brandLogo" ? 800 : 1920,
       });
       const payload = new FormData();
@@ -327,7 +319,9 @@ export function useSiteEditorController(onSaved?: (site: SiteContent) => void) {
           ? "Logo uploaded."
           : kind === "heroCreator"
             ? "Creator photo is on your site now — no need to press Save."
-            : "Photo uploaded.",
+            : kind === "ctaPhoto"
+              ? "CTA photo is on your site now — no need to press Save."
+              : "Photo uploaded.",
       );
     } catch (err) {
       setError(toErrorMessage(err, `Failed to upload ${descriptor.noun}.`));
@@ -374,7 +368,9 @@ export function useSiteEditorController(onSaved?: (site: SiteContent) => void) {
           ? "Logo removed."
           : kind === "heroCreator"
             ? "Creator photo removed."
-            : "Photo removed.",
+            : kind === "ctaPhoto"
+              ? "CTA photo removed."
+              : "Photo removed.",
       );
     } catch (err) {
       setError(toErrorMessage(err, `Failed to remove ${descriptor.noun}.`));
@@ -435,7 +431,6 @@ export function useSiteEditorController(onSaved?: (site: SiteContent) => void) {
     videoUploads,
     videoPreviewUrls,
     heroVideoInputRef,
-    ctaVideoInputRef,
     startVideoUpload,
     rejectVideo,
     removeVideo,

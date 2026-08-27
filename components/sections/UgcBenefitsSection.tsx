@@ -29,7 +29,7 @@ export function UgcBenefitsSection() {
       <SectionButterfly flight="ugcTrailing" />
 
       <div className="relative z-10 mx-auto max-w-6xl">
-        <SectionReveal className="mx-auto max-w-2xl text-center">
+        <SectionReveal variant="fadeUp" className="mx-auto max-w-2xl text-center">
           <p className="font-label text-[0.65rem] font-semibold tracking-[0.22em] text-paper/80 uppercase sm:text-xs">
             {ugcBenefits.eyebrow}
           </p>
@@ -47,7 +47,7 @@ export function UgcBenefitsSection() {
         {ugcBenefits.stats.length > 0 && (
           <StaggerChildren className="mx-auto mt-7 grid max-w-4xl grid-cols-3 items-start gap-2 sm:mt-10 sm:gap-6">
             {ugcBenefits.stats.map((stat, index) => (
-              <StaggerItem key={stat.id} className="min-w-0">
+              <StaggerItem key={stat.id} variant="fadeUp" className="min-w-0">
                 <article className="ugc-stat">
                   <div
                     className={`ugc-stat-card ugc-stat-card-${STAT_TONES[index % STAT_TONES.length]}`}
@@ -64,7 +64,7 @@ export function UgcBenefitsSection() {
         )}
 
         <div className="mt-8 grid gap-6 lg:mt-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-14">
-          <SectionReveal className="text-center lg:text-left">
+          <SectionReveal variant="fadeLeft" className="text-center lg:text-left">
             <p className="font-label text-[0.65rem] font-semibold tracking-[0.2em] text-paper/80 uppercase sm:text-xs">
               {ugcBenefits.calloutLabel}
             </p>
@@ -77,6 +77,7 @@ export function UgcBenefitsSection() {
           </SectionReveal>
 
           <SectionReveal
+            variant="fadeRight"
             delay={0.12}
             className="ugc-benefits-card rounded-[1.5rem] border border-paper/40 p-5 text-ink shadow-xl sm:rounded-[2rem] sm:p-8"
           >

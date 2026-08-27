@@ -16,6 +16,19 @@ export function withAboutPhoto(
   };
 }
 
+export function withCtaPhoto(
+  site: SiteContent,
+  patch: Partial<Pick<AboutPhoto, "caption" | "showCaption" | "rotate" | "frame">>,
+): SiteContent {
+  return {
+    ...site,
+    closingCta: {
+      ...site.closingCta,
+      photo: { ...site.closingCta.photo, ...patch },
+    },
+  };
+}
+
 export function withAboutPhotos(
   site: SiteContent,
   photos: AboutPhoto[],
@@ -26,7 +39,7 @@ export function withAboutPhotos(
   };
 }
 
-/** Keep the public page in sync with unsaved About / My vibe photo edits. */
+/** Keep the public page in sync with unsaved framed-photo edits. */
 export function applyAboutSite(
   setForm: Dispatch<SetStateAction<SiteContent>>,
   setSite: Dispatch<SetStateAction<SiteContent>>,

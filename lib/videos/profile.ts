@@ -1,1 +1,1 @@
-export type VideoUploadProfile = "portfolio" | "hero" | "cta";
+export type VideoUploadProfile = "portfolio" | "hero";

@@ -23,7 +23,7 @@ export function ServicesSection() {
       <AdminEditButton section="services" label="Edit services" />
 
       <div className="relative z-10 mx-auto max-w-6xl">
-        <SectionReveal className="text-center">
+        <SectionReveal variant="fadeUp" className="text-center">
           <p className="font-label text-xs font-semibold tracking-[0.22em] text-sage-deep uppercase">
             {site.services.eyebrow}
           </p>
@@ -36,8 +36,11 @@ export function ServicesSection() {
         </SectionReveal>
 
         <StaggerChildren className="mt-12 grid gap-6 sm:grid-cols-2 sm:gap-8">
-          {site.services.items.map((service) => (
-            <StaggerItem key={service.id}>
+          {site.services.items.map((service, index) => (
+            <StaggerItem
+              key={service.id}
+              variant={index % 2 === 0 ? "fadeLeft" : "fadeRight"}
+            >
               <article className="service-glass-card h-full rounded-3xl border border-white/70 bg-paper/70 p-6 backdrop-blur-sm transition hover:border-sage/60 hover:shadow-lg sm:p-7">
                 <h3 className="font-serif text-xl text-forest sm:text-2xl">
                   {service.title}

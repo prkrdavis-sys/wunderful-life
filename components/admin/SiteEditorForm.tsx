@@ -120,7 +120,6 @@ export function SiteEditorForm({
               videoUploads: editor.videoUploads,
               videoPreviewUrls: editor.videoPreviewUrls,
               heroVideoInputRef: editor.heroVideoInputRef,
-              ctaVideoInputRef: editor.ctaVideoInputRef,
               startVideoUpload: editor.startVideoUpload,
               rejectVideo: editor.rejectVideo,
               removeVideo: editor.removeVideo,

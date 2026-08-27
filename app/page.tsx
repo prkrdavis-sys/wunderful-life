@@ -67,17 +67,17 @@ export default function HomePage() {
       </div>
       <div className="photography-about-band relative">
         <AboutSection />
-        <PhotographyCollage />
         <StatsBannerSection />
       </div>
       <Suspense fallback={<WorkPreviewFallback />}>
         <WorkPreview />
       </Suspense>
       <ServicesSection />
+      <PhotographyCollage />
       <BrandsBanner />
-      <UgcBenefitsSection />
       <TestimonialsSection />
       <MoreEmilySection />
+      <UgcBenefitsSection />
       <ClosingCtaSection />
     </>
   );

@@ -38,8 +38,6 @@ export function SiteEditorSectionView({
       return <HeroEditor {...fields} {...video} />;
     case "about":
       return <AboutEditor {...fields} />;
-    case "photography":
-      return <PhotographyEditor {...fields} photoCardRefs={photoCardRefs} />;
     case "stats":
       return <StatsEditor form={fields.form} setForm={fields.setForm} />;
     case "work":
@@ -52,16 +50,18 @@ export function SiteEditorSectionView({
       );
     case "services":
       return <ServicesEditor form={fields.form} setForm={fields.setForm} />;
+    case "photography":
+      return <PhotographyEditor {...fields} photoCardRefs={photoCardRefs} />;
     case "brands":
       return <BrandsEditor {...fields} />;
-    case "ugc":
-      return <UgcEditor form={fields.form} setForm={fields.setForm} />;
     case "testimonials":
       return <TestimonialsEditor form={fields.form} setForm={fields.setForm} />;
     case "photos":
       return <GalleryEditor {...fields} />;
+    case "ugc":
+      return <UgcEditor form={fields.form} setForm={fields.setForm} />;
     case "cta":
-      return <CtaEditor {...fields} {...video} />;
+      return <CtaEditor {...fields} />;
     default: {
       const _exhaustive: never = section;
       return _exhaustive;

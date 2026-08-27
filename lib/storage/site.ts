@@ -31,7 +31,8 @@ type PhotoFolder =
   | "about-photos"
   | "home-grid-photos"
   | "brand-logos"
-  | "hero-photos";
+  | "hero-photos"
+  | "cta-photos";
 
 function hasServices(value: unknown): boolean {
   if (!value || typeof value !== "object") return false;
@@ -173,6 +174,7 @@ async function deleteStoredPhoto(imagePath: string) {
     imagePath.startsWith("/home-grid-photos/") ||
     imagePath.startsWith("/brand-logos/") ||
     imagePath.startsWith("/hero-photos/") ||
+    imagePath.startsWith("/cta-photos/") ||
     imagePath.startsWith("/uploads/photos/") ||
     imagePath.startsWith("/uploads/hero/") ||
     imagePath.startsWith("/uploads/cta/")
@@ -365,11 +367,6 @@ function slotMediaPaths(
         videoPath: site.hero.videoPath,
         posterPath: site.hero.posterPath,
       };
-    case "cta":
-      return {
-        videoPath: site.closingCta.videoPath,
-        posterPath: site.closingCta.posterPath,
-      };
     default: {
       const _exhaustive: never = slot;
       return _exhaustive;
@@ -394,16 +391,6 @@ function applySlotMedia(
       site.hero = hero;
       return;
     }
-    case "cta":
-      site.closingCta = {
-        ...site.closingCta,
-        videoPath,
-        ...(posterPath ? { posterPath } : {}),
-      };
-      if (!posterPath) {
-        delete site.closingCta.posterPath;
-      }
-      return;
     default: {
       const _exhaustive: never = slot;
       return _exhaustive;
@@ -418,13 +405,6 @@ function clearSlotMedia(site: SiteContent, slot: VideoSlot) {
       delete hero.videoPath;
       delete hero.posterPath;
       site.hero = hero;
-      return;
-    }
-    case "cta": {
-      const closingCta = { ...site.closingCta };
-      delete closingCta.videoPath;
-      delete closingCta.posterPath;
-      site.closingCta = closingCta;
       return;
     }
     default: {
@@ -727,6 +707,62 @@ export async function setHeroCreatorPhotoUrl(
 
 export async function clearHeroCreatorPhoto(expectedVersion?: number) {
   return setHeroCreatorImagePath(undefined, expectedVersion);
+}
+
+async function setCtaPhotoImagePath(
+  imagePath: string | undefined,
+  expectedVersion?: number,
+): Promise<SiteContent> {
+  const record = await readSiteRecord();
+  if (expectedVersion !== undefined && record.version !== expectedVersion) {
+    if (imagePath) await deleteStoredPhoto(imagePath);
+    throw new StorageError(
+      "This editor is out of date. The latest site content was saved elsewhere.",
+      409,
+    );
+  }
+  const site = structuredClone(record.content);
+  const previous = site.closingCta.photo.imagePath;
+  const photo = { ...site.closingCta.photo };
+  if (imagePath) {
+    photo.imagePath = imagePath;
+  } else {
+    delete photo.imagePath;
+  }
+  site.closingCta = { ...site.closingCta, photo };
+
+  try {
+    await writeSiteContent(site, record.version);
+  } catch (error) {
+    if (imagePath && imagePath !== previous) {
+      await deleteStoredPhoto(imagePath);
+    }
+    throw error;
+  }
+  if (previous && previous !== imagePath) {
+    await deleteStoredPhoto(previous);
+  }
+  return site;
+}
+
+export async function uploadCtaPhoto(
+  file: File,
+  expectedVersion?: number,
+) {
+  const imagePath = await savePhotoFile("cta-photo", file, "cta-photos");
+  return setCtaPhotoImagePath(imagePath, expectedVersion);
+}
+
+/** Production path: the file was client-uploaded to Supabase; persist its URL. */
+export async function setCtaPhotoUrl(
+  url: string,
+  expectedVersion?: number,
+) {
+  return setCtaPhotoImagePath(url, expectedVersion);
+}
+
+export async function clearCtaPhoto(expectedVersion?: number) {
+  return setCtaPhotoImagePath(undefined, expectedVersion);
 }
 
 export async function listSiteContentRevisions(

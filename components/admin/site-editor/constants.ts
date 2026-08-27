@@ -6,14 +6,14 @@ export const SECTIONS: { id: SiteEditorSection; label: string }[] = [
   { id: "profile", label: "Profile" },
   { id: "hero", label: "Hero" },
   { id: "about", label: "About Me" },
-  { id: "photography", label: "Photography" },
   { id: "stats", label: "Audience reach" },
   { id: "work", label: "My Work" },
   { id: "services", label: "Services" },
+  { id: "photography", label: "Photography" },
   { id: "brands", label: "Brands" },
-  { id: "ugc", label: "Why UGC" },
   { id: "testimonials", label: "Testimonials" },
   { id: "photos", label: "My vibe" },
+  { id: "ugc", label: "What is UGC" },
   { id: "cta", label: "Contact" },
 ];
 
