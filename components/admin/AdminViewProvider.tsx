@@ -66,6 +66,7 @@ type AdminViewContextValue = {
   ) => void;
   openPortfolioEditor: () => void;
   enterAdminView: () => void;
+  completeAdminLogin: () => void;
   exitAdminView: () => Promise<void>;
   refreshSession: () => Promise<void>;
   site: SiteContent;
@@ -161,6 +162,12 @@ export function AdminViewProvider({
     setPanelOpen(true);
   }, []);
 
+  const completeAdminLogin = useCallback(() => {
+    setAuthenticated(true);
+    setViewModeState("admin");
+    setPanelOpen(true);
+  }, []);
+
   const exitAdminView = useCallback(async () => {
     await fetch("/api/admin/logout", { method: "POST" });
     setAuthenticated(false);
@@ -222,6 +229,7 @@ export function AdminViewProvider({
       openSiteEditor,
       openPortfolioEditor,
       enterAdminView,
+      completeAdminLogin,
       exitAdminView,
       refreshSession,
       site,
@@ -245,6 +253,7 @@ export function AdminViewProvider({
       openSiteEditor,
       openPortfolioEditor,
       enterAdminView,
+      completeAdminLogin,
       exitAdminView,
       refreshSession,
       site,

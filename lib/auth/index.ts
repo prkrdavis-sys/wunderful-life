@@ -8,19 +8,11 @@ function configuredAdminPassword(): string {
   return normalizeAdminSecret(process.env.ADMIN_PASSWORD ?? "");
 }
 
-export function isAdminAuthRequired(): boolean {
-  return configuredAdminPassword().length > 0;
+function comparableAdminSecret(value: string): string {
+  return normalizeAdminSecret(value).toLowerCase();
 }
 
-export function canAccessAdmin(sessionValue: string | undefined): boolean {
-  if (!isAdminAuthRequired()) return true;
-  return normalizeAdminSecret(sessionValue ?? "") === configuredAdminPassword();
-}
-
-export function verifyAdminPassword(password: string): boolean {
-  if (!isAdminAuthRequired()) return true;
-  const expected = configuredAdminPassword();
-  const received = normalizeAdminSecret(password);
+function secretsMatch(received: string, expected: string): boolean {
   if (!received || received.length !== expected.length) return false;
 
   let mismatch = 0;
@@ -28,4 +20,28 @@ export function verifyAdminPassword(password: string): boolean {
     mismatch |= expected.charCodeAt(index) ^ received.charCodeAt(index);
   }
   return mismatch === 0;
+}
+
+export function isAdminAuthRequired(): boolean {
+  return configuredAdminPassword().length > 0;
+}
+
+export function adminSessionCookieValue(): string {
+  return configuredAdminPassword();
+}
+
+export function canAccessAdmin(sessionValue: string | undefined): boolean {
+  if (!isAdminAuthRequired()) return true;
+  return secretsMatch(
+    comparableAdminSecret(sessionValue ?? ""),
+    comparableAdminSecret(configuredAdminPassword()),
+  );
+}
+
+export function verifyAdminPassword(password: string): boolean {
+  if (!isAdminAuthRequired()) return true;
+  return secretsMatch(
+    comparableAdminSecret(password),
+    comparableAdminSecret(configuredAdminPassword()),
+  );
 }

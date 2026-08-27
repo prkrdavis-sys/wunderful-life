@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { useRouter } from "next/navigation";
 import { AnimatedButton } from "@/components/ui/AnimatedButton";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
 
@@ -37,24 +36,26 @@ function PasswordVisibilityIcon({ visible }: { visible: boolean }) {
 }
 
 export function AdminUnlockButton() {
-  const router = useRouter();
   const {
     viewMode,
     authenticated,
     authRequired,
     enterAdminView,
+    completeAdminLogin,
     refreshSession,
   } = useAdminView();
   const [open, setOpen] = useState(false);
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const passwordRef = useRef<HTMLInputElement>(null);
 
-  const readPassword = () => {
-    const fromDom = passwordRef.current?.value ?? password;
+  const readPassword = (form?: HTMLFormElement) => {
+    const fromForm = form
+      ? String(new FormData(form).get("password") ?? "")
+      : "";
+    const fromDom = passwordRef.current?.value ?? fromForm;
     return fromDom.normalize("NFC").replace(/^\uFEFF/, "").trim();
   };
 
@@ -84,15 +85,13 @@ export function AdminUnlockButton() {
     }
 
     setError(null);
-    setPassword("");
     setShowPassword(false);
     setOpen(true);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const submittedPassword = readPassword();
-    setPassword(submittedPassword);
+    const submittedPassword = readPassword(event.currentTarget);
     setLoading(true);
     setError(null);
 
@@ -110,9 +109,8 @@ export function AdminUnlockButton() {
       }
 
       await refreshSession();
-      enterAdminView();
+      completeAdminLogin();
       setOpen(false);
-      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed.");
     } finally {
@@ -170,22 +168,24 @@ export function AdminUnlockButton() {
                       id="admin-password"
                       name="password"
                       type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      onInput={(event) => setPassword(event.currentTarget.value)}
                       placeholder="Password"
                       className="w-full min-w-0 rounded-xl border border-lavender/40 bg-cream py-2 pl-3 pr-12 text-base text-ink outline-none focus:border-forest/50"
                       required
-                      autoComplete="current-password"
+                      autoComplete="off"
                       autoCorrect="off"
+                      autoCapitalize="off"
                       spellCheck={false}
                       autoFocus
                     />
                     <button
                       type="button"
                       onClick={() => {
-                        setPassword(passwordRef.current?.value ?? password);
+                        const input = passwordRef.current;
+                        const current = input?.value ?? "";
                         setShowPassword((visible) => !visible);
+                        requestAnimationFrame(() => {
+                          if (input) input.value = current;
+                        });
                       }}
                       aria-label={showPassword ? "Hide password" : "Show password"}
                       aria-pressed={showPassword}
