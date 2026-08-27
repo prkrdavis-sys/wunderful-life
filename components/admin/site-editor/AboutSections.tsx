@@ -86,6 +86,11 @@ export function AboutEditor({
                 withAboutPhoto(current, index, { caption }),
               )
             }
+            onShowCaptionChange={(showCaption) =>
+              applyAboutSite(setForm, setSite, (current) =>
+                withAboutPhoto(current, index, { showCaption }),
+              )
+            }
             onFrameChange={(frame) =>
               applyAboutSite(setForm, setSite, (current) =>
                 withAboutPhoto(current, index, { frame }),
@@ -196,6 +201,11 @@ export function GalleryEditor({
                     withAboutPhoto(current, index, { caption }),
                   )
                 }
+                onShowCaptionChange={(showCaption) =>
+                  applyAboutSite(setForm, setSite, (current) =>
+                    withAboutPhoto(current, index, { showCaption }),
+                  )
+                }
                 onFrameChange={(frame) =>
                   applyAboutSite(setForm, setSite, (current) =>
                     withAboutPhoto(current, index, { frame }),
@@ -234,6 +244,7 @@ export function GalleryEditor({
               {
                 id: uniqueId("vibe"),
                 caption: "",
+                showCaption: true,
                 rotate: 0,
                 frame: "polaroid",
               },

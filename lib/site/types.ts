@@ -42,6 +42,7 @@ export function resolveAboutPhotoFrame(
 export type AboutPhoto = {
   id: string;
   caption: string;
+  showCaption: boolean;
   rotate: number;
   frame: AboutPhotoFrame;
   imagePath?: string;

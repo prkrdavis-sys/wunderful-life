@@ -112,7 +112,9 @@ function PolaroidPhoto({
       >
         <PhotoMedia photo={photo} size={size} />
       </div>
-      <PhotoCaption caption={photo.caption} />
+      {photo.showCaption !== false ? (
+        <PhotoCaption caption={photo.caption} />
+      ) : null}
     </figure>
   );
 }
@@ -135,7 +137,9 @@ function ShapedPhoto({
       >
         <PhotoMedia photo={photo} size={size} />
       </div>
-      <PhotoCaption caption={photo.caption} />
+      {photo.showCaption !== false ? (
+        <PhotoCaption caption={photo.caption} />
+      ) : null}
     </figure>
   );
 }

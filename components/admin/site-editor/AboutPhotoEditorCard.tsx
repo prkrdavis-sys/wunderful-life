@@ -25,6 +25,7 @@ export function AboutPhotoEditorCard({
   leading,
   loading,
   onCaptionChange,
+  onShowCaptionChange,
   onFrameChange,
   onRotateChange,
   onUpload,
@@ -36,6 +37,7 @@ export function AboutPhotoEditorCard({
   leading?: ReactNode;
   loading: boolean;
   onCaptionChange: (caption: string) => void;
+  onShowCaptionChange: (showCaption: boolean) => void;
   onFrameChange: (frame: AboutPhotoFrame) => void;
   onRotateChange: (rotate: number) => void;
   onUpload: (file: File) => void;
@@ -51,14 +53,25 @@ export function AboutPhotoEditorCard({
           {heading}
         </p>
       )}
-      <label className="block text-sm">
-        <span className="text-muted">Caption</span>
-        <AutoResizeTextarea
-          value={photo.caption}
-          onChange={(event) => onCaptionChange(event.target.value)}
-          className={inputClass}
+      <label className="flex items-center justify-between gap-4 text-sm">
+        <span className="text-muted">Show caption</span>
+        <input
+          type="checkbox"
+          checked={photo.showCaption !== false}
+          onChange={(event) => onShowCaptionChange(event.target.checked)}
+          className="h-5 w-5 accent-forest"
         />
       </label>
+      {photo.showCaption !== false ? (
+        <label className="block text-sm">
+          <span className="text-muted">Caption</span>
+          <AutoResizeTextarea
+            value={photo.caption}
+            onChange={(event) => onCaptionChange(event.target.value)}
+            className={inputClass}
+          />
+        </label>
+      ) : null}
       <label className="block text-sm">
         <span className="text-muted">Frame</span>
         <select

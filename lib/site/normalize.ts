@@ -188,6 +188,7 @@ function normalizeAboutPhotoFrame(
 const DEFAULT_FOURTH_GALLERY_PHOTO: AboutPhoto = {
   id: "ugc-moment",
   caption: "New UGC moment — upload Emily's fourth gallery photo here",
+  showCaption: true,
   rotate: 3,
   frame: "polaroid",
 };
@@ -260,6 +261,7 @@ function normalizeAboutPhotos(photos: AboutPhoto[]): AboutPhoto[] {
   const normalized = photos.map((photo, index) => ({
     id: photo.id,
     caption: photo.caption,
+    showCaption: photo.showCaption !== false,
     rotate: photo.rotate,
     frame: normalizeAboutPhotoFrame(photo.frame, index),
     ...(photo.imagePath ? { imagePath: photo.imagePath } : {}),
