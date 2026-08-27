@@ -648,11 +648,16 @@ body {
  * editorial hero intro. One hue (--sage-deep), layered only by opacity.
  */
 .hero-intro-silhouettes {
-  background-image: url("/hero/nature-silhouettes.svg");
-  background-position: center bottom;
-  background-repeat: no-repeat;
-  background-size: cover;
+  overflow: hidden;
+  color: var(--sage-deep);
   opacity: 0.94;
+}
+
+.hero-intro-silhouette-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 /*
