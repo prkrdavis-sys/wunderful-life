@@ -3,10 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { AutoplayLoopVideo } from "@/components/ui/AutoplayLoopVideo";
 import { PlantSectionBackground } from "@/components/ui/PlantSectionBackground";
-import { HeroEntrance } from "@/components/ui/motion";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
 import { sectionWallpapers } from "@/lib/plants";
-import { lightOnDarkShadow, sectionText } from "@/lib/sectionText";
 import type { MediaIntrinsicSize, VideoObjectFit } from "@/lib/videos/cover-fit";
 
 type MeasuredMedia = {
@@ -45,30 +43,23 @@ function HeroBackgroundVideo({
   onIntrinsicSize: (size: MediaIntrinsicSize) => void;
 }) {
   return (
-    <>
-      <AutoplayLoopVideo
-        src={src}
-        poster={poster}
-        muted
-        eager
-        aria-hidden
-        tabIndex={-1}
-        fit={fit}
-        onIntrinsicSize={onIntrinsicSize}
-        className="pointer-events-none"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/45 via-black/20 to-black/55"
-      />
-    </>
+    <AutoplayLoopVideo
+      src={src}
+      poster={poster}
+      muted
+      eager
+      aria-hidden
+      tabIndex={-1}
+      fit={fit}
+      onIntrinsicSize={onIntrinsicSize}
+      className="pointer-events-none"
+    />
   );
 }
 
 export function HeroVideoSection() {
   const site = useSiteContent();
   const { wallpaper, overlay } = sectionWallpapers.hero;
-  const text = sectionText.hero;
   const videoPath = site.hero.videoPath;
   const posterPath = site.hero.posterPath;
   const hasVideo = Boolean(videoPath);
@@ -145,38 +136,6 @@ export function HeroVideoSection() {
             onIntrinsicSize={onIntrinsicSize}
           />
         ) : null}
-      </div>
-
-      <div className="hero-video-copy absolute inset-x-0 top-0 z-10 flex items-center justify-center px-4 py-16 sm:px-6 sm:py-20">
-        <div className="mx-auto flex w-full max-w-4xl flex-col items-center justify-center text-center">
-          <HeroEntrance variant="fadeDown" delay={0.05}>
-            <p
-              className={`mb-3 text-sm font-medium tracking-[0.28em] uppercase ${
-                hasVideo ? `text-paper/85 ${lightOnDarkShadow}` : text.eyebrow
-              }`}
-            >
-              {site.brand}
-            </p>
-          </HeroEntrance>
-          <HeroEntrance delay={0.14}>
-            <h2
-              className={`font-display text-5xl leading-[1.05] sm:text-6xl md:text-7xl lg:text-8xl ${
-                hasVideo ? `text-paper ${lightOnDarkShadow}` : text.heading
-              }`}
-            >
-              {site.fullName}
-            </h2>
-          </HeroEntrance>
-          <HeroEntrance delay={0.24}>
-            <p
-              className={`font-script mx-auto mt-5 max-w-2xl text-3xl leading-snug sm:mt-6 sm:text-4xl ${
-                hasVideo ? `text-paper ${lightOnDarkShadow}` : text.caption
-              }`}
-            >
-              {site.hero.subtitle}
-            </p>
-          </HeroEntrance>
-        </div>
       </div>
     </section>
   );

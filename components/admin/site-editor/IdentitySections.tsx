@@ -121,8 +121,9 @@ export function HeroEditor({
       <div>
         <h3 className="font-display text-lg text-brown">Hero</h3>
         <p className="mt-1 text-sm text-muted">
-          The intro at the top of the home page — the three services, title, and
-          creator cutout — plus the background video and cursive subtitle.
+          The intro at the top of the home page: the three services, title,
+          creator cutout, and the brand plus cursive subtitle in the top right.
+          The background video sits below with no overlay.
         </p>
       </div>
 
@@ -247,8 +248,8 @@ export function HeroEditor({
           className={inputClass}
         />
         <span className="mt-1 block text-xs text-muted">
-          Remember to press &ldquo;Save site content&rdquo; after editing the
-          subtitle.
+          Shown in the top right of the intro, under the brand name. Remember
+          to press &ldquo;Save site content&rdquo; after editing the subtitle.
         </span>
       </label>
 

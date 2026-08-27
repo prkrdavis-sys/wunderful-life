@@ -19,8 +19,8 @@ function defaultHeroSubtitle(name: string): string {
   return `I'm ${name} — the face behind the frame. Brands hire me for deliverables; they remember me for the personality.`;
 }
 
-const DEFAULT_HERO_TITLE_LINE = "Creative";
-const DEFAULT_HERO_TITLE_ACCENT = "Portfolio";
+const DEFAULT_HERO_TITLE_LINE = "Emily";
+const DEFAULT_HERO_TITLE_ACCENT = "Wunder";
 const DEFAULT_HERO_SERVICES: HeroIntroServices = [
   "UGC",
   "Social Media",

@@ -49,9 +49,9 @@ export type HeroContent = {
   /** First-frame still shown while the hero video buffers. */
   posterPath?: string;
   subtitle: string;
-  /** Serif first line of the hero intro title (e.g. "Creative"). */
+  /** Serif first line of the hero intro title (e.g. "Emily"). */
   titleLine: string;
-  /** Display title second line, shown in all caps (e.g. "Portfolio"). */
+  /** Display title second line, shown in all caps (e.g. "Wunder"). */
   titleAccent: string;
   /** Three offerings shown above the intro title, separated by pipes. */
   services: HeroIntroServices;

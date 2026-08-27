@@ -14,6 +14,10 @@ export function SiteNav() {
   const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
     if (!menuOpen) return;
 
     const handlePointerDown = (event: PointerEvent) => {
@@ -25,8 +29,21 @@ export function SiteNav() {
       }
     };
 
-    document.addEventListener("pointerdown", handlePointerDown);
-    return () => document.removeEventListener("pointerdown", handlePointerDown);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+
+    // Wait a tick so the opening click cannot dismiss the menu immediately.
+    const timeout = window.setTimeout(() => {
+      document.addEventListener("pointerdown", handlePointerDown);
+    }, 0);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.clearTimeout(timeout);
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [menuOpen]);
 
   const isActive = (link: HeroLink) =>
@@ -76,30 +93,34 @@ export function SiteNav() {
 
         <button
           type="button"
-          className="ml-auto shrink-0 rounded-lg border border-white/50 bg-white/20 px-3 py-2 text-sm text-ink backdrop-blur-sm md:hidden"
-          onClick={() => setMenuOpen((open) => !open)}
+          className="relative z-10 ml-auto shrink-0 rounded-lg border border-white/50 bg-white/50 px-3 py-2 text-sm text-ink md:hidden"
           aria-expanded={menuOpen}
+          aria-controls="site-nav-menu"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={() => setMenuOpen((open) => !open)}
         >
           Menu
         </button>
       </div>
 
-      {menuOpen ? (
-        <nav className="border-t border-white/30 md:hidden">
-          <div className="flex flex-col gap-1 px-4 py-3 sm:px-6">
-            {site.heroLinks.map((link) => (
-              <SectionLink
-                key={link.href}
-                href={link.href}
-                onClick={() => setMenuOpen(false)}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-ink hover:bg-white/20 hover:text-forest"
-              >
-                {link.label}
-              </SectionLink>
-            ))}
-          </div>
-        </nav>
-      ) : null}
+      <nav
+        id="site-nav-menu"
+        hidden={!menuOpen}
+        className="border-t border-white/30 bg-paper/80 md:hidden"
+      >
+        <div className="flex flex-col gap-1 px-4 py-3 sm:px-6">
+          {site.heroLinks.map((link) => (
+            <SectionLink
+              key={link.href}
+              href={link.href}
+              onClick={() => setMenuOpen(false)}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-ink hover:bg-white/20 hover:text-forest"
+            >
+              {link.label}
+            </SectionLink>
+          ))}
+        </div>
+      </nav>
     </header>
   );
 }

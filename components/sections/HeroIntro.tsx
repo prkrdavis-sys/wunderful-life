@@ -4,7 +4,6 @@ import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
-import { SignatureHalf } from "@/components/ui/BrandLogo";
 import { SectionSurface } from "@/components/ui/SectionSurface";
 
 const HERO_CREATOR_FALLBACK = {
@@ -29,6 +28,9 @@ export function HeroIntro() {
     : { opacity: 1, y: "16%" };
   const services = site.hero.services.filter((service) => service.trim());
   const creatorImage = site.hero.creatorImagePath ?? HERO_CREATOR_FALLBACK.src;
+  const brand = site.brand.trim();
+  const subtitle = site.hero.subtitle.trim();
+  const hasCopy = Boolean(brand || subtitle);
 
   // No isolate / z-index on this section. The stage is pulled up over the
   // belt so the cutout sits behind the strip and the video below.
@@ -61,18 +63,20 @@ export function HeroIntro() {
 
       <div className="hero-intro-stage">
         <div className="hero-intro-composer">
-          <div
-            aria-hidden
-            className="hero-intro-signature hero-intro-signature-first"
-          >
-            <SignatureHalf
-              side="first"
-              alt=""
-              sizes="(min-width: 1024px) 13rem, 28vw"
-              preload
-              className="w-full"
-            />
-          </div>
+          {hasCopy ? (
+            <div className="hero-intro-copy">
+              {brand ? (
+                <p className="font-label text-[clamp(0.68rem,1.4vw,0.85rem)] font-medium tracking-[0.18em] text-brown uppercase">
+                  {brand}
+                </p>
+              ) : null}
+              {subtitle ? (
+                <p className="font-script mt-2 max-w-[20rem] text-[clamp(1.35rem,2.6vw,2.15rem)] leading-[1.15] text-forest sm:ml-auto">
+                  {subtitle}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="hero-intro-creator-slot">
             <motion.div
@@ -100,19 +104,6 @@ export function HeroIntro() {
                 className="h-full w-full object-cover object-top"
               />
             </motion.div>
-          </div>
-
-          <div
-            aria-hidden
-            className="hero-intro-signature hero-intro-signature-last"
-          >
-            <SignatureHalf
-              side="last"
-              alt=""
-              sizes="(min-width: 1024px) 15.5rem, 32vw"
-              loading="eager"
-              className="w-full"
-            />
           </div>
         </div>
       </div>
