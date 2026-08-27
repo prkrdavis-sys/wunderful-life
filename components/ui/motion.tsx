@@ -6,13 +6,7 @@ import {
   type Transition,
   type Variants,
 } from "framer-motion";
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ComponentProps,
-  type ReactNode,
-} from "react";
+import { type ComponentProps, type ReactNode } from "react";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -82,49 +76,6 @@ function getRevealProps(
   };
 }
 
-/**
- * First paint stays visible. Below-fold nodes may snap to hidden after
- * hydration (off-screen), then animate in when they intersect — never as a
- * requirement to read copy.
- */
-function useDeferredInViewAnimation(enabled: boolean) {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [shown, setShown] = useState(true);
-
-  useEffect(() => {
-    if (!enabled) {
-      setShown(true);
-      return;
-    }
-    const node = ref.current;
-    if (!node) return;
-
-    const rect = node.getBoundingClientRect();
-    const onScreen = rect.bottom > 0 && rect.top < window.innerHeight;
-    if (onScreen) return;
-
-    setShown(false);
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          setShown(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "0px", threshold: 0 },
-    );
-    observer.observe(node);
-    const fallback = window.setTimeout(() => setShown(true), 1500);
-
-    return () => {
-      observer.disconnect();
-      window.clearTimeout(fallback);
-    };
-  }, [enabled]);
-
-  return { ref, shown };
-}
-
 export function HeroEntrance({
   children,
   className = "",
@@ -164,17 +115,14 @@ export function SectionReveal({
   variant?: RevealVariant;
   duration?: number;
 }) {
-  const reduceMotion = useReducedMotion();
   const states = revealStates[variant];
-  const { ref, shown } = useDeferredInViewAnimation(reduceMotion === false);
   const revealTransition = useRevealTransition(delay, duration);
 
   return (
     <motion.div
-      ref={ref}
       initial={states.visible}
-      animate={shown ? states.visible : states.hidden}
-      transition={shown ? revealTransition : { duration: 0 }}
+      animate={states.visible}
+      transition={revealTransition}
       className={className}
     >
       {children}
@@ -188,13 +136,11 @@ export function StaggerChildren({
   stagger = 0.12,
 }: ComponentProps<"div"> & { stagger?: number }) {
   const reduceMotion = useReducedMotion();
-  const { ref, shown } = useDeferredInViewAnimation(reduceMotion === false);
 
   return (
     <motion.div
-      ref={ref}
       initial={false}
-      animate={shown ? "visible" : "hidden"}
+      animate="visible"
       variants={{
         hidden: {},
         visible: {

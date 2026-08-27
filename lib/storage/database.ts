@@ -60,6 +60,24 @@ function unwrapRow(data: SiteContentRow | SiteContentRow[] | null): SiteContentR
   return row;
 }
 
+function isJwtClockSkew(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const record = error as { code?: unknown; message?: unknown };
+  const code = typeof record.code === "string" ? record.code : "";
+  const message = typeof record.message === "string" ? record.message : "";
+  return code === "PGRST303" || message.includes("JWT issued at future");
+}
+
+async function withJwtClockSkewRetry<T>(run: () => Promise<T>): Promise<T> {
+  try {
+    return await run();
+  } catch (error) {
+    if (!isJwtClockSkew(error)) throw error;
+    await new Promise((resolve) => setTimeout(resolve, 750));
+    return run();
+  }
+}
+
 function storageError(error: unknown, fallback: string): StorageError {
   if (error instanceof StorageError) return error;
   if (
@@ -140,14 +158,16 @@ function toStoredContent(row: SiteContentRow): StoredSiteContent {
 
 export async function readStoredSiteContent(): Promise<StoredSiteContent | null> {
   try {
-    const { data, error } = await getSiteDatabase()
-      .from("site_content")
-      .select("id, content, version, updated_at, updated_by")
-      .eq("id", "singleton")
-      .maybeSingle();
+    return await withJwtClockSkewRetry(async () => {
+      const { data, error } = await getSiteDatabase()
+        .from("site_content")
+        .select("id, content, version, updated_at, updated_by")
+        .eq("id", "singleton")
+        .maybeSingle();
 
-    if (error) throw error;
-    return data ? toStoredContent(data as SiteContentRow) : null;
+      if (error) throw error;
+      return data ? toStoredContent(data as SiteContentRow) : null;
+    });
   } catch (error) {
     throw storageError(error, "Could not load site content.");
   }
@@ -200,16 +220,18 @@ function toStoredPortfolioLibrary(
 
 export async function readStoredPortfolioLibrary(): Promise<StoredPortfolioLibrary | null> {
   try {
-    const { data, error } = await getSiteDatabase()
-      .from("portfolio_library")
-      .select("id, videos, version, updated_at, updated_by")
-      .eq("id", "singleton")
-      .maybeSingle();
+    return await withJwtClockSkewRetry(async () => {
+      const { data, error } = await getSiteDatabase()
+        .from("portfolio_library")
+        .select("id, videos, version, updated_at, updated_by")
+        .eq("id", "singleton")
+        .maybeSingle();
 
-    if (error) throw error;
-    return data
-      ? toStoredPortfolioLibrary(data as PortfolioLibraryRow)
-      : null;
+      if (error) throw error;
+      return data
+        ? toStoredPortfolioLibrary(data as PortfolioLibraryRow)
+        : null;
+    });
   } catch (error) {
     throw storageError(error, "Could not load the video library.");
   }

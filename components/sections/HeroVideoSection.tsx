@@ -90,8 +90,10 @@ export function HeroVideoSection() {
     mediaSizeForSource &&
       mediaSizeForSource.width >= mediaSizeForSource.height,
   );
+  // Portrait clips keep their full frame on phones. On a wide desktop the
+  // same exact-ratio box is thousands of pixels tall and looks empty.
   const useExactRatio = Boolean(
-    hasVideo && (!knownLandscape || isPortraitOrientation),
+    hasVideo && isPortraitOrientation && !knownLandscape,
   );
   const videoFit: VideoObjectFit = useExactRatio ? "contain" : "cover";
   const sizerSize = mediaSizeForSource ?? { width: 9, height: 16 };

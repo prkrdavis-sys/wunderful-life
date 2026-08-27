@@ -173,6 +173,18 @@ body {
   display: none;
 }
 
+@media (orientation: landscape) {
+  .hero-video-band[data-exact="true"] .hero-video-sizer-exact,
+  .hero-video-band[data-has-ratio="true"] .hero-video-sizer-exact {
+    display: none;
+  }
+
+  .hero-video-band[data-exact="true"] .hero-video-sizer-cover,
+  .hero-video-band[data-has-ratio="true"] .hero-video-sizer-cover {
+    display: block;
+  }
+}
+
 @media (orientation: portrait) {
   .hero-video-band[data-has-ratio="true"] .hero-video-sizer-exact {
     display: block;
