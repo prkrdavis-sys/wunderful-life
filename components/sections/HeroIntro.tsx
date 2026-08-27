@@ -103,11 +103,7 @@ export function HeroIntro() {
       }`}
     >
       <AdminEditButton section="hero" label="Edit hero" />
-      <div
-        className={`hero-intro-visual${
-          services.length > 0 ? " hero-intro-visual--services" : ""
-        }`}
-      >
+      <div className="hero-intro-visual">
         <SectionButterfly flight="intro" />
         <div
           aria-hidden
@@ -179,13 +175,6 @@ export function HeroIntro() {
           first={nameFirst}
           second={nameLast}
           delay={0.16}
-          className="hero-intro-lockup hero-intro-name"
-        />
-        <HeroLockup
-          as="p"
-          first={site.hero.titleLine}
-          second={site.hero.titleAccent}
-          delay={0.32}
           className="hero-intro-lockup hero-intro-title"
         />
       </div>
