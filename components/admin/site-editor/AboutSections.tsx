@@ -70,6 +70,9 @@ export function AboutEditor({
             onCaptionChange={(caption) =>
               setForm((current) => withAboutPhoto(current, index, { caption }))
             }
+            onFrameChange={(frame) =>
+              setForm((current) => withAboutPhoto(current, index, { frame }))
+            }
             onRotateChange={(rotate) =>
               setForm((current) => withAboutPhoto(current, index, { rotate }))
             }
@@ -99,7 +102,7 @@ export function GalleryEditor({
         <h3 className="font-display text-lg text-brown">A little more</h3>
         <p className="mt-1 text-sm text-muted">
           Gallery photos below About. Change the section title, then upload
-          images, captions, and rotation for each photo.
+          images, captions, and a frame for each photo.
         </p>
       </div>
       <label className="block max-w-2xl text-sm">
@@ -135,6 +138,11 @@ export function GalleryEditor({
                   onCaptionChange={(caption) =>
                     setForm((current) =>
                       withAboutPhoto(current, index, { caption }),
+                    )
+                  }
+                  onFrameChange={(frame) =>
+                    setForm((current) =>
+                      withAboutPhoto(current, index, { frame }),
                     )
                   }
                   onRotateChange={(rotate) =>

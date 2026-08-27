@@ -592,21 +592,16 @@ body {
 }
 
 /*
- * Shared wash behind photography, stats, and about. One gradient instead of
- * three stacked section colors, so the bands do not seam.
+ * Shared wash behind photography, stats, and about. Same layered recipe as
+ * the UGC and recent-videos bands: paper highlight, a darker corner, then
+ * an angled linear so the long band reads as one gradient.
  */
 .photography-about-band {
   background:
-    radial-gradient(circle at 86% 16%, rgba(212, 196, 232, 0.14), transparent 34rem),
-    radial-gradient(circle at 14% 84%, rgba(224, 182, 188, 0.12), transparent 32rem),
-    linear-gradient(
-      180deg,
-      #fffdf9 0%,
-      #f8efe9 28%,
-      #f7f3ec 50%,
-      #f8efe9 76%,
-      #fffdf9 100%
-    );
+    radial-gradient(circle at 16% 14%, rgb(255 253 249 / 0.55), transparent 24rem),
+    radial-gradient(circle at 88% 20%, rgb(224 182 188 / 0.36), transparent 26rem),
+    radial-gradient(circle at 82% 82%, rgb(51 81 61 / 0.16), transparent 28rem),
+    linear-gradient(145deg, #f2eadf 0%, #e4d6cc 42%, #cfd6c0 100%);
 }
 
 /*

@@ -1,7 +1,9 @@
 import {
+  ABOUT_PHOTO_FRAMES,
   MAX_BRANDS,
   MAX_COLLAGE_TILES,
   type AboutPhoto,
+  type AboutPhotoFrame,
   type BrandItem,
   type CollagePhoto,
   type CollagePhotoShape,
@@ -170,10 +172,32 @@ const DEFAULT_TESTIMONIALS: SiteContent["testimonials"] = {
   ],
 };
 
+const ABOUT_PHOTO_FRAME_VALUES = new Set<AboutPhotoFrame>(ABOUT_PHOTO_FRAMES);
+
+function defaultAboutPhotoFrame(index: number): AboutPhotoFrame {
+  if (index === 0) return "arch";
+  if (index === 1) return "oval";
+  return "polaroid";
+}
+
+function normalizeAboutPhotoFrame(
+  value: unknown,
+  index: number,
+): AboutPhotoFrame {
+  if (
+    typeof value === "string" &&
+    ABOUT_PHOTO_FRAME_VALUES.has(value as AboutPhotoFrame)
+  ) {
+    return value as AboutPhotoFrame;
+  }
+  return defaultAboutPhotoFrame(index);
+}
+
 const DEFAULT_FOURTH_GALLERY_PHOTO: AboutPhoto = {
   id: "ugc-moment",
   caption: "New UGC moment — upload Emily's fourth gallery photo here",
   rotate: 3,
+  frame: "polaroid",
 };
 
 /** Public navbar order, matching the live site tabs. */
@@ -241,10 +265,11 @@ function slugId(value: string, fallback: string): string {
 }
 
 function normalizeAboutPhotos(photos: AboutPhoto[]): AboutPhoto[] {
-  const normalized = photos.map((photo) => ({
+  const normalized = photos.map((photo, index) => ({
     id: photo.id,
     caption: photo.caption,
     rotate: photo.rotate,
+    frame: normalizeAboutPhotoFrame(photo.frame, index),
     ...(photo.imagePath ? { imagePath: photo.imagePath } : {}),
   }));
 

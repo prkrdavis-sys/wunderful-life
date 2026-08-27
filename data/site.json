@@ -15,36 +15,42 @@
       {
         "id": "portrait-main",
         "rotate": -3,
+        "frame": "arch",
         "caption": "Hard at work.",
         "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/about-photos/4eed26e1-ff0d-4ae3-b187-af055fe150df.jpg"
       },
       {
         "id": "creator-desk",
         "rotate": 4,
+        "frame": "oval",
         "caption": "Vineyard frolic ",
         "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/about-photos/ff378780-2754-4754-84cf-0cf74e798180.jpg"
       },
       {
         "id": "outdoors",
         "rotate": -5,
+        "frame": "polaroid",
         "caption": "Chasing waterfalls! ",
         "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/about-photos/1a546ab3-31ce-4617-ae5e-74d93e23da9a.jpg"
       },
       {
         "id": "filming",
         "rotate": 2,
+        "frame": "polaroid",
         "caption": "Chai break :)",
         "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/about-photos/faa0baa9-9ed9-4aa6-8884-84290419cd14.jpg"
       },
       {
         "id": "candid",
         "rotate": -2,
+        "frame": "polaroid",
         "caption": "I love animals! ",
         "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/about-photos/0dae8cf2-bab3-453d-bb9c-2e2235b60bd1.jpg"
       },
       {
         "id": "ugc-moment",
         "rotate": 3,
+        "frame": "polaroid",
         "caption": "Adventure together?",
         "imagePath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/about-photos/0fab0872-4739-43a2-9384-937643028e0a.jpg"
       }

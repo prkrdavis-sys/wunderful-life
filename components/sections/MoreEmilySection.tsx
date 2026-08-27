@@ -23,7 +23,7 @@ export function MoreEmilySection() {
       id="more-emily"
       className="scroll-section-anchor relative overflow-hidden px-4 pt-16 pb-20 sm:px-6 sm:pt-20 sm:pb-24"
     >
-      <SectionSurface tone="ivory" motifs="left" />
+      <SectionSurface tone="sage" motifs="scatter" />
       <SectionButterfly flight="aboutFar" />
       <AdminEditButton section="photos" label="Edit photos" />
       <div className="relative z-10 mx-auto max-w-5xl">

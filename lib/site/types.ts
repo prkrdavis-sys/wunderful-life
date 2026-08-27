@@ -5,10 +5,28 @@ export type HeroLink = {
   activePathPrefix?: string;
 };
 
+export type AboutPhotoFrame =
+  | "arch"
+  | "oval"
+  | "polaroid"
+  | "circle"
+  | "rounded"
+  | "square";
+
+export const ABOUT_PHOTO_FRAMES: readonly AboutPhotoFrame[] = [
+  "arch",
+  "oval",
+  "polaroid",
+  "circle",
+  "rounded",
+  "square",
+];
+
 export type AboutPhoto = {
   id: string;
   caption: string;
   rotate: number;
+  frame: AboutPhotoFrame;
   imagePath?: string;
 };
 

@@ -3,7 +3,7 @@ import type { AboutPhoto, SiteContent } from "@/lib/site/types";
 export function withAboutPhoto(
   site: SiteContent,
   index: number,
-  patch: Partial<Pick<AboutPhoto, "caption" | "rotate">>,
+  patch: Partial<Pick<AboutPhoto, "caption" | "rotate" | "frame">>,
 ): SiteContent {
   const current = site.about.photos[index];
   if (!current) return site;
