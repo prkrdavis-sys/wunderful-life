@@ -1,8 +1,20 @@
 import { AutoResizeTextarea } from "@/components/admin/AutoResizeTextarea";
+import { useAdminView } from "@/components/admin/AdminViewProvider";
 import { AboutPhotoEditorCard } from "@/components/admin/site-editor/AboutPhotoEditorCard";
-import { withAboutPhoto } from "@/components/admin/site-editor/aboutPhotos";
+import {
+  applyAboutSite,
+  withAboutPhoto,
+  withAboutPhotos,
+} from "@/components/admin/site-editor/aboutPhotos";
 import { ABOUT_INTRO_PHOTO_COUNT, inputClass } from "@/components/admin/site-editor/constants";
+import {
+  AddRowButton,
+  moveItem,
+  RowControls,
+  uniqueId,
+} from "@/components/admin/site-editor/list";
 import type { SiteEditorFieldsProps } from "@/components/admin/site-editor/types";
+import { MAX_ABOUT_GALLERY_PHOTOS } from "@/lib/site/types";
 
 export function AboutEditor({
   form,
@@ -11,6 +23,8 @@ export function AboutEditor({
   uploadPhoto,
   removePhoto,
 }: SiteEditorFieldsProps) {
+  const { setSite } = useAdminView();
+
   return (
     <section className="space-y-4">
       <div>
@@ -68,13 +82,19 @@ export function AboutEditor({
             heading={index === 0 ? "Main photo" : "Accent photo"}
             loading={loading}
             onCaptionChange={(caption) =>
-              setForm((current) => withAboutPhoto(current, index, { caption }))
+              applyAboutSite(setForm, setSite, (current) =>
+                withAboutPhoto(current, index, { caption }),
+              )
             }
             onFrameChange={(frame) =>
-              setForm((current) => withAboutPhoto(current, index, { frame }))
+              applyAboutSite(setForm, setSite, (current) =>
+                withAboutPhoto(current, index, { frame }),
+              )
             }
             onRotateChange={(rotate) =>
-              setForm((current) => withAboutPhoto(current, index, { rotate }))
+              applyAboutSite(setForm, setSite, (current) =>
+                withAboutPhoto(current, index, { rotate }),
+              )
             }
             onUpload={(file) => {
               void uploadPhoto(photo.id, file);
@@ -96,13 +116,21 @@ export function GalleryEditor({
   uploadPhoto,
   removePhoto,
 }: SiteEditorFieldsProps) {
+  const { setSite, site } = useAdminView();
+  const galleryPhotos = form.about.photos.slice(ABOUT_INTRO_PHOTO_COUNT);
+  const galleryTitle = form.about.galleryHeading.trim() || "My vibe";
+  const savedGalleryIds = new Set(
+    site.about.photos.slice(ABOUT_INTRO_PHOTO_COUNT).map((photo) => photo.id),
+  );
+
   return (
     <section className="space-y-4">
       <div>
-        <h3 className="font-display text-lg text-brown">A little more</h3>
+        <h3 className="font-display text-lg text-brown">{galleryTitle}</h3>
         <p className="mt-1 text-sm text-muted">
-          Gallery photos below About. Change the section title, then upload
-          images, captions, and a frame for each photo.
+          Photos in the {galleryTitle} gallery. Each one can use Arch, Oval,
+          Polaroid, Circle, Rounded, or Square. Rotation only applies to
+          Polaroid.
         </p>
       </div>
       <label className="block max-w-2xl text-sm">
@@ -110,7 +138,7 @@ export function GalleryEditor({
         <AutoResizeTextarea
           value={form.about.galleryHeading}
           onChange={(event) =>
-            setForm((current) => ({
+            applyAboutSite(setForm, setSite, (current) => ({
               ...current,
               about: {
                 ...current.about,
@@ -121,46 +149,98 @@ export function GalleryEditor({
           className={inputClass}
         />
       </label>
-      {form.about.photos.length <= ABOUT_INTRO_PHOTO_COUNT ? (
+      {galleryPhotos.length === 0 ? (
         <p className="text-sm text-muted">No gallery photos yet.</p>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
-          {form.about.photos
-            .slice(ABOUT_INTRO_PHOTO_COUNT)
-            .map((photo, sliceIndex) => {
-              const index = sliceIndex + ABOUT_INTRO_PHOTO_COUNT;
-              return (
-                <AboutPhotoEditorCard
-                  key={photo.id}
-                  photo={photo}
-                  heading={`Photo ${sliceIndex + 1}`}
-                  loading={loading}
-                  onCaptionChange={(caption) =>
-                    setForm((current) =>
-                      withAboutPhoto(current, index, { caption }),
-                    )
-                  }
-                  onFrameChange={(frame) =>
-                    setForm((current) =>
-                      withAboutPhoto(current, index, { frame }),
-                    )
-                  }
-                  onRotateChange={(rotate) =>
-                    setForm((current) =>
-                      withAboutPhoto(current, index, { rotate }),
-                    )
-                  }
-                  onUpload={(file) => {
-                    void uploadPhoto(photo.id, file);
-                  }}
-                  onRemove={() => {
-                    void removePhoto(photo.id);
-                  }}
-                />
-              );
-            })}
+          {galleryPhotos.map((photo, sliceIndex) => {
+            const index = sliceIndex + ABOUT_INTRO_PHOTO_COUNT;
+            return (
+              <AboutPhotoEditorCard
+                key={photo.id}
+                photo={photo}
+                heading={`Photo ${sliceIndex + 1}`}
+                leading={
+                  <RowControls
+                    label="Photo"
+                    index={sliceIndex}
+                    count={galleryPhotos.length}
+                    onMove={(delta) =>
+                      setForm((current) => {
+                        const intro = current.about.photos.slice(
+                          0,
+                          ABOUT_INTRO_PHOTO_COUNT,
+                        );
+                        const gallery = current.about.photos.slice(
+                          ABOUT_INTRO_PHOTO_COUNT,
+                        );
+                        return withAboutPhotos(current, [
+                          ...intro,
+                          ...moveItem(gallery, sliceIndex, delta),
+                        ]);
+                      })
+                    }
+                    onRemove={() =>
+                      setForm((current) =>
+                        withAboutPhotos(
+                          current,
+                          current.about.photos.filter((_, i) => i !== index),
+                        ),
+                      )
+                    }
+                  />
+                }
+                loading={loading}
+                onCaptionChange={(caption) =>
+                  applyAboutSite(setForm, setSite, (current) =>
+                    withAboutPhoto(current, index, { caption }),
+                  )
+                }
+                onFrameChange={(frame) =>
+                  applyAboutSite(setForm, setSite, (current) =>
+                    withAboutPhoto(current, index, { frame }),
+                  )
+                }
+                onRotateChange={(rotate) =>
+                  applyAboutSite(setForm, setSite, (current) =>
+                    withAboutPhoto(current, index, { rotate }),
+                  )
+                }
+                onUpload={(file) => {
+                  void uploadPhoto(photo.id, file);
+                }}
+                onRemove={() => {
+                  void removePhoto(photo.id);
+                }}
+                uploadReady={savedGalleryIds.has(photo.id)}
+              />
+            );
+          })}
         </div>
       )}
+      <AddRowButton
+        label={`Add photo (${galleryPhotos.length} of ${MAX_ABOUT_GALLERY_PHOTOS})`}
+        disabled={galleryPhotos.length >= MAX_ABOUT_GALLERY_PHOTOS}
+        onClick={() =>
+          setForm((current) => {
+            if (
+              current.about.photos.length - ABOUT_INTRO_PHOTO_COUNT >=
+              MAX_ABOUT_GALLERY_PHOTOS
+            ) {
+              return current;
+            }
+            return withAboutPhotos(current, [
+              ...current.about.photos,
+              {
+                id: uniqueId("vibe"),
+                caption: "",
+                rotate: 0,
+                frame: "polaroid",
+              },
+            ]);
+          })
+        }
+      />
     </section>
   );
 }

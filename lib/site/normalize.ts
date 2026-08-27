@@ -1,7 +1,7 @@
 import {
-  ABOUT_PHOTO_FRAMES,
   MAX_BRANDS,
   MAX_COLLAGE_TILES,
+  isAboutPhotoFrame,
   type AboutPhoto,
   type AboutPhotoFrame,
   type BrandItem,
@@ -172,8 +172,6 @@ const DEFAULT_TESTIMONIALS: SiteContent["testimonials"] = {
   ],
 };
 
-const ABOUT_PHOTO_FRAME_VALUES = new Set<AboutPhotoFrame>(ABOUT_PHOTO_FRAMES);
-
 function defaultAboutPhotoFrame(index: number): AboutPhotoFrame {
   if (index === 0) return "arch";
   if (index === 1) return "oval";
@@ -184,13 +182,7 @@ function normalizeAboutPhotoFrame(
   value: unknown,
   index: number,
 ): AboutPhotoFrame {
-  if (
-    typeof value === "string" &&
-    ABOUT_PHOTO_FRAME_VALUES.has(value as AboutPhotoFrame)
-  ) {
-    return value as AboutPhotoFrame;
-  }
-  return defaultAboutPhotoFrame(index);
+  return isAboutPhotoFrame(value) ? value : defaultAboutPhotoFrame(index);
 }
 
 const DEFAULT_FOURTH_GALLERY_PHOTO: AboutPhoto = {

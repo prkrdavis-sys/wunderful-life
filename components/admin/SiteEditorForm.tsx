@@ -96,7 +96,9 @@ export function SiteEditorForm({
                   : "text-ink hover:bg-white/80"
               }`}
             >
-              {item.label}
+              {item.id === "photos"
+                ? editor.form.about.galleryHeading.trim() || item.label
+                : item.label}
             </button>
           ))}
         </div>

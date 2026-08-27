@@ -12,7 +12,7 @@ import { sectionText } from "@/lib/sectionText";
 export function MoreEmilySection() {
   const site = useSiteContent();
   const text = sectionText.about;
-  const galleryPhotos = site.about.photos.slice(2, 6);
+  const galleryPhotos = site.about.photos.slice(2);
 
   if (galleryPhotos.length === 0) {
     return null;
@@ -25,7 +25,7 @@ export function MoreEmilySection() {
     >
       <SectionSurface tone="sage" motifs="scatter" />
       <SectionButterfly flight="aboutFar" />
-      <AdminEditButton section="photos" label="Edit photos" />
+      <AdminEditButton section="photos" label="Edit My vibe" />
       <div className="relative z-10 mx-auto max-w-5xl">
         <SectionReveal className="text-center">
           <h2 className={`font-serif text-3xl sm:text-5xl ${text.heading}`}>

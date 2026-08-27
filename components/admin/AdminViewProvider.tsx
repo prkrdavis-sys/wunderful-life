@@ -7,7 +7,9 @@ import {
   useEffect,
   useMemo,
   useState,
+  type Dispatch,
   type ReactNode,
+  type SetStateAction,
 } from "react";
 import { useRouter } from "next/navigation";
 import type { SiteContent } from "@/lib/site/types";
@@ -67,7 +69,7 @@ type AdminViewContextValue = {
   exitAdminView: () => Promise<void>;
   refreshSession: () => Promise<void>;
   site: SiteContent;
-  setSite: (site: SiteContent) => void;
+  setSite: Dispatch<SetStateAction<SiteContent>>;
   siteVersion: number;
   setSiteVersion: (version: number) => void;
   siteUpdatedAt: string;

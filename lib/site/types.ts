@@ -22,6 +22,23 @@ export const ABOUT_PHOTO_FRAMES: readonly AboutPhotoFrame[] = [
   "square",
 ];
 
+/** Hard cap for My vibe gallery tiles in the editor and on the public page. */
+export const MAX_ABOUT_GALLERY_PHOTOS = 12;
+
+export function isAboutPhotoFrame(value: unknown): value is AboutPhotoFrame {
+  return (
+    typeof value === "string" &&
+    (ABOUT_PHOTO_FRAMES as readonly string[]).includes(value)
+  );
+}
+
+export function resolveAboutPhotoFrame(
+  value: unknown,
+  fallback: AboutPhotoFrame = "polaroid",
+): AboutPhotoFrame {
+  return isAboutPhotoFrame(value) ? value : fallback;
+}
+
 export type AboutPhoto = {
   id: string;
   caption: string;

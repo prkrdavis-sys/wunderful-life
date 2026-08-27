@@ -1,5 +1,7 @@
+import type { ReactNode } from "react";
 import {
   ABOUT_PHOTO_FRAMES,
+  resolveAboutPhotoFrame,
   type AboutPhoto,
   type AboutPhotoFrame,
 } from "@/lib/site/types";
@@ -20,27 +22,35 @@ const FRAME_LABELS: Record<AboutPhotoFrame, string> = {
 export function AboutPhotoEditorCard({
   photo,
   heading,
+  leading,
   loading,
   onCaptionChange,
   onFrameChange,
   onRotateChange,
   onUpload,
   onRemove,
+  uploadReady = true,
 }: {
   photo: AboutPhoto;
   heading: string;
+  leading?: ReactNode;
   loading: boolean;
   onCaptionChange: (caption: string) => void;
   onFrameChange: (frame: AboutPhotoFrame) => void;
   onRotateChange: (rotate: number) => void;
   onUpload: (file: File) => void;
   onRemove: () => void;
+  uploadReady?: boolean;
 }) {
+  const frame = resolveAboutPhotoFrame(photo.frame);
+
   return (
     <div className="space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4">
-      <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
-        {heading}
-      </p>
+      {leading ?? (
+        <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+          {heading}
+        </p>
+      )}
       <label className="block text-sm">
         <span className="text-muted">Caption</span>
         <AutoResizeTextarea
@@ -52,7 +62,7 @@ export function AboutPhotoEditorCard({
       <label className="block text-sm">
         <span className="text-muted">Frame</span>
         <select
-          value={photo.frame}
+          value={frame}
           onChange={(event) =>
             onFrameChange(event.target.value as AboutPhotoFrame)
           }
@@ -65,7 +75,7 @@ export function AboutPhotoEditorCard({
           ))}
         </select>
       </label>
-      {photo.frame === "polaroid" ? (
+      {frame === "polaroid" ? (
         <label className="block text-sm">
           <span className="text-muted">Rotate (deg)</span>
           <input
@@ -78,19 +88,29 @@ export function AboutPhotoEditorCard({
       ) : null}
       <div className="block text-sm">
         <span className="text-muted">Photo</span>
-        <FileUploadButton
-          className="mt-1"
-          kind="photo"
-          accept="image/*"
-          selectedName={photo.imagePath}
-          previewUrl={photo.imagePath}
-          disabled={loading}
-          onChange={(file) => {
-            if (file) onUpload(file);
-          }}
-          onRemove={photo.imagePath ? onRemove : undefined}
-        />
-        {photo.imagePath && <LiveOnSiteNote>Live on your site</LiveOnSiteNote>}
+        {uploadReady ? (
+          <>
+            <FileUploadButton
+              className="mt-1"
+              kind="photo"
+              accept="image/*"
+              selectedName={photo.imagePath}
+              previewUrl={photo.imagePath}
+              disabled={loading}
+              onChange={(file) => {
+                if (file) onUpload(file);
+              }}
+              onRemove={photo.imagePath ? onRemove : undefined}
+            />
+            {photo.imagePath && (
+              <LiveOnSiteNote>Live on your site</LiveOnSiteNote>
+            )}
+          </>
+        ) : (
+          <p className="mt-1 rounded-xl bg-honey/25 px-3 py-2 text-xs text-brown">
+            Save the site content first, then upload a photo here.
+          </p>
+        )}
       </div>
     </div>
   );

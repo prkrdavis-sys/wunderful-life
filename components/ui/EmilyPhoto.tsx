@@ -1,6 +1,10 @@
 import Image from "next/image";
 import { isRemoteMediaUrl } from "@/lib/media/urls";
-import type { AboutPhoto, AboutPhotoFrame } from "@/lib/site/types";
+import {
+  resolveAboutPhotoFrame,
+  type AboutPhoto,
+  type AboutPhotoFrame,
+} from "@/lib/site/types";
 
 const PHOTO_FRAME_GRADIENT = "from-lavender/55 via-lavender/22 to-cream";
 
@@ -141,7 +145,9 @@ export function EmilyPhoto({
   size = "md",
   className = "",
 }: EmilyPhotoProps) {
-  switch (photo.frame) {
+  const frame = resolveAboutPhotoFrame(photo.frame);
+
+  switch (frame) {
     case "polaroid":
       return <PolaroidPhoto photo={photo} size={size} className={className} />;
     case "arch":
@@ -153,12 +159,12 @@ export function EmilyPhoto({
         <ShapedPhoto
           photo={photo}
           size={size}
-          frame={photo.frame}
+          frame={frame}
           className={className}
         />
       );
     default: {
-      const _exhaustive: never = photo.frame;
+      const _exhaustive: never = frame;
       return _exhaustive;
     }
   }

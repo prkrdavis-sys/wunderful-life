@@ -598,10 +598,9 @@ body {
  */
 .photography-about-band {
   background:
-    radial-gradient(circle at 16% 14%, rgb(255 253 249 / 0.55), transparent 24rem),
-    radial-gradient(circle at 88% 20%, rgb(224 182 188 / 0.36), transparent 26rem),
-    radial-gradient(circle at 82% 82%, rgb(51 81 61 / 0.16), transparent 28rem),
-    linear-gradient(145deg, #f2eadf 0%, #e4d6cc 42%, #cfd6c0 100%);
+    radial-gradient(circle at 16% 14%, rgb(255 253 249 / 0.7), transparent 26rem),
+    radial-gradient(circle at 84% 78%, rgb(155 170 140 / 0.22), transparent 28rem),
+    linear-gradient(145deg, #fffdf9 0%, #e4eadb 48%, #cfd6c0 100%);
 }
 
 /*
