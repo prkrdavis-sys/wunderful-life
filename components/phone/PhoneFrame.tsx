@@ -53,8 +53,9 @@ export function PhoneFrame({
       style={{ rotate: tilt }}
       animate={{ scale: isActive ? 1.05 : 1 }}
       transition={{ type: "spring", stiffness: 260, damping: 22 }}
-      className={`shrink-0 ${className}`}
+      className={`relative shrink-0 ${className}`}
     >
+      <span className="phone-float-shadow" aria-hidden />
       <DeviceMockup
         device={iPhone15Pro}
         color={color}
@@ -62,11 +63,7 @@ export function PhoneFrame({
         basePath="/mockify"
         showStatusBar={false}
         screenColor="#0a0a0a"
-        className={
-          isActive
-            ? "drop-shadow-xl drop-shadow-brown/20"
-            : "drop-shadow-lg drop-shadow-brown/15"
-        }
+        className="relative z-10"
       >
         <div className="relative h-full w-full">{children}</div>
       </DeviceMockup>

@@ -35,7 +35,7 @@ export function TestimonialsSection() {
 
         <SectionReveal className="mx-auto max-w-3xl text-center">
           <p className="font-label text-xs font-semibold tracking-[0.18em] text-ink/75 uppercase">
-            Social Proof
+            {site.testimonials.eyebrow}
           </p>
           <h2 className={`mt-3 font-serif text-3xl sm:text-5xl ${text.heading}`}>
             {site.testimonials.heading}

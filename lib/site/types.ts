@@ -128,6 +128,8 @@ export type SiteContent = {
   };
   about: {
     headline: string;
+    /** Line under the About headline (e.g. "Meet Emily — …"). */
+    subtitle: string;
     /** Public heading for the gallery under About (e.g. "A little more Emily"). */
     galleryHeading: string;
     paragraphs: string[];
@@ -155,6 +157,8 @@ export type SiteContent = {
     calloutLabel: string;
     calloutValue: string;
     calloutBody: string;
+    /** Small caps line above the benefits card heading. */
+    benefitsEyebrow: string;
     benefitsHeading: string;
     benefits: string[];
   };
@@ -172,12 +176,16 @@ export type SiteContent = {
     email: string;
   };
   services: {
+    /** Small caps line above the Services heading. */
+    eyebrow: string;
     heading: string;
     subtitle: string;
     items: ServiceItem[];
   };
   testimonials: {
     visible: boolean;
+    /** Small caps line above the Testimonials heading. */
+    eyebrow: string;
     heading: string;
     intro: string;
     items: Testimonial[];

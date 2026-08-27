@@ -213,6 +213,22 @@ export function UgcEditor({
           Benefits checklist
         </p>
         <label className="block text-sm">
+          <span className="text-muted">Card eyebrow</span>
+          <AutoResizeTextarea
+            value={form.ugcBenefits.benefitsEyebrow}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                ugcBenefits: {
+                  ...current.ugcBenefits,
+                  benefitsEyebrow: event.target.value,
+                },
+              }))
+            }
+            className={inputClass}
+          />
+        </label>
+        <label className="block text-sm">
           <span className="text-muted">Card heading</span>
           <AutoResizeTextarea
             value={form.ugcBenefits.benefitsHeading}

@@ -25,7 +25,7 @@ export function ServicesSection() {
       <div className="relative z-10 mx-auto max-w-6xl">
         <SectionReveal className="text-center">
           <p className="font-label text-xs font-semibold tracking-[0.22em] text-sage-deep uppercase">
-            What I offer
+            {site.services.eyebrow}
           </p>
           <h2 className={`mt-3 font-serif text-3xl sm:text-5xl ${text.heading}`}>
             {site.services.heading}

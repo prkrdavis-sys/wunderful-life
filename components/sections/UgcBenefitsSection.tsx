@@ -81,7 +81,7 @@ export function UgcBenefitsSection() {
             className="ugc-benefits-card rounded-[1.5rem] border border-paper/40 p-5 text-ink shadow-xl sm:rounded-[2rem] sm:p-8"
           >
             <p className="font-label text-xs font-semibold tracking-[0.2em] text-forest/80 uppercase">
-              UGC benefits
+              {ugcBenefits.benefitsEyebrow}
             </p>
             <h3 className="mt-2 font-serif text-xl text-forest sm:text-3xl">
               {ugcBenefits.benefitsHeading}

@@ -37,7 +37,7 @@ export function AboutSection() {
             {site.about.headline}
           </h2>
           <p className={`mt-2 max-w-xl text-base sm:text-lg ${text.subheading}`}>
-            Meet {site.name} — creative, aesthetic, and unapologetically myself.
+            {site.about.subtitle}
           </p>
         </SectionReveal>
 

@@ -62,6 +62,7 @@
       }
     ],
     "headline": "About Me",
+    "subtitle": "Meet Emily — creative, aesthetic, and unapologetically myself.",
     "paragraphs": [
       "Hi, I'm Emily — a UGC creator who turns everyday moments into scroll-stopping content! I specialize in relatable storytelling that helps brands connect with real people.",
       "I love collaborating with wellness, travel, lifestyle, and purpose-driven brands that care about authenticity as much as aesthetics. ",
@@ -274,6 +275,7 @@
     "calloutBody": "of marketers say authentic content performs better than traditional brand-made content.",
     "calloutLabel": "Did you know?",
     "calloutValue": "93%",
+    "benefitsEyebrow": "UGC benefits",
     "benefitsHeading": "Content that feels like a recommendation."
   },
   "testimonials": {
@@ -292,6 +294,7 @@
         "quote": "The creative direction was thoughtful, on-brand, and easy to use across our social channels."
       }
     ],
+    "eyebrow": "Social Proof",
     "heading": "Testimonials ",
     "visible": true
   }

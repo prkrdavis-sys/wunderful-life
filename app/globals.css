@@ -534,6 +534,46 @@ body {
   animation: play-pulse 2.2s ease-in-out infinite;
 }
 
+/*
+ * Contact + ambient ground shadow for floating phone mockups.
+ * Radial ellipses only — no filter or blur — so Embla translation
+ * and play-scale cannot smear or desync the shadow from the device.
+ */
+.phone-float-shadow {
+  position: absolute;
+  left: 50%;
+  /* Mockify frames keep ~4% transparent padding under the chin. */
+  bottom: -0.15rem;
+  z-index: 0;
+  width: 86%;
+  height: 1.25rem;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    rgb(35 57 42 / 0.2) 0%,
+    rgb(35 57 42 / 0.08) 42%,
+    transparent 72%
+  );
+}
+
+.phone-float-shadow::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 62%;
+  height: 10px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    rgb(35 57 42 / 0.26) 0%,
+    rgb(35 57 42 / 0.1) 38%,
+    transparent 70%
+  );
+}
+
 @keyframes blob-float {
   0%,
   100% {

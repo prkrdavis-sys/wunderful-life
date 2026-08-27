@@ -11,10 +11,26 @@ export function ServicesEditor({
       <div>
         <h3 className="font-display text-lg text-brown">Services</h3>
         <p className="mt-1 text-sm text-muted">
-          The section heading and subtitle, plus titles and descriptions for
-          each offering.
+          The section eyebrow, heading, and subtitle, plus titles and
+          descriptions for each offering.
         </p>
       </div>
+      <label className="block max-w-2xl text-sm">
+        <span className="text-muted">Eyebrow</span>
+        <AutoResizeTextarea
+          value={form.services.eyebrow}
+          onChange={(event) =>
+            setForm((current) => ({
+              ...current,
+              services: {
+                ...current.services,
+                eyebrow: event.target.value,
+              },
+            }))
+          }
+          className={inputClass}
+        />
+      </label>
       <label className="block max-w-2xl text-sm">
         <span className="text-muted">Section title</span>
         <AutoResizeTextarea
@@ -140,6 +156,22 @@ export function TestimonialsEditor({
             }))
           }
           className="h-5 w-5 accent-forest"
+        />
+      </label>
+      <label className="block max-w-2xl text-sm">
+        <span className="text-muted">Eyebrow</span>
+        <AutoResizeTextarea
+          value={form.testimonials.eyebrow}
+          onChange={(event) =>
+            setForm((current) => ({
+              ...current,
+              testimonials: {
+                ...current.testimonials,
+                eyebrow: event.target.value,
+              },
+            }))
+          }
+          className={inputClass}
         />
       </label>
       <label className="block max-w-2xl text-sm">

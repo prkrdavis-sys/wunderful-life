@@ -106,6 +106,7 @@ const DEFAULT_UGC_BENEFITS: SiteContent["ugcBenefits"] = {
   calloutValue: "93%",
   calloutBody:
     "of marketers say authentic content performs better than traditional brand-made content.",
+  benefitsEyebrow: "UGC benefits",
   benefitsHeading: "Content that feels like a recommendation.",
   benefits: [
     "Builds trust with real stories",
@@ -118,6 +119,7 @@ const DEFAULT_UGC_BENEFITS: SiteContent["ugcBenefits"] = {
 };
 
 const DEFAULT_SERVICES: SiteContent["services"] = {
+  eyebrow: "What I offer",
   heading: "Services",
   subtitle:
     "What Emily delivers — plus the creative, airy, nature-driven personality your audience will remember.",
@@ -151,6 +153,7 @@ const DEFAULT_SERVICES: SiteContent["services"] = {
 
 const DEFAULT_TESTIMONIALS: SiteContent["testimonials"] = {
   visible: true,
+  eyebrow: "Social Proof",
   heading: "Kind Words",
   intro:
     "A few example notes to show how client feedback can live here once Emily starts collecting testimonials.",
@@ -221,8 +224,9 @@ type SiteContentInput = Omit<
   | "testimonials"
   | "hero"
 > & {
-  about: Omit<SiteContent["about"], "galleryHeading"> & {
+  about: Omit<SiteContent["about"], "galleryHeading" | "subtitle"> & {
     galleryHeading?: string;
+    subtitle?: string;
   };
   statsBanner?: Partial<SiteContent["statsBanner"]>;
   work?: Partial<SiteContent["work"]>;
@@ -240,6 +244,10 @@ type SiteContentInput = Omit<
   /** Superseded by `closingCta`. */
   contact?: { headline?: string; body?: string };
 };
+
+function defaultAboutSubtitle(name: string): string {
+  return `Meet ${name} — creative, aesthetic, and unapologetically myself.`;
+}
 
 function defaultCtaBody(name: string): string {
   return `Want content that converts and a creator brands actually want to work with again? Hi — I'm ${name}. Let's chat.`;
@@ -415,6 +423,7 @@ function normalizeServices(
 ): SiteContent["services"] {
   if (Array.isArray(raw)) {
     return {
+      eyebrow: DEFAULT_SERVICES.eyebrow,
       heading: DEFAULT_SERVICES.heading,
       subtitle: DEFAULT_SERVICES.subtitle,
       items: normalizeServiceItems(raw),
@@ -423,6 +432,7 @@ function normalizeServices(
 
   if (raw && typeof raw === "object") {
     return {
+      eyebrow: text(raw.eyebrow, DEFAULT_SERVICES.eyebrow),
       heading: text(raw.heading, DEFAULT_SERVICES.heading),
       subtitle: text(raw.subtitle, DEFAULT_SERVICES.subtitle),
       items: normalizeServiceItems(raw.items),
@@ -471,6 +481,7 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
     },
     about: {
       headline: raw.about.headline,
+      subtitle: text(raw.about.subtitle, defaultAboutSubtitle(raw.name)),
       galleryHeading: text(
         raw.about.galleryHeading,
         `A little more ${raw.name}`,
@@ -519,6 +530,10 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
         ugcBenefits.calloutBody,
         DEFAULT_UGC_BENEFITS.calloutBody,
       ),
+      benefitsEyebrow: text(
+        ugcBenefits.benefitsEyebrow,
+        DEFAULT_UGC_BENEFITS.benefitsEyebrow,
+      ),
       benefitsHeading: text(
         ugcBenefits.benefitsHeading,
         DEFAULT_UGC_BENEFITS.benefitsHeading,
@@ -546,6 +561,7 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
         typeof testimonials.visible === "boolean"
           ? testimonials.visible
           : DEFAULT_TESTIMONIALS.visible,
+      eyebrow: text(testimonials.eyebrow, DEFAULT_TESTIMONIALS.eyebrow),
       heading: text(testimonials.heading, DEFAULT_TESTIMONIALS.heading),
       intro: text(testimonials.intro, DEFAULT_TESTIMONIALS.intro),
       items: Array.isArray(testimonials.items)

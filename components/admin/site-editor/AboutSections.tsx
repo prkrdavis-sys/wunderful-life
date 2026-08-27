@@ -30,7 +30,7 @@ export function AboutEditor({
       <div>
         <h3 className="font-display text-lg text-brown">About Me</h3>
         <p className="mt-1 text-sm text-muted">
-          Headline and paragraphs for the About Me section.
+          Headline, subtitle, and paragraphs for the About Me section.
         </p>
       </div>
       <label className="block text-sm">
@@ -41,6 +41,19 @@ export function AboutEditor({
             setForm((current) => ({
               ...current,
               about: { ...current.about, headline: event.target.value },
+            }))
+          }
+          className={inputClass}
+        />
+      </label>
+      <label className="block text-sm">
+        <span className="text-muted">Section subtitle</span>
+        <AutoResizeTextarea
+          value={form.about.subtitle}
+          onChange={(event) =>
+            setForm((current) => ({
+              ...current,
+              about: { ...current.about, subtitle: event.target.value },
             }))
           }
           className={inputClass}

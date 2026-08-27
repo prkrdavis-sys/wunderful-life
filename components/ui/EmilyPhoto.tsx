@@ -43,16 +43,26 @@ const imageSizes: Record<EmilyPhotoSize, string> = {
   gallery: "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
 };
 
-const shapedWindowClasses: Record<
-  Exclude<AboutPhotoFrame, "polaroid">,
-  string
-> = {
+type ShapedFrame = Exclude<AboutPhotoFrame, "polaroid">;
+
+const shapedWindowClasses: Record<ShapedFrame, string> = {
   arch: "aspect-[3/4] rounded-t-full",
   oval: "aspect-[4/5] rounded-full",
   circle: "aspect-square rounded-full",
   rounded: "aspect-[4/5] rounded-3xl",
   square: "aspect-square rounded-2xl",
 };
+
+const shapedShadowLayerClasses: Record<ShapedFrame, string> = {
+  arch: "rounded-t-full origin-bottom translate-y-3 scale-x-[0.94] bg-ink/30 blur-md",
+  oval: "rounded-full origin-bottom translate-y-2.5 scale-[0.96] bg-ink/28 blur-lg",
+  circle: "rounded-full origin-bottom translate-y-2.5 scale-[0.93] bg-ink/28 blur-lg",
+  rounded: "rounded-3xl translate-y-2.5 bg-ink/26 blur-md",
+  square: "rounded-2xl translate-y-2 bg-ink/28 blur-[10px]",
+};
+
+const POLAROID_SHADOW =
+  "shadow-[0_10px_24px_-6px_rgba(61,55,46,0.3),0_3px_8px_-2px_rgba(61,55,46,0.12)]";
 
 function PhotoCaption({ caption }: { caption: string }) {
   return (
@@ -104,7 +114,7 @@ function PolaroidPhoto({
 }) {
   return (
     <figure
-      className={`max-w-full ${sizeClasses[size]} ${polaroidPadClasses[size]} rotate-[var(--photo-rotate)] rounded-sm border border-white/90 bg-paper shadow-lg shadow-ink/10 ring-1 ring-lavender/20 ${className}`}
+      className={`max-w-full ${sizeClasses[size]} ${polaroidPadClasses[size]} rotate-[var(--photo-rotate)] rounded-sm border border-white/90 bg-paper ${POLAROID_SHADOW} ring-1 ring-lavender/20 ${className}`}
       style={{ ["--photo-rotate" as string]: `${photo.rotate}deg` }}
     >
       <div
@@ -127,15 +137,21 @@ function ShapedPhoto({
 }: {
   photo: AboutPhoto;
   size: EmilyPhotoSize;
-  frame: Exclude<AboutPhotoFrame, "polaroid">;
+  frame: ShapedFrame;
   className: string;
 }) {
   return (
     <figure className={`max-w-full ${sizeClasses[size]} ${className}`}>
-      <div
-        className={`relative overflow-hidden bg-gradient-to-br shadow-lg shadow-ink/10 ${PHOTO_FRAME_GRADIENT} ${shapedWindowClasses[frame]}`}
-      >
-        <PhotoMedia photo={photo} size={size} />
+      <div className="relative">
+        <div
+          aria-hidden
+          className={`pointer-events-none absolute inset-0 ${shapedShadowLayerClasses[frame]}`}
+        />
+        <div
+          className={`relative overflow-hidden bg-gradient-to-br ${PHOTO_FRAME_GRADIENT} ${shapedWindowClasses[frame]}`}
+        >
+          <PhotoMedia photo={photo} size={size} />
+        </div>
       </div>
       {photo.showCaption !== false ? (
         <PhotoCaption caption={photo.caption} />

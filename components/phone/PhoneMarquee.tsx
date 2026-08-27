@@ -214,7 +214,7 @@ export function PhoneMarquee({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div className="flex gap-8 py-2">
+        <div className="flex gap-8 py-4">
           {marqueeSlides.map((video, index) => {
             const slideKey = `${video.id}-${index}`;
             const sourceIndex = index % uniqueVideos.length;
