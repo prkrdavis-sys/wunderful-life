@@ -23,7 +23,7 @@ export function WorkEditor({
   return (
     <section className="space-y-4">
       <div>
-        <h3 className="font-display text-lg text-brown">Videos section</h3>
+        <h3 className="font-display text-lg text-brown">My Work</h3>
         <p className="mt-1 text-sm text-muted">
           Phone carousel clips live in the Videos tab. Mark a video “Show in
           carousel” to feature it there. If none are marked, every uploaded clip

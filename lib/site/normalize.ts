@@ -19,8 +19,8 @@ function defaultHeroSubtitle(name: string): string {
   return `I'm ${name} — the face behind the frame. Brands hire me for deliverables; they remember me for the personality.`;
 }
 
-const DEFAULT_HERO_TITLE_LINE = "Emily";
-const DEFAULT_HERO_TITLE_ACCENT = "Wunder";
+const DEFAULT_HERO_TITLE_LINE = "Creative";
+const DEFAULT_HERO_TITLE_ACCENT = "Portfolio";
 const DEFAULT_HERO_SERVICES: HeroIntroServices = [
   "UGC",
   "Social Media",
@@ -176,13 +176,19 @@ const DEFAULT_FOURTH_GALLERY_PHOTO: AboutPhoto = {
   rotate: 3,
 };
 
-const UGC_LINK: SiteContent["heroLinks"][number] = {
-  label: "Why UGC",
-  href: "/#ugc",
-};
-
-/** Older anchors that the merged UGC section now owns. */
-const LEGACY_UGC_HREFS = new Set(["/#ugc-benefits", "/#what-is-ugc"]);
+/** Public navbar order, matching the live site tabs. */
+const CANONICAL_HERO_LINKS: SiteContent["heroLinks"] = [
+  { label: "About Me", href: "/#about" },
+  {
+    label: "My Work",
+    href: "/work",
+    emphasis: "primary",
+    activePathPrefix: "/work",
+  },
+  { label: "Services", href: "/#services" },
+  { label: "Why UGC", href: "/#ugc" },
+  { label: "Contact", href: "/#contact" },
+];
 
 type SiteContentInput = Omit<
   SiteContent,
@@ -262,33 +268,8 @@ function normalizeHeroServices(value: unknown): HeroIntroServices {
   ];
 }
 
-function normalizeHeroLinks(
-  links: SiteContent["heroLinks"],
-): SiteContent["heroLinks"] {
-  const seen = new Set<string>();
-  const normalized: SiteContent["heroLinks"] = [];
-
-  for (const link of links) {
-    let next = link;
-
-    if (link.activePathPrefix === "/work" || link.href === "/#work") {
-      next = { ...link, href: "/work" };
-    } else if (LEGACY_UGC_HREFS.has(link.href)) {
-      next = { ...link, label: UGC_LINK.label, href: UGC_LINK.href };
-    } else if (link.href === "/#contact") {
-      next = { ...link, href: "/#contact" };
-    }
-
-    if (seen.has(next.href)) continue;
-    seen.add(next.href);
-    normalized.push(next);
-  }
-
-  if (!seen.has(UGC_LINK.href)) {
-    normalized.push(UGC_LINK);
-  }
-
-  return normalized;
+function normalizeHeroLinks(): SiteContent["heroLinks"] {
+  return CANONICAL_HERO_LINKS.map((link) => ({ ...link }));
 }
 
 /**
@@ -528,7 +509,7 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
         DEFAULT_UGC_BENEFITS.benefits,
       ),
     },
-    heroLinks: normalizeHeroLinks(raw.heroLinks),
+    heroLinks: normalizeHeroLinks(),
     closingCta: {
       headline: text(closingCta.headline, DEFAULT_CTA_HEADLINE),
       body: text(

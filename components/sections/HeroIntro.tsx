@@ -14,10 +14,43 @@ const HERO_CREATOR_FALLBACK = {
   height: 1350,
 } as const;
 
+function heroNameLines(fullName: string, name: string) {
+  const first = name.trim() || "Emily";
+  const last = fullName
+    .trim()
+    .split(/\s+/)
+    .filter((part) => part.toLowerCase() !== first.toLowerCase())
+    .join(" ");
+  return { first, last: last || "Wunder" };
+}
+
+function HeroLockup({
+  as: Tag,
+  first,
+  second,
+  className,
+}: {
+  as: "h1" | "p";
+  first: string;
+  second: string;
+  className: string;
+}) {
+  return (
+    <Tag className={className}>
+      <span className="block font-serif text-[clamp(1.45rem,7vw,4.6rem)] text-sage-deep">
+        {first}
+      </span>
+      <span className="-mt-1 block font-cooper text-[clamp(1.75rem,10.5vw,7.5rem)] text-forest uppercase">
+        {second}
+      </span>
+    </Tag>
+  );
+}
+
 function HeroForestBelt({ subtitle }: { subtitle: string }) {
   return (
     <div
-      className="hero-intro-belt relative overflow-hidden"
+      className="hero-intro-belt relative z-20 overflow-hidden"
       aria-hidden={subtitle ? undefined : true}
     >
       <SectionSurface tone="forest" motifs="none" />
@@ -39,6 +72,10 @@ export function HeroIntro() {
   const services = site.hero.services.filter((service) => service.trim());
   const creatorImage = site.hero.creatorImagePath ?? HERO_CREATOR_FALLBACK.src;
   const subtitle = site.hero.subtitle.trim();
+  const { first: nameFirst, last: nameLast } = heroNameLines(
+    site.fullName,
+    site.name,
+  );
 
   return (
     <section
@@ -47,7 +84,11 @@ export function HeroIntro() {
       }`}
     >
       <AdminEditButton section="hero" label="Edit hero" />
-      <div className="hero-intro-visual">
+      <div
+        className={`hero-intro-visual${
+          services.length > 0 ? " hero-intro-visual--services" : ""
+        }`}
+      >
         <SectionButterfly flight="intro" />
         <div
           aria-hidden
@@ -106,14 +147,18 @@ export function HeroIntro() {
           </div>
         </div>
 
-        <h1 className="hero-intro-title">
-          <span className="block font-serif text-[clamp(1.45rem,7vw,4.6rem)] text-sage-deep">
-            {site.hero.titleLine}
-          </span>
-          <span className="-mt-1 block font-cooper text-[clamp(1.75rem,10.5vw,7.5rem)] text-forest uppercase">
-            {site.hero.titleAccent}
-          </span>
-        </h1>
+        <HeroLockup
+          as="h1"
+          first={nameFirst}
+          second={nameLast}
+          className="hero-intro-lockup hero-intro-name"
+        />
+        <HeroLockup
+          as="p"
+          first={site.hero.titleLine}
+          second={site.hero.titleAccent}
+          className="hero-intro-lockup hero-intro-title"
+        />
       </div>
 
       <HeroForestBelt subtitle={subtitle} />

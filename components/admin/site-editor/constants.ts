@@ -5,16 +5,16 @@ export const ABOUT_INTRO_PHOTO_COUNT = 2;
 export const SECTIONS: { id: SiteEditorSection; label: string }[] = [
   { id: "profile", label: "Profile" },
   { id: "hero", label: "Hero" },
-  { id: "work", label: "Videos" },
-  { id: "services", label: "Services" },
-  { id: "brands", label: "Brands" },
+  { id: "about", label: "About Me" },
   { id: "photography", label: "Photography" },
   { id: "stats", label: "Audience reach" },
-  { id: "about", label: "About" },
+  { id: "work", label: "My Work" },
+  { id: "services", label: "Services" },
+  { id: "brands", label: "Brands" },
   { id: "ugc", label: "Why UGC" },
   { id: "testimonials", label: "Testimonials" },
   { id: "photos", label: "A little more" },
-  { id: "cta", label: "Closing CTA" },
+  { id: "cta", label: "Contact" },
 ];
 
 export const inputClass =

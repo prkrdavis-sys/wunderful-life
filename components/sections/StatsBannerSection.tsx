@@ -5,7 +5,7 @@ import { useAdminView } from "@/components/admin/AdminViewProvider";
 import { SectionSurface } from "@/components/ui/SectionSurface";
 import { SectionReveal, StaggerChildren, StaggerItem } from "@/components/ui/motion";
 
-/** Reach and engagement figures, shown as a forest panel after photography. */
+/** Reach and engagement figures, shown as a forest panel in the About Me band. */
 export function StatsBannerSection() {
   const { site, viewMode } = useAdminView();
   const isAdminView = viewMode === "admin";

@@ -36,12 +36,12 @@ export function SiteEditorSectionView({
       return <ProfileEditor form={fields.form} setForm={fields.setForm} />;
     case "hero":
       return <HeroEditor {...fields} {...video} />;
-    case "stats":
-      return <StatsEditor form={fields.form} setForm={fields.setForm} />;
     case "about":
       return <AboutEditor {...fields} />;
-    case "photos":
-      return <GalleryEditor {...fields} />;
+    case "photography":
+      return <PhotographyEditor {...fields} photoCardRefs={photoCardRefs} />;
+    case "stats":
+      return <StatsEditor form={fields.form} setForm={fields.setForm} />;
     case "work":
       return (
         <WorkEditor
@@ -50,16 +50,16 @@ export function SiteEditorSectionView({
           {...work}
         />
       );
-    case "photography":
-      return <PhotographyEditor {...fields} photoCardRefs={photoCardRefs} />;
+    case "services":
+      return <ServicesEditor form={fields.form} setForm={fields.setForm} />;
     case "brands":
       return <BrandsEditor {...fields} />;
     case "ugc":
       return <UgcEditor form={fields.form} setForm={fields.setForm} />;
-    case "services":
-      return <ServicesEditor form={fields.form} setForm={fields.setForm} />;
     case "testimonials":
       return <TestimonialsEditor form={fields.form} setForm={fields.setForm} />;
+    case "photos":
+      return <GalleryEditor {...fields} />;
     case "cta":
       return <CtaEditor {...fields} {...video} />;
     default: {

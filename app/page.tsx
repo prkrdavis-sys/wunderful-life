@@ -65,16 +65,16 @@ export default function HomePage() {
         <HeroIntro />
         <HeroVideoSection />
       </div>
+      <div className="photography-about-band relative">
+        <AboutSection />
+        <PhotographyCollage />
+        <StatsBannerSection />
+      </div>
       <Suspense fallback={<WorkPreviewFallback />}>
         <WorkPreview />
       </Suspense>
       <ServicesSection />
       <BrandsBanner />
-      <div className="photography-about-band relative">
-        <PhotographyCollage />
-        <StatsBannerSection />
-        <AboutSection />
-      </div>
       <UgcBenefitsSection />
       <TestimonialsSection />
       <MoreEmilySection />

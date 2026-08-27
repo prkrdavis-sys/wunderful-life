@@ -17,15 +17,15 @@ export type ViewMode = "regular" | "admin";
 export type SiteEditorSection =
   | "profile"
   | "hero"
-  | "stats"
   | "about"
-  | "photos"
-  | "work"
   | "photography"
-  | "brands"
+  | "stats"
+  | "work"
   | "services"
+  | "brands"
   | "ugc"
   | "testimonials"
+  | "photos"
   | "cta";
 
 export type SiteEditorFocus = {

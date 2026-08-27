@@ -165,7 +165,7 @@ export function HeroEditor({
 
       <div className="grid max-w-2xl min-w-0 gap-4 sm:grid-cols-2">
         <label className="block text-sm">
-          <span className="text-muted">Title, first line</span>
+          <span className="text-muted">Bottom-left title, first line</span>
           <AutoResizeTextarea
             value={form.hero.titleLine}
             onChange={(event) =>
@@ -178,7 +178,7 @@ export function HeroEditor({
           />
         </label>
         <label className="block text-sm">
-          <span className="text-muted">Title, second line</span>
+          <span className="text-muted">Bottom-left title, second line</span>
           <AutoResizeTextarea
             value={form.hero.titleAccent}
             onChange={(event) =>
@@ -425,7 +425,7 @@ export function CtaEditor({
   return (
     <section className="space-y-4">
       <div>
-        <h3 className="font-display text-lg text-brown">Closing CTA</h3>
+        <h3 className="font-display text-lg text-brown">Contact</h3>
         <p className="mt-1 text-sm text-muted">
           The &ldquo;Let&apos;s work together&rdquo; section at the bottom of
           the home page — headline, message, video, and links.

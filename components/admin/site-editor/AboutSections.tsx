@@ -14,9 +14,9 @@ export function AboutEditor({
   return (
     <section className="space-y-4">
       <div>
-        <h3 className="font-display text-lg text-brown">About copy</h3>
+        <h3 className="font-display text-lg text-brown">About Me</h3>
         <p className="mt-1 text-sm text-muted">
-          Headline and paragraphs for the About section.
+          Headline and paragraphs for the About Me section.
         </p>
       </div>
       <label className="block text-sm">

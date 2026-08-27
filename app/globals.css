@@ -610,7 +610,7 @@ body {
 }
 
 /*
- * Homogeneous sage silhouettes (rolling hills and trees) for the
+ * Homogeneous sage silhouettes (rolling hills, a few pines) for the
  * editorial hero intro. One hue (--sage-deep), layered only by opacity.
  */
 .hero-intro-silhouettes {
@@ -622,26 +622,21 @@ body {
 }
 
 /*
- * Tall phones crop the 1600-wide artwork from the sides. Size the bitmap a
- * little under full height so more of the center groves stay in frame.
- */
-@media (max-width: 640px) {
-  .hero-intro-silhouettes {
-    background-size: auto 88%;
-  }
-}
-
-/*
- * Hero intro stacking. Hills, cutout, and title live in .hero-intro-visual.
- * The forest belt is a separate in-flow strip below that art, never over it.
+ * Hero intro stacking. Hills and title stay in .hero-intro-visual, above
+ * the forest belt. The 2:3 cutout only reserves 85% of its height in flow
+ * so the bottom 15% hangs behind the belt and the video band.
+ * container-type lives on the section (not the stage) so inline-size
+ * containment cannot clip that hang on the block axis.
  *   0  silhouettes
  *   2  creator cutout
  *   5  butterfly
- *  20  UGC labels
- *  30  title
+ *  20  forest belt, UGC labels, video sibling
+ *  30  name (top right) and title (bottom left)
  */
 .hero-intro {
   overflow: visible;
+  container-type: inline-size;
+  container-name: hero-intro;
 }
 
 .hero-intro-visual {
@@ -653,8 +648,6 @@ body {
   position: relative;
   z-index: 2;
   overflow: visible;
-  container-type: inline-size;
-  container-name: hero-intro;
 }
 
 .hero-intro-composer {
@@ -668,43 +661,63 @@ body {
   margin-inline: auto;
   padding-inline: clamp(0.55rem, 3vw, 2.25rem);
   padding-top: clamp(0.45rem, 1.6vw, 1rem);
-  padding-bottom: 0.35rem;
+  padding-bottom: 0;
 }
 
 .hero-intro-creator-slot {
+  /* In-flow box is the visible 85%. The image is taller and hangs below. */
+  --creator-visible: 0.85;
   position: relative;
   z-index: 2;
   overflow: visible;
   grid-column: 2;
   width: 100%;
   min-width: 0;
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 2 / calc(3 * var(--creator-visible));
 }
 
 .hero-intro-creator-image {
   position: absolute;
-  inset: 0;
+  inset-inline: 0;
+  top: 0;
   z-index: 0;
   width: 100%;
+  height: calc(100% / var(--creator-visible));
   pointer-events: none;
 }
 
-.hero-intro-title {
+.hero-intro-lockup {
   pointer-events: none;
   position: absolute;
   z-index: 30;
-  bottom: 0;
-  left: 0;
   margin: 0;
   max-width: min(94%, 46rem);
   padding-inline: clamp(0.85rem, 4vw, 2.5rem);
-  padding-bottom: 0.35rem;
   line-height: 0.78;
   letter-spacing: -0.04em;
+}
+
+.hero-intro-title {
+  bottom: 0;
+  left: 0;
+  padding-bottom: 0.35rem;
   text-align: left;
 }
 
+.hero-intro-name {
+  top: 0;
+  right: 0;
+  padding-top: clamp(0.45rem, 1.6vw, 1rem);
+  text-align: right;
+}
+
+.hero-intro-visual--services .hero-intro-name {
+  top: clamp(2.2rem, 6.4vw, 3.35rem);
+}
+
 .hero-intro-belt {
+  position: relative;
+  z-index: 20;
   isolation: isolate;
   display: flex;
   align-items: center;
@@ -755,6 +768,10 @@ body {
     grid-column: 1;
     width: min(48%, 14rem);
   }
+
+  .hero-intro-visual--services .hero-intro-name {
+    top: clamp(2.7rem, 11vw, 4rem);
+  }
 }
 
 @container hero-intro (max-width: 24rem) {
@@ -762,7 +779,8 @@ body {
     width: min(44%, 10rem);
   }
 
-  .hero-intro-title {
+  .hero-intro-title,
+  .hero-intro-name {
     max-width: 96%;
     padding-inline: 0.7rem;
   }

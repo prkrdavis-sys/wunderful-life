@@ -44,9 +44,8 @@ const MAX_TILT_DEGREES = 26;
  * by a mask. A mask selects a region of the canvas, so wherever a route passed near
  * or across itself the mask over the tail also uncovered the stretch of line running
  * the other way, printing dashes ahead of the butterfly. Addressing each dash by its
- * distance along the route removes the mask fault. A directional guard below also
- * stops the tail when a curved route folds an older dash into the butterfly's
- * forward half-plane, so mirroring the sprite can never make a dash appear in front.
+ * unwrapped distance along the route keeps the tail behind the body and lets it
+ * wrap a closed loop without a chord across the seam.
  */
 const DASH_LENGTH = 3;
 const DASH_GAP = 7;
@@ -54,8 +53,44 @@ const DASH_PERIOD = DASH_LENGTH + DASH_GAP;
 
 /** Spacing of the sampled geometry the dashes are built from, in path units. */
 const SAMPLE_STEP = 1.5;
-/** No dash is allowed to project into the butterfly's current direction of travel. */
-const TRAIL_FORWARD_TOLERANCE = 0;
+/**
+ * A dash that straddles the loop close must not be drawn as one straight segment:
+ * those two samples sit on opposite sides of the route and the line between them
+ * flashes across the canvas. Anything longer than this is treated as a wrap.
+ */
+const MAX_DASH_SEGMENT = DASH_LENGTH * 2;
+
+type TrailPoint = { x: number; y: number };
+
+function formatPoint(point: TrailPoint) {
+  return `${point.x.toFixed(1)} ${point.y.toFixed(1)}`;
+}
+
+function dashPath(
+  start: number,
+  end: number,
+  pointAt: (distance: number) => TrailPoint,
+) {
+  const span = end - start;
+  const samples = Math.max(2, Math.ceil(span / SAMPLE_STEP) + 1);
+  let commands = "";
+  let previous: TrailPoint | null = null;
+
+  for (let sample = 0; sample < samples; sample += 1) {
+    const distance = start + (span * sample) / (samples - 1);
+    const point = pointAt(distance);
+    if (!previous) {
+      commands = `M ${formatPoint(point)}`;
+    } else if (Math.hypot(point.x - previous.x, point.y - previous.y) > MAX_DASH_SEGMENT) {
+      commands += ` M ${formatPoint(point)}`;
+    } else {
+      commands += ` L ${formatPoint(point)}`;
+    }
+    previous = point;
+  }
+
+  return commands;
+}
 
 /**
  * Drops a preset butterfly into a section, layered between the section's
@@ -155,7 +190,8 @@ export function ButterflyFlight({
       const last = points.length - 1;
 
       // Distances wrap, so the tail crossing the start of a closed route simply
-      // continues from its end.
+      // continues from its end. `value` itself is allowed to climb past 1 so the
+      // dash grid never snaps back to the path origin at the end of a lap.
       const pointAt = (distance: number) => {
         const wrapped = ((distance % total) + total) % total;
         const scaled = (wrapped / total) * last;
@@ -175,11 +211,6 @@ export function ButterflyFlight({
       const behind = pointAt(head - HEADING_STEP * total);
       const dx = ahead.x - behind.x;
       const dy = ahead.y - behind.y;
-      const headingLength = Math.hypot(dx, dy);
-      const forwardDistance = (point: { x: number; y: number }) =>
-        headingLength === 0
-          ? 0
-          : ((point.x - here.x) * dx + (point.y - here.y) * dy) / headingLength;
 
       // The sprite is drawn facing right, so travelling left is a horizontal mirror.
       // Mirroring also flips the sense of rotation, hence the tilt is scaled by the
@@ -192,12 +223,11 @@ export function ButterflyFlight({
 
       butterfly.style.transform = transformFor(here.x, here.y, tilt, facing);
 
-      // Dashes sit on a fixed grid measured from the start of the route, so they
-      // stay pinned to the route instead of sliding along with the butterfly. Once
-      // a curved route folds into the forward half-plane, stop the older tail too:
-      // otherwise a later dash could reappear past the offending one.
+      // Dashes sit on a fixed grid measured from the unwrapped distance flown, so
+      // they stay pinned to the route and the fade window slides with the butterfly.
+      // Age is path distance, so the tail keeps a constant length and dissolves at
+      // its tip at the same speed as the flight.
       const newest = Math.floor(head / DASH_PERIOD);
-      let trailBlocked = false;
 
       for (let index = 0; index < dashCount; index += 1) {
         const dash = dashRefs.current[index];
@@ -209,32 +239,14 @@ export function ButterflyFlight({
         const end = Math.min(start + DASH_LENGTH, head);
         const age = (head - end) / trailLength;
 
-        if (end <= start || age >= 1 || trailBlocked) {
+        // `end <= 0` hides the phantom first-lap tail that wrapping would otherwise
+        // paint at the close of the route before the butterfly has flown there.
+        if (end <= start || end <= 0 || age >= 1) {
           dash.style.opacity = "0";
           continue;
         }
 
-        const middle = pointAt((start + end) / 2);
-        const from = pointAt(start);
-        const to = pointAt(end);
-        const furthestForward = Math.max(
-          forwardDistance(from),
-          forwardDistance(middle),
-          forwardDistance(to),
-        );
-
-        if (furthestForward > TRAIL_FORWARD_TOLERANCE) {
-          dash.style.opacity = "0";
-          trailBlocked = true;
-          continue;
-        }
-
-        dash.setAttribute(
-          "d",
-          `M ${from.x.toFixed(1)} ${from.y.toFixed(1)}` +
-            ` L ${middle.x.toFixed(1)} ${middle.y.toFixed(1)}` +
-            ` L ${to.x.toFixed(1)} ${to.y.toFixed(1)}`,
-        );
+        dash.setAttribute("d", dashPath(start, end, pointAt));
         dash.style.opacity = (1 - age).toFixed(3);
       }
     },
@@ -281,19 +293,17 @@ export function ButterflyFlight({
 
     const flyCircuit = async () => {
       while (!cancelled) {
-        // Resuming after the section scrolled away should only cover the distance
-        // that is left, otherwise the butterfly crawls through the remainder.
-        const remaining = 1 - progress.get();
-        const flight = animate(progress, 1, {
-          duration: duration * remaining,
+        // Progress is the number of laps flown, not a 0–1 loop. Animating to the
+        // next integer keeps the trail's unwrapped distances continuous so the
+        // dash grid never snaps when the sprite crosses the path close.
+        const from = progress.get();
+        const flight = animate(progress, from + 1, {
+          duration,
           ease: "linear",
         });
         running = flight;
         await flight;
         if (cancelled) return;
-
-        // Closed routes make this a seamless restart rather than a jump.
-        progress.set(0);
       }
     };
 

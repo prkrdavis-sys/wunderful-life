@@ -50,9 +50,9 @@ export type HeroContent = {
   posterPath?: string;
   /** Cursive line in the forest belt between the intro and the hero video. */
   subtitle: string;
-  /** Serif first line of the hero intro title (e.g. "Emily"). */
+  /** Serif first line of the bottom-left hero title (e.g. "Creative"). */
   titleLine: string;
-  /** Display title second line, shown in all caps (e.g. "Wunder"). */
+  /** Display title second line, shown in all caps (e.g. "Portfolio"). */
   titleAccent: string;
   /** Three offerings shown above the intro title, separated by pipes. */
   services: HeroIntroServices;
