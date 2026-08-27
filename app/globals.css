@@ -622,39 +622,37 @@ body {
 }
 
 /*
- * Hero intro stacking. The stage is pulled up over the belt by a fixed
- * tuck so the 2:3 cutout always disappears under the strip and video.
+ * Tall phones crop the 1600-wide artwork from the sides. Size the bitmap a
+ * little under full height so more of the center groves stay in frame.
+ */
+@media (max-width: 640px) {
+  .hero-intro-silhouettes {
+    background-size: auto 88%;
+  }
+}
+
+/*
+ * Hero intro stacking. Hills, cutout, and title live in .hero-intro-visual.
+ * The forest belt is a separate in-flow strip below that art, never over it.
  *   0  silhouettes
  *   2  creator cutout
- *  20  forest belt, UGC labels, video sibling
- *  30  Emily / Wunder title
+ *   5  butterfly
+ *  20  UGC labels
+ *  30  title
  */
 .hero-intro {
-  --hero-belt-height: 3.5rem;
-  --hero-tuck: 2rem;
   overflow: visible;
 }
 
-.hero-intro--belt-copy {
-  --hero-belt-height: 8rem;
-}
-
-@media (min-width: 640px) {
-  .hero-intro {
-    --hero-belt-height: 4rem;
-    --hero-tuck: 2.5rem;
-  }
-
-  .hero-intro--belt-copy {
-    --hero-belt-height: 7.5rem;
-  }
+.hero-intro-visual {
+  position: relative;
+  overflow: visible;
 }
 
 .hero-intro-stage {
   position: relative;
   z-index: 2;
   overflow: visible;
-  margin-bottom: calc(-1 * (var(--hero-belt-height) + var(--hero-tuck)));
   container-type: inline-size;
   container-name: hero-intro;
 }
@@ -695,12 +693,12 @@ body {
   pointer-events: none;
   position: absolute;
   z-index: 30;
-  bottom: var(--hero-belt-height);
+  bottom: 0;
   left: 0;
   margin: 0;
   max-width: min(94%, 46rem);
   padding-inline: clamp(0.85rem, 4vw, 2.5rem);
-  padding-bottom: 0.2rem;
+  padding-bottom: 0.35rem;
   line-height: 0.78;
   letter-spacing: -0.04em;
   text-align: left;
@@ -712,8 +710,37 @@ body {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  height: var(--hero-belt-height);
-  padding-inline: clamp(1.1rem, 4vw, 2.5rem);
+  min-height: 0.65rem;
+  height: auto;
+  padding-block: 0;
+  padding-inline: clamp(1rem, 4vw, 2.5rem);
+}
+
+.hero-intro--belt-copy .hero-intro-belt {
+  min-height: 0;
+  padding-block: 0.28rem 0.38rem;
+}
+
+.hero-intro-belt-copy {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  font-size: clamp(1.05rem, 3.1vw, 1.4rem);
+  line-height: 1.2;
+  text-wrap: pretty;
+}
+
+@media (min-width: 72rem) {
+  .hero-intro--belt-copy .hero-intro-belt {
+    padding-block: 0.22rem 0.3rem;
+  }
+
+  .hero-intro-belt-copy {
+    overflow: hidden;
+    font-size: clamp(1rem, calc((100vw - 5rem) / 58), 1.5rem);
+    white-space: nowrap;
+  }
 }
 
 @container hero-intro (max-width: 40rem) {
@@ -742,10 +769,6 @@ body {
 }
 
 @media (max-height: 40rem) and (orientation: landscape) {
-  .hero-intro {
-    --hero-tuck: 1.5rem;
-  }
-
   .hero-intro-composer {
     max-width: 42rem;
   }
