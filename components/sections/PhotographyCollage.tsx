@@ -8,6 +8,7 @@ import { DeferredMount } from "@/components/ui/DeferredMount";
 import { DecorMotifs } from "@/components/ui/DecorMotifs";
 import { SectionSurface } from "@/components/ui/SectionSurface";
 import { SectionReveal, StaggerChildren, StaggerItem } from "@/components/ui/motion";
+import { isRemoteMediaUrl } from "@/lib/media/urls";
 import type { CollagePhotoShape } from "@/lib/site/types";
 
 /** Row/column spans that give the collage its irregular, scrapbook rhythm. */
@@ -61,6 +62,7 @@ export function PhotographyCollage() {
                     fill
                     sizes="(max-width: 640px) 33vw, 25vw"
                     decoding="async"
+                    unoptimized={isRemoteMediaUrl(photo.imagePath)}
                     className="object-cover"
                   />
                 ) : (

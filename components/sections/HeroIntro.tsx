@@ -4,7 +4,9 @@ import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
+import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { SectionSurface } from "@/components/ui/SectionSurface";
+import { isRemoteMediaUrl } from "@/lib/media/urls";
 
 const HERO_CREATOR_FALLBACK = {
   src: "/hero/creator-placeholder.webp",
@@ -12,10 +14,18 @@ const HERO_CREATOR_FALLBACK = {
   height: 1350,
 } as const;
 
-function HeroForestBelt() {
+function HeroForestBelt({ subtitle }: { subtitle: string }) {
   return (
-    <div aria-hidden className="hero-intro-belt relative z-20 overflow-hidden">
+    <div
+      className="hero-intro-belt relative z-20 overflow-hidden"
+      aria-hidden={subtitle ? undefined : true}
+    >
       <SectionSurface tone="forest" motifs="none" />
+      {subtitle ? (
+        <p className="hero-intro-belt-copy relative z-10 max-w-[40rem] pb-1 text-center font-script text-[clamp(1.4rem,2.8vw,2.15rem)] leading-[1.15] text-balance text-paper">
+          {subtitle}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -28,15 +38,18 @@ export function HeroIntro() {
     : { opacity: 1, y: "16%" };
   const services = site.hero.services.filter((service) => service.trim());
   const creatorImage = site.hero.creatorImagePath ?? HERO_CREATOR_FALLBACK.src;
-  const brand = site.brand.trim();
   const subtitle = site.hero.subtitle.trim();
-  const hasCopy = Boolean(brand || subtitle);
 
   // No isolate / z-index on this section. The stage is pulled up over the
   // belt so the cutout sits behind the strip and the video below.
   return (
-    <section className="hero-intro relative overflow-visible bg-paper">
+    <section
+      className={`hero-intro relative overflow-visible bg-paper${
+        subtitle ? " hero-intro--belt-copy" : ""
+      }`}
+    >
       <AdminEditButton section="hero" label="Edit hero" />
+      <SectionButterfly flight="intro" />
       <div
         aria-hidden
         className="hero-intro-silhouettes absolute inset-x-0 bottom-0 z-0 h-[90%]"
@@ -63,21 +76,6 @@ export function HeroIntro() {
 
       <div className="hero-intro-stage">
         <div className="hero-intro-composer">
-          {hasCopy ? (
-            <div className="hero-intro-copy">
-              {brand ? (
-                <p className="font-label text-[clamp(0.68rem,1.4vw,0.85rem)] font-medium tracking-[0.18em] text-brown uppercase">
-                  {brand}
-                </p>
-              ) : null}
-              {subtitle ? (
-                <p className="font-script mt-2 max-w-[20rem] text-[clamp(1.35rem,2.6vw,2.15rem)] leading-[1.15] text-forest sm:ml-auto">
-                  {subtitle}
-                </p>
-              ) : null}
-            </div>
-          ) : null}
-
           <div className="hero-intro-creator-slot">
             <motion.div
               initial={creatorInitial}
@@ -101,6 +99,7 @@ export function HeroIntro() {
                 height={HERO_CREATOR_FALLBACK.height}
                 preload
                 sizes="(min-width: 1024px) 22.5rem, 42vw"
+                unoptimized={isRemoteMediaUrl(creatorImage)}
                 className="h-full w-full object-cover object-top"
               />
             </motion.div>
@@ -117,7 +116,7 @@ export function HeroIntro() {
         </span>
       </h1>
 
-      <HeroForestBelt />
+      <HeroForestBelt subtitle={subtitle} />
     </section>
   );
 }

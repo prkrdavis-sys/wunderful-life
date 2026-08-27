@@ -85,8 +85,8 @@ export function PhoneMarquee({
   const [activeSlideKey, setActiveSlideKey] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [marqueeInView, setMarqueeInView] = useState(false);
-  // Desktop-first default so the first paint already overflows wide viewports.
-  const [minSlides, setMinSlides] = useState(() => slidesNeededForWidth(1440));
+  // Two copies already overflow a phone; the observer grows this on desktop.
+  const [minSlides, setMinSlides] = useState(() => slidesNeededForWidth(640));
   const { viewMode } = useAdminView();
   const uniqueVideos = useMemo(() => uniqueVideosById(videos), [videos]);
   const marqueeSlides = useMemo(

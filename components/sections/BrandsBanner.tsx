@@ -6,6 +6,7 @@ import { useAdminView } from "@/components/admin/AdminViewProvider";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { DecorMotifs } from "@/components/ui/DecorMotifs";
 import { SectionReveal } from "@/components/ui/motion";
+import { isRemoteMediaUrl } from "@/lib/media/urls";
 import { MAX_BRANDS, type BrandItem } from "@/lib/site/types";
 
 function BrandMark({ brand }: { brand: BrandItem }) {
@@ -16,8 +17,9 @@ function BrandMark({ brand }: { brand: BrandItem }) {
         alt={brand.name}
         width={160}
         height={48}
-        sizes="8rem"
+        sizes="(max-width: 1023px) 20vw, 8rem"
         decoding="async"
+        unoptimized={isRemoteMediaUrl(brand.logoPath)}
         className="max-h-full max-w-full object-contain opacity-90"
       />
     );
@@ -65,7 +67,7 @@ export function BrandsBanner() {
         ) : (
           <SectionReveal
             delay={0.12}
-            className="ugc-benefits-card mx-auto mt-10 max-w-5xl rounded-[2rem] border border-paper/40 p-6 text-ink shadow-xl sm:mt-12 sm:p-8"
+            className="ugc-benefits-card mx-auto mt-10 max-w-5xl rounded-[2rem] border border-paper/40 px-4 py-5 text-ink shadow-xl sm:mt-12 sm:px-6 sm:py-6 lg:p-8"
           >
             <ul className="ugc-brands-list">
               {items.map((brand) => (

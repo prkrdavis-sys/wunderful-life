@@ -1,28 +1,15 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
+import { BrandsBanner } from "@/components/sections/BrandsBanner";
 import { HeroIntro } from "@/components/sections/HeroIntro";
+import { HeroVideoSection } from "@/components/sections/HeroVideoSection";
+import { PhotographyCollage } from "@/components/sections/PhotographyCollage";
 import { WorkPreviewSection } from "@/components/sections/WorkPreviewSection";
 import { getVideos } from "@/lib/videos/load";
-
-const HeroVideoSection = dynamic(() =>
-  import("@/components/sections/HeroVideoSection").then(
-    (module) => module.HeroVideoSection,
-  ),
-);
 
 const ServicesSection = dynamic(() =>
   import("@/components/sections/ServicesSection").then(
     (module) => module.ServicesSection,
-  ),
-);
-const BrandsBanner = dynamic(() =>
-  import("@/components/sections/BrandsBanner").then(
-    (module) => module.BrandsBanner,
-  ),
-);
-const PhotographyCollage = dynamic(() =>
-  import("@/components/sections/PhotographyCollage").then(
-    (module) => module.PhotographyCollage,
   ),
 );
 const StatsBannerSection = dynamic(() =>

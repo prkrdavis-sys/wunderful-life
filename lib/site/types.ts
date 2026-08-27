@@ -48,6 +48,7 @@ export type HeroContent = {
   videoPath?: string;
   /** First-frame still shown while the hero video buffers. */
   posterPath?: string;
+  /** Cursive line in the forest belt between the intro and the hero video. */
   subtitle: string;
   /** Serif first line of the hero intro title (e.g. "Emily"). */
   titleLine: string;

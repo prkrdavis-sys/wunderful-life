@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { isRemoteMediaUrl } from "@/lib/media/urls";
 import {
   containFitForVideo,
   coverFitForVideo,
@@ -23,10 +24,6 @@ type AutoplayLoopVideoProps = {
   "aria-hidden"?: boolean;
   tabIndex?: number;
 };
-
-function isRemoteMediaUrl(src: string): boolean {
-  return src.startsWith("https://") || src.startsWith("http://");
-}
 
 function shouldLoadDecorativeVideo() {
   const connection = (
@@ -387,9 +384,7 @@ export function AutoplayLoopVideo({
   return (
     <div
       ref={containerRef}
-      className={`autoplay-loop-clip absolute inset-0 h-full w-full overflow-hidden ${
-        eager ? "bg-black" : ""
-      }`}
+      className="autoplay-loop-clip absolute inset-0 h-full w-full overflow-hidden"
     >
       <video
         ref={videoRef}

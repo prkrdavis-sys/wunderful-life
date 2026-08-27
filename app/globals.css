@@ -326,21 +326,28 @@ body {
     linear-gradient(145deg, #82956f 0%, #8fa37c 42%, #7a8f68 100%);
 }
 
-/* Predicted logo cells: wrap to a new row when the current row is full. */
+/* Up to 5 marks per row on phones, 6 on desktop. A short last row stays centered. */
 .ugc-brands-list {
+  --brand-cols: 5;
+  --brand-gap: 0.7rem;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  column-gap: clamp(1rem, 2.4vw, 2rem);
-  row-gap: clamp(1rem, 2vw, 1.5rem);
+  gap: var(--brand-gap);
+}
+
+@media (min-width: 1024px) {
+  .ugc-brands-list {
+    --brand-cols: 6;
+    --brand-gap: 1.25rem;
+  }
 }
 
 .ugc-brands-item {
   display: flex;
-  width: clamp(5.75rem, 18vw, 8rem);
-  height: clamp(2.25rem, 7.5vw, 3rem);
-  flex: 0 0 auto;
+  height: clamp(2rem, 6vw, 3rem);
+  flex: 0 0 calc((100% - (var(--brand-cols) - 1) * var(--brand-gap)) / var(--brand-cols));
   align-items: center;
   justify-content: center;
 }
@@ -628,10 +635,18 @@ body {
   overflow: visible;
 }
 
+.hero-intro--belt-copy {
+  --hero-belt-height: 8rem;
+}
+
 @media (min-width: 640px) {
   .hero-intro {
     --hero-belt-height: 4rem;
     --hero-tuck: 2.5rem;
+  }
+
+  .hero-intro--belt-copy {
+    --hero-belt-height: 7.5rem;
   }
 }
 
@@ -656,17 +671,6 @@ body {
   padding-inline: clamp(0.55rem, 3vw, 2.25rem);
   padding-top: clamp(0.45rem, 1.6vw, 1rem);
   padding-bottom: 0.35rem;
-}
-
-.hero-intro-copy {
-  grid-column: 3;
-  z-index: 3;
-  align-self: start;
-  justify-self: end;
-  width: 100%;
-  max-width: 20rem;
-  padding-top: clamp(0.15rem, 0.8vw, 0.45rem);
-  text-align: right;
 }
 
 .hero-intro-creator-slot {
@@ -704,7 +708,12 @@ body {
 
 .hero-intro-belt {
   isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   height: var(--hero-belt-height);
+  padding-inline: clamp(1.1rem, 4vw, 2.5rem);
 }
 
 @container hero-intro (max-width: 40rem) {
@@ -715,17 +724,8 @@ body {
     padding-inline: 0.5rem;
   }
 
-  .hero-intro-copy {
-    grid-column: 1;
-    grid-row: 1;
-    justify-self: stretch;
-    max-width: none;
-    padding-inline: 0.35rem;
-  }
-
   .hero-intro-creator-slot {
     grid-column: 1;
-    grid-row: 2;
     width: min(48%, 14rem);
   }
 }

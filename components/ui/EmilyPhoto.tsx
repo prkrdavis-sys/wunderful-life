@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { isRemoteMediaUrl } from "@/lib/media/urls";
 import type { AboutPhoto } from "@/lib/site/types";
 
 const PHOTO_FRAME_GRADIENT = "from-lavender/55 via-lavender/22 to-cream";
@@ -56,6 +57,7 @@ export function EmilyPhoto({
             fill
             sizes={imageSizes[size]}
             decoding="async"
+            unoptimized={isRemoteMediaUrl(photo.imagePath)}
             className="object-cover object-center"
           />
         ) : (

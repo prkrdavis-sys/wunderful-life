@@ -2,7 +2,6 @@
 
 import {
   animate,
-  useInView,
   useMotionValue,
   useMotionValueEvent,
   useReducedMotion,
@@ -113,8 +112,9 @@ export function ButterflyFlight({
   );
 
   const reduceMotion = useReducedMotion();
-  const inView = useInView(containerRef, { amount: 0.15 });
-  const isFlying = inView && !reduceMotion;
+  // Fly as soon as the sprite exists. Waiting for a 15% intersection left every
+  // butterfly paused on first paint, and overflow-hidden sections never counted.
+  const isFlying = !reduceMotion;
 
   const progress = useMotionValue(0);
 
