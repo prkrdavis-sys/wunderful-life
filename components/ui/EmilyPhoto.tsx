@@ -55,6 +55,7 @@ export function EmilyPhoto({
             alt={photo.caption}
             fill
             sizes={imageSizes[size]}
+            decoding="async"
             className="object-cover object-center"
           />
         ) : (

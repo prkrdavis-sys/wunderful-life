@@ -2,6 +2,7 @@
 
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
+import { DeferredMount } from "@/components/ui/DeferredMount";
 import { SectionReveal, StaggerChildren, StaggerItem } from "@/components/ui/motion";
 import { EmilyPhoto } from "@/components/ui/EmilyPhoto";
 import { SectionSurface } from "@/components/ui/SectionSurface";
@@ -31,13 +32,15 @@ export function MoreEmilySection() {
             {site.about.galleryHeading}
           </h2>
         </SectionReveal>
-        <StaggerChildren className="mx-auto mt-8 grid max-w-5xl grid-cols-2 justify-items-center gap-x-6 gap-y-10 sm:mt-10 sm:gap-x-10 lg:grid-cols-4">
-          {galleryPhotos.map((photo) => (
-            <StaggerItem key={photo.id} className="w-full max-w-[260px] sm:max-w-[290px]">
-              <EmilyPhoto photo={photo} size="md" className="mx-auto" />
-            </StaggerItem>
-          ))}
-        </StaggerChildren>
+        <DeferredMount className="min-h-[20rem] sm:min-h-[24rem]">
+          <StaggerChildren className="mx-auto mt-8 grid max-w-5xl grid-cols-2 justify-items-center gap-x-6 gap-y-10 sm:mt-10 sm:gap-x-10 lg:grid-cols-4">
+            {galleryPhotos.map((photo) => (
+              <StaggerItem key={photo.id} className="w-full max-w-[260px] sm:max-w-[290px]">
+                <EmilyPhoto photo={photo} size="md" className="mx-auto" />
+              </StaggerItem>
+            ))}
+          </StaggerChildren>
+        </DeferredMount>
       </div>
     </section>
   );

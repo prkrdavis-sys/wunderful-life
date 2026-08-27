@@ -1,7 +1,6 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { SectionLink } from "@/components/ui/SectionLink";
@@ -40,10 +39,10 @@ export function SiteNav() {
       ref={headerRef}
       className="glass-header relative z-10 border-b border-white/55"
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-2.5 sm:px-6">
+      <div className="flex w-full items-center justify-between gap-4 px-4 py-2.5 sm:px-6 lg:px-8">
         <SectionLink
           href="/"
-          className="group flex min-w-0 items-center gap-2.5 sm:gap-3"
+          className="group flex min-w-0 shrink items-center gap-2.5 sm:gap-3"
         >
           <BrandLogo
             alt=""
@@ -61,12 +60,12 @@ export function SiteNav() {
           </span>
         </SectionLink>
 
-        <nav className="hidden items-center gap-5 md:flex">
+        <nav className="ml-auto hidden shrink-0 items-center gap-4 md:flex lg:gap-6">
           {site.heroLinks.map((link) => (
             <SectionLink
               key={link.href}
               href={link.href}
-              className={`text-sm font-medium transition-colors hover:text-forest ${
+              className={`whitespace-nowrap text-sm font-medium transition-colors hover:text-forest ${
                 isActive(link) ? "text-forest" : "text-ink/85"
               }`}
             >
@@ -77,7 +76,7 @@ export function SiteNav() {
 
         <button
           type="button"
-          className="rounded-lg border border-white/50 bg-white/20 px-3 py-2 text-sm text-ink backdrop-blur-sm md:hidden"
+          className="ml-auto shrink-0 rounded-lg border border-white/50 bg-white/20 px-3 py-2 text-sm text-ink backdrop-blur-sm md:hidden"
           onClick={() => setMenuOpen((open) => !open)}
           aria-expanded={menuOpen}
         >
@@ -85,29 +84,22 @@ export function SiteNav() {
         </button>
       </div>
 
-      <AnimatePresence>
-        {menuOpen && (
-          <motion.nav
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden border-t border-white/30 md:hidden"
-          >
-            <div className="flex flex-col gap-1 px-4 py-3">
-              {site.heroLinks.map((link) => (
-                <SectionLink
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-ink hover:bg-white/20 hover:text-forest"
-                >
-                  {link.label}
-                </SectionLink>
-              ))}
-            </div>
-          </motion.nav>
-        )}
-      </AnimatePresence>
+      {menuOpen ? (
+        <nav className="border-t border-white/30 md:hidden">
+          <div className="flex flex-col gap-1 px-4 py-3 sm:px-6">
+            {site.heroLinks.map((link) => (
+              <SectionLink
+                key={link.href}
+                href={link.href}
+                onClick={() => setMenuOpen(false)}
+                className="rounded-lg px-3 py-2 text-sm font-medium text-ink hover:bg-white/20 hover:text-forest"
+              >
+                {link.label}
+              </SectionLink>
+            ))}
+          </div>
+        </nav>
+      ) : null}
     </header>
   );
 }

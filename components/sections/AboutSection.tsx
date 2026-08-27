@@ -1,11 +1,11 @@
 "use client";
 
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
-import { SectionButterfly } from "@/components/ui/ButterflyFlight";
-import { SectionReveal, StaggerChildren, StaggerItem } from "@/components/ui/motion";
-import { EmilyPhoto } from "@/components/ui/EmilyPhoto";
-import { SectionSurface } from "@/components/ui/SectionSurface";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
+import { SectionButterfly } from "@/components/ui/ButterflyFlight";
+import { DecorMotifs } from "@/components/ui/DecorMotifs";
+import { EmilyPhoto } from "@/components/ui/EmilyPhoto";
+import { SectionReveal, StaggerChildren, StaggerItem } from "@/components/ui/motion";
 import { sectionText } from "@/lib/sectionText";
 
 export function AboutSection() {
@@ -27,7 +27,7 @@ export function AboutSection() {
       id="about"
       className="scroll-section-anchor relative overflow-hidden px-4 pt-20 pb-14 sm:px-6 sm:pt-24 sm:pb-20"
     >
-      <SectionSurface tone="ivory" motifs="right" />
+      <DecorMotifs preset="right" />
       <SectionButterfly flight="about" />
       <SectionButterfly flight="stats" />
       <AdminEditButton section="about" label="Edit about" />

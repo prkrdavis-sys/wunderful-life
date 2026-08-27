@@ -184,13 +184,11 @@ body {
 }
 
 /*
- * Landscape desktops: keep the real ratio via contain, but do not let a
- * 9:16 full-bleed grow to 2–3 viewports or the centered copy falls off-screen.
+ * Keep the title in the first screen even when a 9:16 clip makes the band
+ * taller than the viewport. The video still fills the full ratio below.
  */
-@media (orientation: landscape) {
-  .hero-video-sizer-exact {
-    padding-top: min(var(--hero-ratio-padding), 100svh);
-  }
+.hero-video-copy {
+  height: min(100%, 100svh);
 }
 
 .autoplay-loop-video {
@@ -564,6 +562,24 @@ body {
 }
 
 /*
+ * Shared wash behind photography, stats, and about. One gradient instead of
+ * three stacked section colors, so the bands do not seam.
+ */
+.photography-about-band {
+  background:
+    radial-gradient(circle at 86% 16%, rgba(212, 196, 232, 0.14), transparent 34rem),
+    radial-gradient(circle at 14% 84%, rgba(224, 182, 188, 0.12), transparent 32rem),
+    linear-gradient(
+      180deg,
+      #fffdf9 0%,
+      #f8efe9 28%,
+      #f7f3ec 50%,
+      #f8efe9 76%,
+      #fffdf9 100%
+    );
+}
+
+/*
  * Homogeneous sage silhouettes (rolling hills and trees) for the
  * editorial hero intro. One hue (--sage-deep), layered only by opacity.
  */
@@ -576,43 +592,57 @@ body {
 }
 
 /*
- * Hero intro stacking. container-type makes this a stacking context, so
- * the video sibling (z-20) can cover the cutout where it hangs below.
+ * Hero intro stacking. The stage is pulled up over the belt by a fixed
+ * tuck so the 2:3 cutout always disappears under the strip and video.
  *   0  silhouettes
  *   1  signature halves
- *   2  creator cutout (hangs behind the belt and video)
- *  20  forest belt, UGC labels
+ *   2  creator cutout
+ *  20  forest belt, UGC labels, video sibling
  *  30  Creative Portfolio title
  */
 .hero-intro {
+  --hero-belt-height: 3.5rem;
+  --hero-tuck: 2rem;
   overflow: visible;
-  container-type: inline-size;
-  container-name: hero-intro;
+}
+
+@media (min-width: 640px) {
+  .hero-intro {
+    --hero-belt-height: 4rem;
+    --hero-tuck: 2.5rem;
+  }
 }
 
 .hero-intro-stage {
   position: relative;
+  z-index: 2;
   overflow: visible;
+  margin-bottom: calc(-1 * (var(--hero-belt-height) + var(--hero-tuck)));
+  container-type: inline-size;
+  container-name: hero-intro;
 }
 
 .hero-intro-composer {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(34%, 22.5rem) minmax(0, 1.15fr);
-  align-items: center;
-  column-gap: clamp(0.15rem, 1.4vw, 1.1rem);
+  grid-template-columns: minmax(0, 1fr) minmax(32%, 20rem) minmax(0, 1.25fr);
+  align-items: start;
+  column-gap: clamp(0.2rem, 1.4vw, 1.1rem);
   width: 100%;
   max-width: 72rem;
   margin-inline: auto;
-  padding-inline: clamp(0.65rem, 3vw, 2.25rem);
-  padding-top: 0.15rem;
-  padding-bottom: clamp(1.55rem, 4.2vw, 2.25rem);
+  padding-inline: clamp(0.55rem, 3vw, 2.25rem);
+  padding-top: clamp(0.45rem, 1.6vw, 1rem);
+  padding-bottom: 0.35rem;
 }
 
 .hero-intro-signature {
   position: relative;
   z-index: 1;
   min-width: 0;
+  max-width: 100%;
   width: 100%;
+  overflow: hidden;
 }
 
 .hero-intro-signature-first {
@@ -626,19 +656,17 @@ body {
 }
 
 .hero-intro-creator-slot {
-  /* Show the top of the 2:3 cutout; the rest hangs behind the belt. */
-  --creator-visible: 0.64;
   position: relative;
   z-index: 2;
   overflow: visible;
   width: 100%;
-  aspect-ratio: 2 / calc(3 * var(--creator-visible));
+  min-width: 0;
+  aspect-ratio: 2 / 3;
 }
 
 .hero-intro-creator-image {
   position: absolute;
-  inset-inline: 0;
-  top: 0;
+  inset: 0;
   z-index: 0;
   width: 100%;
   pointer-events: none;
@@ -648,8 +676,9 @@ body {
   pointer-events: none;
   position: absolute;
   z-index: 30;
-  bottom: 0;
+  bottom: var(--hero-belt-height);
   left: 0;
+  margin: 0;
   max-width: min(94%, 46rem);
   padding-inline: clamp(0.85rem, 4vw, 2.5rem);
   padding-bottom: 0.2rem;
@@ -660,59 +689,71 @@ body {
 
 .hero-intro-belt {
   isolation: isolate;
+  height: var(--hero-belt-height);
 }
 
 @container hero-intro (max-width: 40rem) {
   .hero-intro-composer {
-    grid-template-columns: minmax(0, 1fr) minmax(34%, 13rem) minmax(0, 1.25fr);
-    column-gap: 0.2rem;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding-inline: 0.5rem;
+  }
+
+  .hero-intro-creator-slot {
+    width: min(48%, 14rem);
   }
 
   .hero-intro-signature-first,
   .hero-intro-signature-last {
+    position: absolute;
+    top: 0.55rem;
     max-width: none;
+    z-index: 1;
   }
 
   .hero-intro-signature-first {
-    transform: translateX(8%);
+    left: 0.45rem;
+    width: 27%;
   }
 
   .hero-intro-signature-last {
-    transform: translateX(-6%);
-  }
-
-  .hero-intro-creator-slot {
-    --creator-visible: 0.54;
+    right: 0.45rem;
+    left: auto;
+    width: 34%;
+    justify-self: start;
   }
 }
 
 @container hero-intro (max-width: 24rem) {
-  .hero-intro-composer {
-    grid-template-columns: minmax(0, 0.95fr) minmax(34%, 9.25rem) minmax(0, 1.2fr);
-    padding-inline: 0.4rem;
-  }
-
   .hero-intro-signature-first {
-    transform: translateX(6%);
+    width: 28%;
   }
 
   .hero-intro-signature-last {
-    transform: translateX(-4%);
+    width: 40%;
   }
 
   .hero-intro-creator-slot {
-    --creator-visible: 0.5;
+    width: min(44%, 10rem);
   }
 
   .hero-intro-title {
     max-width: 96%;
+    padding-inline: 0.7rem;
   }
 }
 
 @media (max-height: 40rem) and (orientation: landscape) {
+  .hero-intro {
+    --hero-tuck: 1.5rem;
+  }
+
+  .hero-intro-composer {
+    max-width: 42rem;
+  }
+
   .hero-intro-creator-slot {
-    --creator-visible: 0.56;
-    max-height: 48dvh;
+    max-width: 9.5rem;
   }
 }
 

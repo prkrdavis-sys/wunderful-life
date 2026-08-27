@@ -47,7 +47,7 @@ export function SignatureHalf({
 
   return (
     <div
-      className={`relative overflow-hidden ${className ?? ""}`.trim()}
+      className={`relative min-w-0 max-w-full overflow-hidden ${className ?? ""}`.trim()}
       style={{ aspectRatio: `${sliceWidth} / ${SIGNATURE.height}` }}
     >
       <Image

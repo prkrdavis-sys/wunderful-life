@@ -1,8 +1,14 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
-import { HeroSection } from "@/components/sections/HeroSection";
+import { HeroIntro } from "@/components/sections/HeroIntro";
 import { WorkPreviewSection } from "@/components/sections/WorkPreviewSection";
 import { getVideos } from "@/lib/videos/load";
+
+const HeroVideoSection = dynamic(() =>
+  import("@/components/sections/HeroVideoSection").then(
+    (module) => module.HeroVideoSection,
+  ),
+);
 
 const ServicesSection = dynamic(() =>
   import("@/components/sections/ServicesSection").then(
@@ -68,15 +74,20 @@ function WorkPreviewFallback() {
 export default function HomePage() {
   return (
     <>
-      <HeroSection />
+      <div className="relative overflow-hidden">
+        <HeroIntro />
+        <HeroVideoSection />
+      </div>
       <Suspense fallback={<WorkPreviewFallback />}>
         <WorkPreview />
       </Suspense>
       <ServicesSection />
       <BrandsBanner />
-      <PhotographyCollage />
-      <StatsBannerSection />
-      <AboutSection />
+      <div className="photography-about-band relative">
+        <PhotographyCollage />
+        <StatsBannerSection />
+        <AboutSection />
+      </div>
       <UgcBenefitsSection />
       <TestimonialsSection />
       <MoreEmilySection />

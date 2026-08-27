@@ -6,6 +6,7 @@ import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { useAdminView, useSiteContent } from "@/components/admin/AdminViewProvider";
 import { AutoplayLoopVideo } from "@/components/ui/AutoplayLoopVideo";
 import { BrandLogo, SIGNATURE } from "@/components/ui/BrandLogo";
+import { DeferredMount } from "@/components/ui/DeferredMount";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { SectionSurface } from "@/components/ui/SectionSurface";
 import { SectionReveal } from "@/components/ui/motion";
@@ -79,10 +80,12 @@ export function ClosingCtaSection() {
 
       <div className="relative z-10 mx-auto grid max-w-5xl items-center gap-10 sm:gap-14 lg:grid-cols-[0.85fr_1.15fr]">
         <div className="mx-auto w-full max-w-xs lg:max-w-none">
-          <CtaVideo
-            videoPath={closingCta.videoPath}
-            posterPath={closingCta.posterPath}
-          />
+          <DeferredMount className="min-h-[20rem] sm:min-h-[24rem]">
+            <CtaVideo
+              videoPath={closingCta.videoPath}
+              posterPath={closingCta.posterPath}
+            />
+          </DeferredMount>
         </div>
 
         <SectionReveal delay={0.12} className="text-center lg:text-left">

@@ -4,6 +4,8 @@ import Image from "next/image";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
+import { DeferredMount } from "@/components/ui/DeferredMount";
+import { DecorMotifs } from "@/components/ui/DecorMotifs";
 import { SectionSurface } from "@/components/ui/SectionSurface";
 import { SectionReveal, StaggerChildren, StaggerItem } from "@/components/ui/motion";
 import type { CollagePhotoShape } from "@/lib/site/types";
@@ -28,7 +30,7 @@ export function PhotographyCollage() {
       aria-labelledby="photography-heading"
       className="scroll-section-anchor relative overflow-hidden px-4 pt-8 pb-16 sm:px-6 sm:pt-10 sm:pb-20"
     >
-      <SectionSurface tone="blush" motifs="right" />
+      <DecorMotifs preset="right" />
       <AdminEditButton section="photography" label="Edit photos" />
       <SectionButterfly flight="photography" />
       <SectionButterfly flight="photographyLow" />
@@ -47,7 +49,8 @@ export function PhotographyCollage() {
         </SectionReveal>
 
         {/* Dense flow backfills the holes that tall/wide tiles leave behind. */}
-        <StaggerChildren className="grid auto-rows-[minmax(0,7rem)] grid-flow-row-dense grid-cols-3 gap-2 sm:auto-rows-[minmax(0,9rem)] sm:grid-cols-4 sm:gap-3">
+        <DeferredMount className="min-h-[28rem] sm:min-h-[36rem]">
+          <StaggerChildren className="grid auto-rows-[minmax(0,7rem)] grid-flow-row-dense grid-cols-3 gap-2 sm:auto-rows-[minmax(0,9rem)] sm:grid-cols-4 sm:gap-3">
           {photos.map((photo) => {
             const tile = (
               <>
@@ -57,6 +60,7 @@ export function PhotographyCollage() {
                     alt={photo.alt}
                     fill
                     sizes="(max-width: 640px) 33vw, 25vw"
+                    decoding="async"
                     className="object-cover"
                   />
                 ) : (
@@ -103,7 +107,8 @@ export function PhotographyCollage() {
               </StaggerItem>
             );
           })}
-        </StaggerChildren>
+          </StaggerChildren>
+        </DeferredMount>
       </div>
     </section>
   );

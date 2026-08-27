@@ -16,6 +16,8 @@ function BrandMark({ brand }: { brand: BrandItem }) {
         alt={brand.name}
         width={160}
         height={48}
+        sizes="8rem"
+        decoding="async"
         className="max-h-full max-w-full object-contain opacity-90"
       />
     );
