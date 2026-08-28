@@ -650,6 +650,8 @@ body {
  */
 .hero-intro-silhouettes {
   overflow: hidden;
+  color: var(--sage-deep);
+  opacity: 0.94;
 }
 
 .hero-intro-silhouette-layer {
@@ -660,21 +662,18 @@ body {
 }
 
 .hero-intro-silhouette-layer[data-hill="far"] {
-  color: var(--sage);
   --hill-from: 42%;
   --hill-duration: 1.15s;
   --hill-delay: 0.02s;
 }
 
 .hero-intro-silhouette-layer[data-hill="mid"] {
-  color: var(--sage-deep);
   --hill-from: 56%;
   --hill-duration: 1.2s;
   --hill-delay: 0.18s;
 }
 
 .hero-intro-silhouette-layer[data-hill="near"] {
-  color: var(--forest);
   --hill-from: 70%;
   --hill-duration: 1.25s;
   --hill-delay: 0.34s;
