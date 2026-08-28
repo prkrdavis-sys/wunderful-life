@@ -161,6 +161,7 @@
     "body": "Want content that converts and a creator that brands actually want to work with again? Let's chat!",
     "headline": "Let's work together",
     "emailLabel": "hello@wunderfulife.com",
+    "showPhoto": true,
     "photo": {
       "id": "cta-photo",
       "caption": "",

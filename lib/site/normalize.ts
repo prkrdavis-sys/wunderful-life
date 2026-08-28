@@ -584,6 +584,7 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
         defaultCtaBody(raw.name),
       ),
       emailLabel: text(closingCta.emailLabel, DEFAULT_CTA_EMAIL_LABEL),
+      showPhoto: closingCta.showPhoto !== false,
       photo: normalizeCtaPhoto(closingCta.photo, closingCta.posterPath),
     },
     social: raw.social,

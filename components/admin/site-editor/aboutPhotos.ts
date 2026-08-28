@@ -29,6 +29,16 @@ export function withCtaPhoto(
   };
 }
 
+export function withCtaShowPhoto(
+  site: SiteContent,
+  showPhoto: boolean,
+): SiteContent {
+  return {
+    ...site,
+    closingCta: { ...site.closingCta, showPhoto },
+  };
+}
+
 export function withAboutPhotos(
   site: SiteContent,
   photos: AboutPhoto[],

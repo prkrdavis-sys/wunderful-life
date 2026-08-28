@@ -33,7 +33,9 @@ export function ClosingCtaSection() {
   const site = useSiteContent();
   const { viewMode } = useAdminView();
   const { closingCta, social } = site;
-  const showPhoto = Boolean(closingCta.photo.imagePath) || viewMode === "admin";
+  const showPhoto =
+    closingCta.showPhoto &&
+    (Boolean(closingCta.photo.imagePath) || viewMode === "admin");
 
   return (
     <section
@@ -50,7 +52,9 @@ export function ClosingCtaSection() {
         variant="slideFromLeft"
         duration={0.9}
         className={`relative z-10 mx-auto grid max-w-5xl items-center gap-10 sm:gap-14 ${
-          showPhoto ? "lg:grid-cols-[0.85fr_1.15fr]" : ""
+          showPhoto
+            ? "lg:grid-cols-[0.85fr_1.15fr]"
+            : "justify-items-center"
         }`}
       >
         {showPhoto ? (
@@ -59,18 +63,32 @@ export function ClosingCtaSection() {
           </div>
         ) : null}
 
-        <div className="text-center lg:text-left">
+        <div
+          className={
+            showPhoto
+              ? "text-center lg:text-left"
+              : "w-full max-w-2xl text-center"
+          }
+        >
           <h2
             id="closing-cta-heading"
             className="font-script pb-1 text-5xl leading-[1.15] text-forest sm:text-7xl"
           >
             {closingCta.headline}
           </h2>
-          <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-ink/80 lg:mx-0 sm:text-base">
+          <p
+            className={`mx-auto mt-5 max-w-md text-sm leading-relaxed text-ink/80 sm:text-base${
+              showPhoto ? " lg:mx-0" : ""
+            }`}
+          >
             {closingCta.body}
           </p>
 
-          <div className="mt-8 flex flex-row items-center justify-center gap-4 lg:justify-start">
+          <div
+            className={`mt-8 flex flex-row items-center justify-center gap-4${
+              showPhoto ? " lg:justify-start" : ""
+            }`}
+          >
             <motion.a
               href={social.email}
               whileHover={{ scale: 1.03, y: -2 }}
@@ -91,7 +109,11 @@ export function ClosingCtaSection() {
             </motion.a>
           </div>
 
-          <div className="mx-auto mt-9 w-[min(100%,16.5rem)] sm:mt-10 sm:w-[20rem] lg:mx-0 lg:mt-12 lg:ml-1 lg:w-[22.5rem]">
+          <div
+            className={`mx-auto mt-9 w-[min(100%,16.5rem)] sm:mt-10 sm:w-[20rem] lg:mt-12 lg:w-[22.5rem]${
+              showPhoto ? " lg:mx-0 lg:ml-1" : ""
+            }`}
+          >
             <figure className="mx-auto w-[83.5%] px-1 pt-2">
               <Image
                 src={SIGNATURE.src}

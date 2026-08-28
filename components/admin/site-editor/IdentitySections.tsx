@@ -4,6 +4,7 @@ import { AboutPhotoEditorCard } from "@/components/admin/site-editor/AboutPhotoE
 import {
   applyAboutSite,
   withCtaPhoto,
+  withCtaShowPhoto,
 } from "@/components/admin/site-editor/aboutPhotos";
 import { cardClass, inputClass } from "@/components/admin/site-editor/constants";
 import { AddRowButton, moveItem, RowControls, uniqueId } from "@/components/admin/site-editor/list";
@@ -433,6 +434,27 @@ export function CtaEditor({
           }
           rows={6}
           className={inputClass}
+        />
+      </label>
+
+      <label className="flex max-w-2xl items-center justify-between gap-4 rounded-2xl border border-brown/15 bg-cream/55 p-4 text-sm">
+        <span>
+          <span className="block font-semibold text-brown">
+            Show CTA photo
+          </span>
+          <span className="mt-1 block text-muted">
+            When off, the contact copy sits centered on the page.
+          </span>
+        </span>
+        <input
+          type="checkbox"
+          checked={form.closingCta.showPhoto}
+          onChange={(event) =>
+            applyAboutSite(setForm, setSite, (current) =>
+              withCtaShowPhoto(current, event.target.checked),
+            )
+          }
+          className="h-5 w-5 accent-forest"
         />
       </label>
 

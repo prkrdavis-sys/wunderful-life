@@ -166,6 +166,8 @@ export type SiteContent = {
     headline: string;
     body: string;
     emailLabel: string;
+    /** When false, the CTA photo is hidden and the copy is centered. */
+    showPhoto: boolean;
     photo: AboutPhoto;
   };
   social: {
