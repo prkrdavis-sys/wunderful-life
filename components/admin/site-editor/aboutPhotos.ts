@@ -39,6 +39,16 @@ export function withCtaShowPhoto(
   };
 }
 
+export function withStatsBannerVisible(
+  site: SiteContent,
+  visible: boolean,
+): SiteContent {
+  return {
+    ...site,
+    statsBanner: { ...site.statsBanner, visible },
+  };
+}
+
 export function withAboutPhotos(
   site: SiteContent,
   photos: AboutPhoto[],

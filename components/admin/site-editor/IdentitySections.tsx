@@ -5,6 +5,7 @@ import {
   applyAboutSite,
   withCtaPhoto,
   withCtaShowPhoto,
+  withStatsBannerVisible,
 } from "@/components/admin/site-editor/aboutPhotos";
 import { cardClass, inputClass } from "@/components/admin/site-editor/constants";
 import { AddRowButton, moveItem, RowControls, uniqueId } from "@/components/admin/site-editor/list";
@@ -265,6 +266,8 @@ export function StatsEditor({
   form,
   setForm,
 }: Pick<SiteEditorFieldsProps, "form" | "setForm">) {
+  const { setSite } = useAdminView();
+
   return (
     <section className="space-y-4">
       <div>
@@ -288,13 +291,9 @@ export function StatsEditor({
           type="checkbox"
           checked={form.statsBanner.visible}
           onChange={(event) =>
-            setForm((current) => ({
-              ...current,
-              statsBanner: {
-                ...current.statsBanner,
-                visible: event.target.checked,
-              },
-            }))
+            applyAboutSite(setForm, setSite, (current) =>
+              withStatsBannerVisible(current, event.target.checked),
+            )
           }
           className="h-5 w-5 accent-forest"
         />

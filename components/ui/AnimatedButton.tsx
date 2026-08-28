@@ -23,15 +23,15 @@ type AnimatedButtonProps = {
 
 const variants: Record<AnimatedButtonVariant, string> = {
   primary:
-    "border border-forest/50 bg-forest/90 px-6 py-3 font-display text-sm tracking-wide text-paper shadow-md shadow-forest/20 hover:bg-forest",
+    "gap-2 rounded-full border border-forest/50 bg-forest/90 px-6 py-3 font-display text-sm tracking-wide text-paper shadow-md shadow-forest/20 hover:bg-forest",
   secondary:
-    "border border-lavender-deep/40 bg-lavender/25 px-6 py-3 font-display text-sm tracking-wide text-ink shadow-sm backdrop-blur-sm hover:border-forest/35 hover:bg-lavender/40",
+    "gap-2 rounded-full border border-lavender-deep/40 bg-lavender/25 px-6 py-3 font-display text-sm tracking-wide text-ink shadow-sm backdrop-blur-sm hover:border-forest/35 hover:bg-lavender/40",
   ghost:
-    "border border-lavender/35 bg-paper/90 px-6 py-3 font-display text-sm tracking-wide text-ink backdrop-blur-sm hover:border-forest/40 hover:bg-white",
+    "gap-2 rounded-full border border-lavender/35 bg-paper/90 px-6 py-3 font-display text-sm tracking-wide text-ink backdrop-blur-sm hover:border-forest/40 hover:bg-white",
   soft:
-    "border border-lavender-deep/45 bg-paper/88 px-6 py-3 font-display text-sm tracking-wide text-ink backdrop-blur-sm hover:border-forest/40 hover:bg-paper",
+    "gap-2 rounded-full border border-lavender-deep/45 bg-paper/88 px-6 py-3 font-display text-sm tracking-wide text-ink backdrop-blur-sm hover:border-forest/40 hover:bg-paper",
   inverse:
-    "whitespace-nowrap border-2 border-forest bg-paper px-5 py-3 font-label text-sm tracking-[0.03em] text-forest shadow-[0_10px_28px_rgba(35,57,42,0.22)] underline decoration-forest/40 underline-offset-[5px] hover:border-forest-deep hover:bg-honey hover:decoration-forest focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest sm:px-8 sm:py-3.5 sm:text-base",
+    "group gap-3 whitespace-nowrap rounded-full bg-forest py-1.5 pr-1.5 pl-5 font-label text-sm tracking-[0.02em] text-paper shadow-[0_12px_28px_rgba(35,57,42,0.28)] hover:bg-forest-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-honey sm:gap-3.5 sm:py-2 sm:pr-2 sm:pl-6 sm:text-base",
 };
 
 export function AnimatedButton({
@@ -43,7 +43,7 @@ export function AnimatedButton({
   type = "button",
   disabled,
 }: AnimatedButtonProps) {
-  const classes = `inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-colors ${variants[variant]} ${className}`;
+  const classes = `inline-flex items-center justify-center font-semibold leading-none transition-colors ${variants[variant]} ${className}`;
 
   if (href) {
     return (

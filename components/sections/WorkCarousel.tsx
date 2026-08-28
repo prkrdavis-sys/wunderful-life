@@ -57,8 +57,13 @@ export function WorkCarousel({ featuredVideos }: WorkCarouselProps) {
           className="mt-10 flex justify-center px-4"
         >
           <AnimatedButton href="/work" variant="inverse">
-            See All of {site.name}&apos;s Work
-            <span aria-hidden="true" className="translate-y-px text-[1.05em]">
+            <span className="leading-none">
+              See All of {site.name}&apos;s Work
+            </span>
+            <span
+              aria-hidden="true"
+              className="grid size-9 shrink-0 place-items-center rounded-full bg-honey font-body text-lg leading-none text-forest transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0.5 sm:size-10"
+            >
               →
             </span>
           </AnimatedButton>

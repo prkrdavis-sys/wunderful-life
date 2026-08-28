@@ -16,7 +16,7 @@ export function ServicesSection() {
       id="services"
       className="scroll-section-anchor relative overflow-hidden px-4 pt-16 pb-20 sm:px-6 sm:pt-20 sm:pb-24"
     >
-      <SectionSurface tone="sage" motifs="scatter" />
+      <SectionSurface tone="lavender" motifs="scatter" />
       <SectionButterfly flight="brandsBand" />
       <SectionButterfly flight="services" />
       <SectionButterfly flight="servicesHigh" />
@@ -24,7 +24,7 @@ export function ServicesSection() {
 
       <div className="relative z-10 mx-auto max-w-6xl">
         <SectionReveal variant="fadeUp" className="text-center">
-          <p className="font-label text-xs font-semibold tracking-[0.22em] text-sage-deep uppercase">
+          <p className="font-label text-xs font-semibold tracking-[0.22em] text-ink/75 uppercase">
             {site.services.eyebrow}
           </p>
           <h2 className={`mt-3 font-serif text-3xl sm:text-5xl ${text.heading}`}>
@@ -41,7 +41,7 @@ export function ServicesSection() {
               key={service.id}
               variant={index % 2 === 0 ? "fadeLeft" : "fadeRight"}
             >
-              <article className="service-glass-card h-full rounded-3xl border border-white/70 bg-paper/70 p-6 backdrop-blur-sm transition hover:border-sage/60 hover:shadow-lg sm:p-7">
+              <article className="service-glass-card h-full rounded-3xl border border-white/70 bg-paper/70 p-6 backdrop-blur-sm transition hover:border-lavender/60 hover:shadow-lg sm:p-7">
                 <h3 className="font-serif text-xl text-forest sm:text-2xl">
                   {service.title}
                 </h3>
