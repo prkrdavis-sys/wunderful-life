@@ -11,6 +11,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type CSSProperties,
 } from "react";
 import { butterflyFlights, type ButterflyFlightId } from "@/lib/butterflies";
@@ -99,7 +100,13 @@ function dashPath(
 export function SectionButterfly({ flight }: { flight: ButterflyFlightId }) {
   const preset = butterflyFlights[flight];
 
-  return <ButterflyFlight {...preset} className={`z-[5] ${preset.className}`} />;
+  return (
+    <ButterflyFlight
+      {...preset}
+      startDelay={flight === "intro" ? 1.2 : 0}
+      className={`z-[5] ${preset.className}`}
+    />
+  );
 }
 
 type ButterflyFlightProps = {
@@ -123,6 +130,8 @@ type ButterflyFlightProps = {
   opacity?: number;
   /** Trail opacity relative to the layer, so the line reads lighter than the wing. */
   trailOpacity?: number;
+  /** Seconds to wait after the host section is on screen before flying. */
+  startDelay?: number;
 };
 
 export function ButterflyFlight({
@@ -137,8 +146,10 @@ export function ButterflyFlight({
   colorClassName = "text-forest-deep",
   opacity = 0.75,
   trailOpacity = 0.6,
+  startDelay = 0,
 }: ButterflyFlightProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [canFly, setCanFly] = useState(false);
   const geometryRef = useRef<SVGPathElement>(null);
   const dashRefs = useRef<(SVGPathElement | null)[]>([]);
   const butterflyRef = useRef<HTMLDivElement>(null);
@@ -147,9 +158,34 @@ export function ButterflyFlight({
   );
 
   const reduceMotion = useReducedMotion();
-  // Fly as soon as the sprite exists. Waiting for a 15% intersection left every
-  // butterfly paused on first paint, and overflow-hidden sections never counted.
-  const isFlying = !reduceMotion;
+  const isFlying = !reduceMotion && canFly;
+
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node) return;
+    const target = node.closest("section") ?? node;
+    let timeoutId = 0;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        window.clearTimeout(timeoutId);
+        if (!entry.isIntersecting) {
+          setCanFly(false);
+          return;
+        }
+        if (startDelay <= 0) {
+          setCanFly(true);
+          return;
+        }
+        timeoutId = window.setTimeout(() => setCanFly(true), startDelay * 1000);
+      },
+      { threshold: 0, rootMargin: "18% 0px" },
+    );
+    observer.observe(target);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(timeoutId);
+    };
+  }, [startDelay]);
 
   const progress = useMotionValue(0);
 

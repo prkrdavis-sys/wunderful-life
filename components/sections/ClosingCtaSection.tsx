@@ -46,18 +46,20 @@ export function ClosingCtaSection() {
       <SectionButterfly flight="closingFar" />
       <AdminEditButton section="cta" label="Edit CTA" />
 
-      <div
+      <SectionReveal
+        variant="slideFromLeft"
+        duration={0.9}
         className={`relative z-10 mx-auto grid max-w-5xl items-center gap-10 sm:gap-14 ${
           showPhoto ? "lg:grid-cols-[0.85fr_1.15fr]" : ""
         }`}
       >
         {showPhoto ? (
-          <SectionReveal variant="fadeLeft" className="mx-auto w-full max-w-xs lg:max-w-none">
+          <div className="mx-auto w-full max-w-xs lg:max-w-none">
             <EmilyPhoto photo={closingCta.photo} size="lg" />
-          </SectionReveal>
+          </div>
         ) : null}
 
-        <SectionReveal variant="fadeRight" delay={0.12} className="text-center lg:text-left">
+        <div className="text-center lg:text-left">
           <h2
             id="closing-cta-heading"
             className="font-script pb-1 text-5xl leading-[1.15] text-forest sm:text-7xl"
@@ -109,8 +111,8 @@ export function ClosingCtaSection() {
               />
             </figure>
           </div>
-        </SectionReveal>
-      </div>
+        </div>
+      </SectionReveal>
     </section>
   );
 }

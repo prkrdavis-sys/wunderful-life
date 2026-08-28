@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { motion, useReducedMotion } from "framer-motion";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { useSiteContent } from "@/components/admin/AdminViewProvider";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
@@ -15,56 +14,44 @@ const HERO_CREATOR_FALLBACK = {
   height: 1350,
 } as const;
 
-const HILL_EASE = [0.22, 1, 0.36, 1] as const;
-
 const HILL_LAYERS = [
   {
     id: "far",
-    opacity: 0.28,
-    delay: 0,
-    y: "12%",
+    opacity: 0.5,
     d: "M0.0,210.0 C26.7 203.0 103.3 170.0 160.0 168.0 C216.7 166.0 276.7 201.0 340.0 198.0 C403.3 195.0 470.0 151.7 540.0 150.0 C610.0 148.3 686.7 189.3 760.0 188.0 C833.3 186.7 906.7 144.0 980.0 142.0 C1053.3 140.0 1126.7 174.0 1200.0 176.0 C1273.3 178.0 1353.3 155.0 1420.0 154.0 C1486.7 153.0 1570.0 167.3 1600.0 170.0 L1600,600 L0,600 Z",
   },
   {
     id: "mid",
-    opacity: 0.44,
-    delay: 0.09,
-    y: "16%",
+    opacity: 0.68,
     d: "M0.0,318.0 C31.7 311.3 123.3 277.3 190.0 278.0 C256.7 278.7 325.0 323.7 400.0 322.0 C475.0 320.3 556.7 270.0 640.0 268.0 C723.3 266.0 816.7 311.0 900.0 310.0 C983.3 309.0 1060.0 264.0 1140.0 262.0 C1220.0 260.0 1303.3 295.7 1380.0 298.0 C1456.7 300.3 1563.3 279.7 1600.0 276.0 L1600,600 L0,600 Z",
   },
   {
     id: "near",
-    opacity: 0.6,
-    delay: 0.18,
-    y: "20%",
+    opacity: 0.86,
     d: "M0.0,448.0 C36.7 442.0 140.0 410.3 220.0 412.0 C300.0 413.7 386.7 458.7 480.0 458.0 C573.3 457.3 680.0 410.0 780.0 408.0 C880.0 406.0 986.7 444.3 1080.0 446.0 C1173.3 447.7 1253.3 419.7 1340.0 418.0 C1426.7 416.3 1556.7 433.0 1600.0 436.0 L1600,600 L0,600 Z",
   },
 ] as const;
 
 function HeroHillSilhouettes() {
-  const reduceMotion = useReducedMotion();
-
   return (
     <div
       aria-hidden
-      className="hero-intro-silhouettes absolute inset-x-0 bottom-0 z-0 h-[90%]"
+      className="hero-intro-silhouettes absolute inset-x-0 bottom-0 z-0 h-full"
     >
       {HILL_LAYERS.map((layer) => (
-        <motion.svg
+        <div
           key={layer.id}
-          viewBox="0 0 1600 600"
-          preserveAspectRatio="xMidYMax slice"
-          initial={reduceMotion ? { y: 0, opacity: 1 } : { y: layer.y, opacity: 0.35 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={
-            reduceMotion
-              ? { duration: 0 }
-              : { duration: 0.5, delay: layer.delay, ease: HILL_EASE }
-          }
-          className="hero-intro-silhouette-layer will-change-transform"
+          data-hill={layer.id}
+          className="hero-intro-silhouette-layer"
         >
-          <path d={layer.d} fill="currentColor" opacity={layer.opacity} />
-        </motion.svg>
+          <svg
+            viewBox="0 0 1600 600"
+            preserveAspectRatio="xMidYMax slice"
+            className="h-full w-full"
+          >
+            <path d={layer.d} fill="currentColor" opacity={layer.opacity} />
+          </svg>
+        </div>
       ))}
     </div>
   );
@@ -139,10 +126,6 @@ function HeroForestBelt({ subtitle }: { subtitle: string }) {
 
 export function HeroIntro() {
   const site = useSiteContent();
-  const reduceMotion = useReducedMotion();
-  const creatorInitial = reduceMotion
-    ? { opacity: 1, y: 0 }
-    : { opacity: 1, y: "42%" };
   const services = site.hero.services.filter((service) => service.trim());
   const creatorImage = site.hero.creatorImagePath ?? HERO_CREATOR_FALLBACK.src;
   const subtitle = site.hero.subtitle.trim();
@@ -163,7 +146,7 @@ export function HeroIntro() {
         <HeroHillSilhouettes />
         <div
           aria-hidden
-          className="absolute inset-0 z-0 bg-gradient-to-b from-paper via-paper/45 to-transparent"
+          className="absolute inset-x-0 top-0 z-[1] h-[36%] bg-gradient-to-b from-paper to-transparent"
         />
 
         {services.length > 0 ? (
@@ -190,22 +173,7 @@ export function HeroIntro() {
         <div className="hero-intro-stage">
           <div className="hero-intro-composer">
             <div className="hero-intro-creator-slot">
-              <motion.div
-                initial={creatorInitial}
-                animate={{ opacity: 1, y: 0 }}
-                transition={
-                  reduceMotion
-                    ? { duration: 0 }
-                    : {
-                        type: "spring",
-                        stiffness: 46,
-                        damping: 18,
-                        mass: 1.15,
-                        delay: 0.08,
-                      }
-                }
-                className="hero-intro-creator-image will-change-transform"
-              >
+              <div className="hero-intro-creator-image">
                 <Image
                   key={creatorImage}
                   src={creatorImage}
@@ -217,7 +185,7 @@ export function HeroIntro() {
                   unoptimized={isRemoteMediaUrl(creatorImage)}
                   className="h-full w-full object-cover object-top"
                 />
-              </motion.div>
+              </div>
             </div>
           </div>
         </div>

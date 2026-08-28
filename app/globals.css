@@ -645,12 +645,11 @@ body {
 
 /*
  * Homogeneous sage silhouettes (rolling hills) for the
- * editorial hero intro. One hue (--sage-deep), layered only by opacity.
+ * editorial hero intro. CSS-only so they rise on first paint,
+ * before hydration and video decode.
  */
 .hero-intro-silhouettes {
   overflow: hidden;
-  color: var(--sage-deep);
-  opacity: 0.94;
 }
 
 .hero-intro-silhouette-layer {
@@ -658,6 +657,305 @@ body {
   inset: 0;
   width: 100%;
   height: 100%;
+}
+
+.hero-intro-silhouette-layer[data-hill="far"] {
+  color: var(--sage);
+  --hill-from: 42%;
+  --hill-duration: 1.15s;
+  --hill-delay: 0.02s;
+}
+
+.hero-intro-silhouette-layer[data-hill="mid"] {
+  color: var(--sage-deep);
+  --hill-from: 56%;
+  --hill-duration: 1.2s;
+  --hill-delay: 0.18s;
+}
+
+.hero-intro-silhouette-layer[data-hill="near"] {
+  color: var(--forest);
+  --hill-from: 70%;
+  --hill-duration: 1.25s;
+  --hill-delay: 0.34s;
+}
+
+@keyframes hero-hill-rise {
+  from {
+    transform: translate3d(0, var(--hill-from, 50%), 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes hero-creator-rise {
+  from {
+    transform: translate3d(0, 42%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes hero-enter-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hero-enter-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 1.75rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes hero-enter-down {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -1.25rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes hero-enter-left {
+  from {
+    opacity: 0;
+    transform: translate3d(-2rem, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes hero-enter-slide-left {
+  from {
+    opacity: 0;
+    transform: translate3d(-28%, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes hero-enter-right {
+  from {
+    opacity: 0;
+    transform: translate3d(2rem, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes hero-enter-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes hero-enter-blur {
+  from {
+    opacity: 0;
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-intro-silhouette-layer {
+    animation: hero-hill-rise var(--hill-duration, 1.2s) cubic-bezier(0.16, 1, 0.3, 1)
+      both;
+    animation-delay: var(--hill-delay, 0s);
+  }
+
+  .hero-intro-creator-image {
+    animation: hero-creator-rise 1.15s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: 0.06s;
+  }
+
+  .hero-enter {
+    animation-duration: var(--enter-duration, 0.9s);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    animation-fill-mode: both;
+    animation-delay: var(--enter-delay, 0s);
+  }
+
+  .hero-enter.reveal-fade {
+    animation-name: hero-enter-fade;
+  }
+
+  .hero-enter.reveal-up {
+    animation-name: hero-enter-up;
+  }
+
+  .hero-enter.reveal-down {
+    animation-name: hero-enter-down;
+  }
+
+  .hero-enter.reveal-left {
+    animation-name: hero-enter-left;
+  }
+
+  .hero-enter.reveal-right {
+    animation-name: hero-enter-right;
+  }
+
+  .hero-enter.reveal-from-left {
+    animation-name: hero-enter-slide-left;
+  }
+
+  .hero-enter.reveal-scale {
+    animation-name: hero-enter-scale;
+  }
+
+  .hero-enter.reveal-blur {
+    animation-name: hero-enter-blur;
+  }
+}
+
+/*
+ * Section slides. Content stays visible until JS is ready so a late hydrate
+ * never leaves a blank hole. Off-screen nodes then hide and play a compositor
+ * transition when they enter, instead of a Framer Motion update on a busy thread.
+ */
+.reveal[data-reveal="ready"],
+.reveal-stagger[data-reveal="ready"] > .reveal-item {
+  opacity: 0;
+}
+
+.reveal.reveal-up[data-reveal="ready"],
+.reveal-stagger[data-reveal="ready"] > .reveal-item.reveal-up {
+  transform: translate3d(0, 2.25rem, 0);
+}
+
+.reveal.reveal-down[data-reveal="ready"],
+.reveal-stagger[data-reveal="ready"] > .reveal-item.reveal-down {
+  transform: translate3d(0, -1.5rem, 0);
+}
+
+.reveal.reveal-left[data-reveal="ready"],
+.reveal-stagger[data-reveal="ready"] > .reveal-item.reveal-left {
+  transform: translate3d(-2.25rem, 0, 0);
+}
+
+.reveal.reveal-right[data-reveal="ready"],
+.reveal-stagger[data-reveal="ready"] > .reveal-item.reveal-right {
+  transform: translate3d(2.25rem, 0, 0);
+}
+
+.reveal.reveal-from-left[data-reveal="ready"],
+.reveal-stagger[data-reveal="ready"] > .reveal-item.reveal-from-left {
+  transform: translate3d(-28%, 0, 0);
+}
+
+.reveal.reveal-scale[data-reveal="ready"],
+.reveal-stagger[data-reveal="ready"] > .reveal-item.reveal-scale {
+  transform: scale(0.94);
+}
+
+.reveal.reveal-blur[data-reveal="ready"],
+.reveal-stagger[data-reveal="ready"] > .reveal-item.reveal-blur {
+  filter: blur(10px);
+}
+
+.reveal[data-reveal="shown"],
+.reveal-stagger[data-reveal="shown"] > .reveal-item {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  filter: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal[data-reveal="shown"] {
+    transition:
+      opacity var(--reveal-duration, 0.8s) cubic-bezier(0.22, 1, 0.36, 1)
+        var(--reveal-delay, 0s),
+      transform var(--reveal-duration, 0.8s) cubic-bezier(0.22, 1, 0.36, 1)
+        var(--reveal-delay, 0s),
+      filter var(--reveal-duration, 0.8s) cubic-bezier(0.22, 1, 0.36, 1)
+        var(--reveal-delay, 0s);
+  }
+
+  .reveal-stagger[data-reveal="shown"] > .reveal-item {
+    transition:
+      opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1) var(--item-delay, 0s),
+      transform 0.8s cubic-bezier(0.22, 1, 0.36, 1) var(--item-delay, 0s),
+      filter 0.8s cubic-bezier(0.22, 1, 0.36, 1) var(--item-delay, 0s);
+  }
+
+  .reveal-stagger[data-reveal="shown"] > .reveal-item:nth-child(1) {
+    --item-delay: var(--stagger-start, 0.04s);
+  }
+
+  .reveal-stagger[data-reveal="shown"] > .reveal-item:nth-child(2) {
+    --item-delay: calc(var(--stagger-start, 0.04s) + var(--stagger, 0.1s));
+  }
+
+  .reveal-stagger[data-reveal="shown"] > .reveal-item:nth-child(3) {
+    --item-delay: calc(var(--stagger-start, 0.04s) + (var(--stagger, 0.1s) * 2));
+  }
+
+  .reveal-stagger[data-reveal="shown"] > .reveal-item:nth-child(4) {
+    --item-delay: calc(var(--stagger-start, 0.04s) + (var(--stagger, 0.1s) * 3));
+  }
+
+  .reveal-stagger[data-reveal="shown"] > .reveal-item:nth-child(5) {
+    --item-delay: calc(var(--stagger-start, 0.04s) + (var(--stagger, 0.1s) * 4));
+  }
+
+  .reveal-stagger[data-reveal="shown"] > .reveal-item:nth-child(6) {
+    --item-delay: calc(var(--stagger-start, 0.04s) + (var(--stagger, 0.1s) * 5));
+  }
+
+  .reveal-stagger[data-reveal="shown"] > .reveal-item:nth-child(7) {
+    --item-delay: calc(var(--stagger-start, 0.04s) + (var(--stagger, 0.1s) * 6));
+  }
+
+  .reveal-stagger[data-reveal="shown"] > .reveal-item:nth-child(8) {
+    --item-delay: calc(var(--stagger-start, 0.04s) + (var(--stagger, 0.1s) * 7));
+  }
+
+  .reveal-stagger[data-reveal="shown"] > .reveal-item:nth-child(9) {
+    --item-delay: calc(var(--stagger-start, 0.04s) + (var(--stagger, 0.1s) * 8));
+  }
+
+  .reveal-stagger[data-reveal="shown"] > .reveal-item:nth-child(10) {
+    --item-delay: calc(var(--stagger-start, 0.04s) + (var(--stagger, 0.1s) * 9));
+  }
+
+  .reveal-stagger[data-reveal="shown"] > .reveal-item:nth-child(11) {
+    --item-delay: calc(var(--stagger-start, 0.04s) + (var(--stagger, 0.1s) * 10));
+  }
+
+  .reveal-stagger[data-reveal="shown"] > .reveal-item:nth-child(12) {
+    --item-delay: calc(var(--stagger-start, 0.04s) + (var(--stagger, 0.1s) * 11));
+  }
 }
 
 /*

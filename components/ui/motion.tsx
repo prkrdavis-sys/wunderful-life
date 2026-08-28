@@ -1,17 +1,13 @@
 "use client";
 
 import {
-  motion,
-  useReducedMotion,
-  type Transition,
-  type Variants,
-} from "framer-motion";
-import { type ComponentProps, type ReactNode } from "react";
-
-const EASE = [0.22, 1, 0.36, 1] as const;
-const REVEAL_DURATION = 0.78;
-const STAGGER_ITEM_DURATION = 0.72;
-const VIEWPORT = { once: true, amount: 0.22 } as const;
+  useEffect,
+  useRef,
+  useState,
+  type ComponentProps,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 
 export type RevealVariant =
   | "fade"
@@ -19,51 +15,68 @@ export type RevealVariant =
   | "fadeDown"
   | "fadeLeft"
   | "fadeRight"
+  | "slideFromLeft"
   | "scale"
   | "blur";
 
-const revealStates: Record<
-  RevealVariant,
-  { hidden: Record<string, number | string>; visible: Record<string, number | string> }
-> = {
-  fade: {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1 },
-  },
-  fadeUp: {
-    hidden: { opacity: 0, y: 36 },
-    visible: { opacity: 1, y: 0 },
-  },
-  fadeDown: {
-    hidden: { opacity: 0, y: -24 },
-    visible: { opacity: 1, y: 0 },
-  },
-  fadeLeft: {
-    hidden: { opacity: 0, x: -36 },
-    visible: { opacity: 1, x: 0 },
-  },
-  fadeRight: {
-    hidden: { opacity: 0, x: 36 },
-    visible: { opacity: 1, x: 0 },
-  },
-  scale: {
-    hidden: { opacity: 0, scale: 0.94 },
-    visible: { opacity: 1, scale: 1 },
-  },
-  blur: {
-    hidden: { opacity: 0, filter: "blur(10px)" },
-    visible: { opacity: 1, filter: "blur(0px)" },
-  },
+type RevealPhase = "pending" | "ready" | "shown";
+
+const VARIANT_CLASS: Record<RevealVariant, string> = {
+  fade: "reveal-fade",
+  fadeUp: "reveal-up",
+  fadeDown: "reveal-down",
+  fadeLeft: "reveal-left",
+  fadeRight: "reveal-right",
+  slideFromLeft: "reveal-from-left",
+  scale: "reveal-scale",
+  blur: "reveal-blur",
 };
 
-function useRevealTransition(delay = 0, duration = REVEAL_DURATION): Transition {
-  const reduceMotion = useReducedMotion();
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
 
-  if (reduceMotion) {
-    return { duration: 0 };
-  }
+function isAlreadyOnScreen(node: Element) {
+  const rect = node.getBoundingClientRect();
+  const viewportHeight = window.innerHeight;
+  return rect.top < viewportHeight * 0.9 && rect.bottom > viewportHeight * 0.05;
+}
 
-  return { duration, delay, ease: EASE };
+function useRevealPhase() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [phase, setPhase] = useState<RevealPhase>("pending");
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+
+    if (prefersReducedMotion() || isAlreadyOnScreen(node)) {
+      setPhase("shown");
+      return;
+    }
+
+    setPhase("ready");
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setPhase("shown");
+        observer.disconnect();
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -6% 0px" },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, phase };
+}
+
+function revealVars(delay = 0, duration?: number): CSSProperties {
+  return {
+    ["--reveal-delay" as string]: `${delay}s`,
+    ["--reveal-duration" as string]: duration ? `${duration}s` : undefined,
+  };
 }
 
 export function HeroEntrance({
@@ -71,7 +84,7 @@ export function HeroEntrance({
   className = "",
   delay = 0,
   variant = "fadeUp",
-  duration = 0.85,
+  duration = 0.9,
   as = "div",
 }: {
   children: ReactNode;
@@ -81,20 +94,18 @@ export function HeroEntrance({
   duration?: number;
   as?: "div" | "span";
 }) {
-  const reduceMotion = useReducedMotion();
-  const states = revealStates[variant];
-  const revealTransition = useRevealTransition(delay, duration);
-  const MotionTag = as === "span" ? motion.span : motion.div;
+  const Tag = as === "span" ? "span" : "div";
 
   return (
-    <MotionTag
-      initial={reduceMotion ? states.visible : states.hidden}
-      animate={states.visible}
-      transition={revealTransition}
-      className={className}
+    <Tag
+      className={`hero-enter ${VARIANT_CLASS[variant]} ${className}`}
+      style={{
+        ["--enter-delay" as string]: `${delay}s`,
+        ["--enter-duration" as string]: `${duration}s`,
+      }}
     >
       {children}
-    </MotionTag>
+    </Tag>
   );
 }
 
@@ -103,7 +114,7 @@ export function SectionReveal({
   className = "",
   delay = 0,
   variant = "fadeUp",
-  duration = REVEAL_DURATION,
+  duration = 0.8,
 }: {
   children: ReactNode;
   className?: string;
@@ -111,50 +122,42 @@ export function SectionReveal({
   variant?: RevealVariant;
   duration?: number;
 }) {
-  const reduceMotion = useReducedMotion();
-  const states = revealStates[variant];
-  const revealTransition = useRevealTransition(delay, duration);
-  const visible = states.visible;
+  const { ref, phase } = useRevealPhase();
 
   return (
-    <motion.div
-      initial={reduceMotion ? visible : states.hidden}
-      whileInView={visible}
-      viewport={VIEWPORT}
-      transition={revealTransition}
-      className={className}
+    <div
+      ref={ref}
+      data-reveal={phase}
+      className={`reveal ${VARIANT_CLASS[variant]} ${className}`}
+      style={revealVars(delay, duration)}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
 export function StaggerChildren({
   children,
   className = "",
-  stagger = 0.12,
-  delayChildren = 0.06,
+  stagger = 0.1,
+  delayChildren = 0.04,
+  ...props
 }: ComponentProps<"div"> & { stagger?: number; delayChildren?: number }) {
-  const reduceMotion = useReducedMotion();
+  const { ref, phase } = useRevealPhase();
 
   return (
-    <motion.div
-      initial={reduceMotion ? "visible" : "hidden"}
-      whileInView="visible"
-      viewport={VIEWPORT}
-      variants={{
-        hidden: {},
-        visible: {
-          transition: {
-            staggerChildren: reduceMotion ? 0 : stagger,
-            delayChildren: reduceMotion ? 0 : delayChildren,
-          },
-        },
+    <div
+      {...props}
+      ref={ref}
+      data-reveal={phase}
+      className={`reveal-stagger ${className}`}
+      style={{
+        ["--stagger" as string]: `${stagger}s`,
+        ["--stagger-start" as string]: `${delayChildren}s`,
       }}
-      className={className}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 
@@ -167,25 +170,9 @@ export function StaggerItem({
   className?: string;
   variant?: RevealVariant;
 }) {
-  const reduceMotion = useReducedMotion();
-  const states = revealStates[variant];
-
-  const variants: Variants = reduceMotion
-    ? {
-        hidden: states.visible,
-        visible: states.visible,
-      }
-    : {
-        hidden: states.hidden,
-        visible: {
-          ...states.visible,
-          transition: { duration: STAGGER_ITEM_DURATION, ease: EASE },
-        },
-      };
-
   return (
-    <motion.div variants={variants} className={className}>
+    <div className={`reveal-item ${VARIANT_CLASS[variant]} ${className}`}>
       {children}
-    </motion.div>
+    </div>
   );
 }

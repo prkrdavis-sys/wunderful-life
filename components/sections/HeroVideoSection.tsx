@@ -47,7 +47,6 @@ function HeroBackgroundVideo({
       src={src}
       poster={poster}
       muted
-      eager
       aria-hidden
       tabIndex={-1}
       fit={fit}

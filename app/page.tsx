@@ -1,47 +1,17 @@
-import dynamic from "next/dynamic";
 import { Suspense } from "react";
+import { AboutSection } from "@/components/sections/AboutSection";
 import { BrandsBanner } from "@/components/sections/BrandsBanner";
+import { ClosingCtaSection } from "@/components/sections/ClosingCtaSection";
 import { HeroIntro } from "@/components/sections/HeroIntro";
 import { HeroVideoSection } from "@/components/sections/HeroVideoSection";
+import { MoreEmilySection } from "@/components/sections/MoreEmilySection";
 import { PhotographyCollage } from "@/components/sections/PhotographyCollage";
+import { ServicesSection } from "@/components/sections/ServicesSection";
+import { StatsBannerSection } from "@/components/sections/StatsBannerSection";
+import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
+import { UgcBenefitsSection } from "@/components/sections/UgcBenefitsSection";
 import { WorkPreviewSection } from "@/components/sections/WorkPreviewSection";
 import { getVideos } from "@/lib/videos/load";
-
-const ServicesSection = dynamic(() =>
-  import("@/components/sections/ServicesSection").then(
-    (module) => module.ServicesSection,
-  ),
-);
-const StatsBannerSection = dynamic(() =>
-  import("@/components/sections/StatsBannerSection").then(
-    (module) => module.StatsBannerSection,
-  ),
-);
-const AboutSection = dynamic(() =>
-  import("@/components/sections/AboutSection").then(
-    (module) => module.AboutSection,
-  ),
-);
-const UgcBenefitsSection = dynamic(() =>
-  import("@/components/sections/UgcBenefitsSection").then(
-    (module) => module.UgcBenefitsSection,
-  ),
-);
-const TestimonialsSection = dynamic(() =>
-  import("@/components/sections/TestimonialsSection").then(
-    (module) => module.TestimonialsSection,
-  ),
-);
-const MoreEmilySection = dynamic(() =>
-  import("@/components/sections/MoreEmilySection").then(
-    (module) => module.MoreEmilySection,
-  ),
-);
-const ClosingCtaSection = dynamic(() =>
-  import("@/components/sections/ClosingCtaSection").then(
-    (module) => module.ClosingCtaSection,
-  ),
-);
 
 async function WorkPreview() {
   const videos = await getVideos();
