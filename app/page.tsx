@@ -11,6 +11,7 @@ import { StatsBannerSection } from "@/components/sections/StatsBannerSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { UgcBenefitsSection } from "@/components/sections/UgcBenefitsSection";
 import { WorkPreviewSection } from "@/components/sections/WorkPreviewSection";
+import { SectionSurface } from "@/components/ui/SectionSurface";
 import { getVideos } from "@/lib/videos/load";
 
 async function WorkPreview() {
@@ -35,17 +36,20 @@ export default function HomePage() {
         <HeroIntro />
         <HeroVideoSection />
       </div>
-      <div className="photography-about-band relative">
-        <AboutSection />
-        <StatsBannerSection />
-      </div>
       <Suspense fallback={<WorkPreviewFallback />}>
         <WorkPreview />
       </Suspense>
       <ServicesSection />
-      <PhotographyCollage />
-      <BrandsBanner />
-      <TestimonialsSection />
+      <div className="photography-about-band relative">
+        <PhotographyCollage />
+        <AboutSection />
+        <StatsBannerSection />
+      </div>
+      <div className="relative overflow-hidden">
+        <SectionSurface tone="lavender" motifs="scatter" />
+        <BrandsBanner />
+        <TestimonialsSection />
+      </div>
       <MoreEmilySection />
       <UgcBenefitsSection />
       <ClosingCtaSection />

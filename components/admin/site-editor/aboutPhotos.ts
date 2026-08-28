@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import type { AboutPhoto, SiteContent } from "@/lib/site/types";
+import { MAX_STATS_PHOTOS, type AboutPhoto, type SiteContent } from "@/lib/site/types";
 
 export function withAboutPhoto(
   site: SiteContent,
@@ -46,6 +46,41 @@ export function withStatsBannerVisible(
   return {
     ...site,
     statsBanner: { ...site.statsBanner, visible },
+  };
+}
+
+export function withStatsShowPhotos(
+  site: SiteContent,
+  showPhotos: boolean,
+): SiteContent {
+  return {
+    ...site,
+    statsBanner: { ...site.statsBanner, showPhotos },
+  };
+}
+
+export function withStatsPhoto(
+  site: SiteContent,
+  index: number,
+  patch: Partial<Pick<AboutPhoto, "caption" | "showCaption" | "rotate" | "frame">>,
+): SiteContent {
+  const photos = [...(site.statsBanner.photos ?? [])];
+  const current = photos[index];
+  if (!current) return site;
+  photos[index] = { ...current, ...patch };
+  return {
+    ...site,
+    statsBanner: { ...site.statsBanner, photos },
+  };
+}
+
+export function withStatsPhotos(
+  site: SiteContent,
+  photos: AboutPhoto[],
+): SiteContent {
+  return {
+    ...site,
+    statsBanner: { ...site.statsBanner, photos: photos.slice(0, MAX_STATS_PHOTOS) },
   };
 }
 

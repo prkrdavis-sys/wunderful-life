@@ -57,6 +57,9 @@ export const MAX_COLLAGE_TILES = 20;
 /** Hard cap for brand logos in the editor, on save, and on the public page. */
 export const MAX_BRANDS = 30;
 
+/** Hard cap for framed photos in the audience reach panel. */
+export const MAX_STATS_PHOTOS = 6;
+
 export type CollagePhoto = {
   id: string;
   alt: string;
@@ -123,7 +126,10 @@ export type SiteContent = {
   hero: HeroContent;
   statsBanner: {
     visible: boolean;
+    /** When false, the framed photos stay hidden and the panel stays compact. */
+    showPhotos: boolean;
     items: StatItem[];
+    photos: AboutPhoto[];
   };
   about: {
     headline: string;

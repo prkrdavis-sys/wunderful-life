@@ -21,7 +21,8 @@ type PhotoFolder =
   | "home-grid-photos"
   | "brand-logos"
   | "hero-photos"
-  | "cta-photos";
+  | "cta-photos"
+  | "stats-photos";
 
 function isHeicLike(file: Pick<File, "name" | "type">): boolean {
   const mime = file.type.toLowerCase();

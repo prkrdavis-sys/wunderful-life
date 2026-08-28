@@ -3,7 +3,7 @@
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { SectionReveal, StaggerChildren, StaggerItem } from "@/components/ui/motion";
-import { SectionSurface } from "@/components/ui/SectionSurface";
+import { TestimonialCloud } from "@/components/ui/TestimonialCloud";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
 import { sectionText } from "@/lib/sectionText";
 
@@ -19,9 +19,8 @@ export function TestimonialsSection() {
   return (
     <section
       id="testimonials"
-      className="scroll-section-anchor relative overflow-hidden px-4 py-20 sm:px-6 sm:py-24"
+      className="scroll-section-anchor relative overflow-hidden px-4 pt-8 pb-20 sm:px-6 sm:pt-10 sm:pb-24"
     >
-      <SectionSurface tone="lavender" motifs="edges" />
       <AdminEditButton section="testimonials" label="Edit quotes" />
       <SectionButterfly flight="testimonials" />
       <SectionButterfly flight="testimonialsLow" />
@@ -34,10 +33,7 @@ export function TestimonialsSection() {
         )}
 
         <SectionReveal variant="fadeUp" className="mx-auto max-w-3xl text-center">
-          <p className="font-label text-xs font-semibold tracking-[0.18em] text-ink/75 uppercase">
-            {site.testimonials.eyebrow}
-          </p>
-          <h2 className={`mt-3 font-serif text-3xl sm:text-5xl ${text.heading}`}>
+          <h2 className={`font-didone text-3xl font-bold tracking-tight sm:text-5xl ${text.heading}`}>
             {site.testimonials.heading}
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-ink/88 sm:text-lg">
@@ -45,13 +41,13 @@ export function TestimonialsSection() {
           </p>
         </SectionReveal>
 
-        <StaggerChildren className="mx-auto mt-10 grid max-w-5xl gap-6 md:grid-cols-2">
+        <StaggerChildren className="mx-auto mt-10 grid max-w-5xl gap-8 md:grid-cols-2 md:gap-10">
           {site.testimonials.items.map((testimonial, index) => (
             <StaggerItem
               key={testimonial.id}
               variant={index % 2 === 0 ? "fadeLeft" : "fadeRight"}
             >
-              <figure className="glass-panel h-full rounded-[2rem] border border-white/55 px-6 py-7 text-left ring-1 ring-white/40 sm:px-8">
+              <TestimonialCloud flip={index % 2 === 1}>
                 <blockquote className="font-serif text-xl leading-relaxed text-forest sm:text-2xl">
                   &ldquo;{testimonial.quote}&rdquo;
                 </blockquote>
@@ -59,7 +55,7 @@ export function TestimonialsSection() {
                   <p className="font-semibold text-ink">{testimonial.name}</p>
                   <p className="mt-1 text-sm text-muted">{testimonial.role}</p>
                 </figcaption>
-              </figure>
+              </TestimonialCloud>
             </StaggerItem>
           ))}
         </StaggerChildren>

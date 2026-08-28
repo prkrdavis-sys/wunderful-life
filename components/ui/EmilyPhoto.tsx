@@ -8,12 +8,14 @@ import {
 
 const PHOTO_FRAME_GRADIENT = "from-lavender/55 via-lavender/22 to-cream";
 
-type EmilyPhotoSize = "sm" | "md" | "lg" | "xl" | "hero" | "gallery";
+type EmilyPhotoSize = "sm" | "md" | "lg" | "xl" | "hero" | "gallery" | "panel";
 
 type EmilyPhotoProps = {
   photo: AboutPhoto;
   size?: EmilyPhotoSize;
   className?: string;
+  /** Override for captions sitting on a dark surface instead of cream. */
+  captionClassName?: string;
 };
 
 const sizeClasses: Record<EmilyPhotoSize, string> = {
@@ -23,6 +25,7 @@ const sizeClasses: Record<EmilyPhotoSize, string> = {
   xl: "w-[320px] max-w-full sm:w-[420px] xl:w-[480px]",
   hero: "w-full max-w-full sm:max-w-[min(100%,480px)] xl:max-w-[min(100%,560px)]",
   gallery: "w-full max-w-md mx-auto sm:max-w-none",
+  panel: "w-[150px] max-w-full sm:w-[180px]",
 };
 
 const polaroidPadClasses: Record<EmilyPhotoSize, string> = {
@@ -32,6 +35,7 @@ const polaroidPadClasses: Record<EmilyPhotoSize, string> = {
   xl: "p-3",
   hero: "p-3 sm:p-4",
   gallery: "p-2.5 sm:p-3",
+  panel: "p-2",
 };
 
 const imageSizes: Record<EmilyPhotoSize, string> = {
@@ -41,6 +45,7 @@ const imageSizes: Record<EmilyPhotoSize, string> = {
   xl: "480px",
   hero: "(max-width: 640px) 360px, (max-width: 1024px) 480px, 640px",
   gallery: "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
+  panel: "(max-width: 640px) 150px, 180px",
 };
 
 type ShapedFrame = Exclude<AboutPhotoFrame, "polaroid">;
@@ -64,9 +69,17 @@ const shapedShadowLayerClasses: Record<ShapedFrame, string> = {
 const POLAROID_SHADOW =
   "shadow-[0_10px_24px_-6px_rgba(61,55,46,0.3),0_3px_8px_-2px_rgba(61,55,46,0.12)]";
 
-function PhotoCaption({ caption }: { caption: string }) {
+function PhotoCaption({
+  caption,
+  className = "text-ink/90",
+}: {
+  caption: string;
+  className?: string;
+}) {
   return (
-    <figcaption className="font-label mt-3 w-full text-center text-xs tracking-wide break-words text-ink/90 sm:text-sm">
+    <figcaption
+      className={`font-label mt-3 w-full text-center text-xs tracking-wide break-words sm:text-sm ${className}`}
+    >
       {caption}
     </figcaption>
   );
@@ -107,10 +120,12 @@ function PolaroidPhoto({
   photo,
   size,
   className,
+  captionClassName,
 }: {
   photo: AboutPhoto;
   size: EmilyPhotoSize;
   className: string;
+  captionClassName?: string;
 }) {
   return (
     <figure
@@ -123,7 +138,7 @@ function PolaroidPhoto({
         <PhotoMedia photo={photo} size={size} />
       </div>
       {photo.showCaption !== false ? (
-        <PhotoCaption caption={photo.caption} />
+        <PhotoCaption caption={photo.caption} className={captionClassName} />
       ) : null}
     </figure>
   );
@@ -134,11 +149,13 @@ function ShapedPhoto({
   size,
   frame,
   className,
+  captionClassName,
 }: {
   photo: AboutPhoto;
   size: EmilyPhotoSize;
   frame: ShapedFrame;
   className: string;
+  captionClassName?: string;
 }) {
   return (
     <figure className={`max-w-full ${sizeClasses[size]} ${className}`}>
@@ -154,7 +171,7 @@ function ShapedPhoto({
         </div>
       </div>
       {photo.showCaption !== false ? (
-        <PhotoCaption caption={photo.caption} />
+        <PhotoCaption caption={photo.caption} className={captionClassName} />
       ) : null}
     </figure>
   );
@@ -164,12 +181,20 @@ export function EmilyPhoto({
   photo,
   size = "md",
   className = "",
+  captionClassName,
 }: EmilyPhotoProps) {
   const frame = resolveAboutPhotoFrame(photo.frame);
 
   switch (frame) {
     case "polaroid":
-      return <PolaroidPhoto photo={photo} size={size} className={className} />;
+      return (
+        <PolaroidPhoto
+          photo={photo}
+          size={size}
+          className={className}
+          captionClassName={captionClassName}
+        />
+      );
     case "arch":
     case "oval":
     case "circle":
@@ -181,6 +206,7 @@ export function EmilyPhoto({
           size={size}
           frame={frame}
           className={className}
+          captionClassName={captionClassName}
         />
       );
     default: {

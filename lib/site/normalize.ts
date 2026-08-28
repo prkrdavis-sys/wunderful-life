@@ -1,6 +1,7 @@
 import {
   MAX_BRANDS,
   MAX_COLLAGE_TILES,
+  MAX_STATS_PHOTOS,
   isAboutPhotoFrame,
   type AboutPhoto,
   type AboutPhotoFrame,
@@ -31,12 +32,14 @@ const DEFAULT_HERO_SERVICES: HeroIntroServices = [
 
 const DEFAULT_STATS_BANNER: SiteContent["statsBanner"] = {
   visible: true,
+  showPhotos: true,
   items: [
     { id: "instagram", value: "10k", label: "Instagram" },
     { id: "tiktok", value: "9k", label: "Tiktok" },
     { id: "reach", value: "300k", label: "Avg. Reach" },
     { id: "engagement", value: "9.5%", label: "Avg. Engagement" },
   ],
+  photos: [],
 };
 
 const DEFAULT_WORK: SiteContent["work"] = {
@@ -298,15 +301,28 @@ function normalizeCtaPhoto(
   };
 }
 
-function normalizeAboutPhotos(photos: AboutPhoto[]): AboutPhoto[] {
-  const normalized = photos.map((photo, index) => ({
-    id: photo.id,
-    caption: photo.caption,
+function normalizeFramedPhoto(
+  photo: Partial<AboutPhoto>,
+  index: number,
+  idFallback: string,
+): AboutPhoto {
+  return {
+    id: text(photo.id, idFallback),
+    caption: typeof photo.caption === "string" ? photo.caption : "",
     showCaption: photo.showCaption !== false,
-    rotate: photo.rotate,
+    rotate:
+      typeof photo.rotate === "number" && Number.isFinite(photo.rotate)
+        ? photo.rotate
+        : 0,
     frame: normalizeAboutPhotoFrame(photo.frame, index),
     ...(photo.imagePath ? { imagePath: photo.imagePath } : {}),
-  }));
+  };
+}
+
+function normalizeAboutPhotos(photos: AboutPhoto[]): AboutPhoto[] {
+  const normalized = photos.map((photo, index) =>
+    normalizeFramedPhoto(photo, index, `about-${index + 1}`),
+  );
 
   if (
     normalized.length < 6 &&
@@ -336,6 +352,22 @@ function normalizeHeroLinks(): SiteContent["heroLinks"] {
  * An explicitly empty array is respected so the admin can clear a list; only a
  * missing or malformed value falls back to the seeded defaults.
  */
+function normalizeStatsPhotos(photos: unknown): AboutPhoto[] {
+  if (!Array.isArray(photos)) return [];
+
+  return photos
+    .map((item, index): AboutPhoto | null => {
+      if (!item || typeof item !== "object") return null;
+      return normalizeFramedPhoto(
+        item as Partial<AboutPhoto>,
+        index,
+        `reach-${index + 1}`,
+      );
+    })
+    .filter((photo): photo is AboutPhoto => photo !== null)
+    .slice(0, MAX_STATS_PHOTOS);
+}
+
 function normalizeStats(
   items: unknown,
   fallback: StatItem[],
@@ -506,11 +538,13 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
         typeof statsBanner.visible === "boolean"
           ? statsBanner.visible
           : DEFAULT_STATS_BANNER.visible,
+      showPhotos: statsBanner.showPhotos !== false,
       items: normalizeStats(
         statsBanner.items,
         DEFAULT_STATS_BANNER.items,
         "stat",
       ),
+      photos: normalizeStatsPhotos(statsBanner.photos),
     },
     about: {
       headline: raw.about.headline,

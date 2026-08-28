@@ -6,6 +6,7 @@ export const PHOTO_KINDS = [
   "brandLogo",
   "heroCreator",
   "ctaPhoto",
+  "statsPhoto",
 ] as const;
 export type PhotoKind = (typeof PHOTO_KINDS)[number];
 
@@ -50,6 +51,12 @@ export const PHOTO_KIND_DESCRIPTORS: Record<PhotoKind, PhotoKindDescriptor> = {
     folder: "cta-photos",
     noun: "CTA photo",
     singleton: true,
+  },
+  statsPhoto: {
+    kind: "statsPhoto",
+    endpoint: "/api/site/stats-photos",
+    folder: "stats-photos",
+    noun: "photo",
   },
 };
 

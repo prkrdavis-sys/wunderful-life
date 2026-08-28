@@ -7,6 +7,7 @@ export const MEDIA_UPLOAD_DIRS = [
   "brand-logos",
   "hero-photos",
   "cta-photos",
+  "stats-photos",
 ] as const;
 
 export type MediaUploadDir = (typeof MEDIA_UPLOAD_DIRS)[number];

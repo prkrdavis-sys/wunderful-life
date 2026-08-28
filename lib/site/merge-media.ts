@@ -108,6 +108,20 @@ export function mergePhotoMedia(
         closingCta: { ...draft.closingCta, photo },
       };
     }
+    case "statsPhoto": {
+      const savedPhoto = saved.statsBanner.photos.find((photo) => photo.id === id);
+      return {
+        ...draft,
+        statsBanner: {
+          ...draft.statsBanner,
+          photos: draft.statsBanner.photos.map((photo) => {
+            if (photo.id !== id) return photo;
+            if (!savedPhoto?.imagePath) return omitImagePath(photo);
+            return { ...photo, imagePath: savedPhoto.imagePath };
+          }),
+        },
+      };
+    }
     default: {
       const _exhaustive: never = kind;
       return _exhaustive;

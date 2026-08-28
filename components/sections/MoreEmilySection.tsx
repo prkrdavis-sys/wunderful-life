@@ -28,7 +28,7 @@ export function MoreEmilySection() {
       <AdminEditButton section="photos" label="Edit My vibe" />
       <div className="relative z-10 mx-auto max-w-5xl">
         <SectionReveal variant="fadeUp" className="text-center">
-          <h2 className={`font-serif text-3xl sm:text-5xl ${text.heading}`}>
+          <h2 className={`font-didone text-3xl font-bold tracking-tight sm:text-5xl ${text.heading}`}>
             {site.about.galleryHeading}
           </h2>
         </SectionReveal>

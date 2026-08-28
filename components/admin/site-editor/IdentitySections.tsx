@@ -6,6 +6,9 @@ import {
   withCtaPhoto,
   withCtaShowPhoto,
   withStatsBannerVisible,
+  withStatsPhoto,
+  withStatsPhotos,
+  withStatsShowPhotos,
 } from "@/components/admin/site-editor/aboutPhotos";
 import { cardClass, inputClass } from "@/components/admin/site-editor/constants";
 import { AddRowButton, moveItem, RowControls, uniqueId } from "@/components/admin/site-editor/list";
@@ -16,7 +19,11 @@ import type {
   SiteEditorVideoProps,
 } from "@/components/admin/site-editor/types";
 import { FileUploadButton } from "@/components/ui/FileUploadButton";
-import type { HeroIntroServices } from "@/lib/site/types";
+import {
+  ABOUT_PHOTO_FRAMES,
+  MAX_STATS_PHOTOS,
+  type HeroIntroServices,
+} from "@/lib/site/types";
 
 export function ProfileEditor({
   form,
@@ -265,8 +272,15 @@ export function HeroEditor({
 export function StatsEditor({
   form,
   setForm,
-}: Pick<SiteEditorFieldsProps, "form" | "setForm">) {
-  const { setSite } = useAdminView();
+  loading,
+  uploadPhoto,
+  removePhoto,
+}: SiteEditorFieldsProps) {
+  const { setSite, site } = useAdminView();
+  const photos = form.statsBanner.photos ?? [];
+  const savedPhotoIds = new Set(
+    (site.statsBanner.photos ?? []).map((photo) => photo.id),
+  );
 
   return (
     <section className="space-y-4">
@@ -274,7 +288,8 @@ export function StatsEditor({
         <h3 className="font-display text-lg text-brown">Audience reach</h3>
         <p className="mt-1 text-sm text-muted">
           The figures between photography and about. Add as many as you like —
-          they spread evenly across the section.
+          they spread evenly across the section. Up to six framed photos can
+          sit in the same panel.
         </p>
       </div>
 
@@ -378,6 +393,121 @@ export function StatsEditor({
               ],
             },
           }))
+        }
+      />
+
+      <label className="flex max-w-2xl items-center justify-between gap-4 rounded-2xl border border-brown/15 bg-cream/55 p-4 text-sm">
+        <span>
+          <span className="block font-semibold text-brown">
+            Show photos
+          </span>
+          <span className="mt-1 block text-muted">
+            When off, visitors only see the figures. Admin view still
+            previews the expanded panel.
+          </span>
+        </span>
+        <input
+          type="checkbox"
+          checked={form.statsBanner.showPhotos !== false}
+          onChange={(event) =>
+            applyAboutSite(setForm, setSite, (current) =>
+              withStatsShowPhotos(current, event.target.checked),
+            )
+          }
+          className="h-5 w-5 accent-forest"
+        />
+      </label>
+
+      {photos.length === 0 ? (
+        <p className="max-w-2xl text-sm text-muted">
+          No photos yet. Add up to {MAX_STATS_PHOTOS} for the expanded panel.
+        </p>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {photos.map((photo, index) => (
+            <AboutPhotoEditorCard
+              key={photo.id}
+              photo={photo}
+              heading={`Photo ${index + 1}`}
+              leading={
+                <RowControls
+                  label="Photo"
+                  index={index}
+                  count={photos.length}
+                  onMove={(delta) =>
+                    setForm((current) =>
+                      withStatsPhotos(
+                        current,
+                        moveItem(current.statsBanner.photos ?? [], index, delta),
+                      ),
+                    )
+                  }
+                  onRemove={() =>
+                    setForm((current) =>
+                      withStatsPhotos(
+                        current,
+                        (current.statsBanner.photos ?? []).filter(
+                          (_, i) => i !== index,
+                        ),
+                      ),
+                    )
+                  }
+                />
+              }
+              loading={loading}
+              onCaptionChange={(caption) =>
+                applyAboutSite(setForm, setSite, (current) =>
+                  withStatsPhoto(current, index, { caption }),
+                )
+              }
+              onShowCaptionChange={(showCaption) =>
+                applyAboutSite(setForm, setSite, (current) =>
+                  withStatsPhoto(current, index, { showCaption }),
+                )
+              }
+              onFrameChange={(frame) =>
+                applyAboutSite(setForm, setSite, (current) =>
+                  withStatsPhoto(current, index, { frame }),
+                )
+              }
+              onRotateChange={(rotate) =>
+                applyAboutSite(setForm, setSite, (current) =>
+                  withStatsPhoto(current, index, { rotate }),
+                )
+              }
+              onUpload={(file) => {
+                void uploadPhoto(photo.id, file, "statsPhoto");
+              }}
+              onRemove={() => {
+                void removePhoto(photo.id, "statsPhoto");
+              }}
+              uploadReady={savedPhotoIds.has(photo.id)}
+            />
+          ))}
+        </div>
+      )}
+
+      <AddRowButton
+        label={`Add photo (${photos.length} of ${MAX_STATS_PHOTOS})`}
+        disabled={photos.length >= MAX_STATS_PHOTOS}
+        onClick={() =>
+          setForm((current) => {
+            const existing = current.statsBanner.photos ?? [];
+            if (existing.length >= MAX_STATS_PHOTOS) {
+              return current;
+            }
+            return withStatsPhotos(current, [
+              ...existing,
+              {
+                id: uniqueId("reach"),
+                caption: "",
+                showCaption: true,
+                rotate: 0,
+                frame:
+                  ABOUT_PHOTO_FRAMES[existing.length % ABOUT_PHOTO_FRAMES.length],
+              },
+            ]);
+          })
         }
       />
     </section>

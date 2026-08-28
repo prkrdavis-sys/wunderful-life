@@ -1,3 +1,4 @@
+import type { HTMLAttributes } from "react";
 import { smallButtonClass } from "@/components/admin/site-editor/constants";
 
 /** Move an item within a list, returning a new array. */
@@ -6,6 +7,26 @@ export function moveItem<T>(items: T[], index: number, delta: number): T[] {
   if (target < 0 || target >= items.length) return items;
   const next = [...items];
   [next[index], next[target]] = [next[target], next[index]];
+  return next;
+}
+
+/** Insert the item at `fromIndex` before the item currently at `toIndex`. */
+export function moveItemTo<T>(items: T[], fromIndex: number, toIndex: number): T[] {
+  if (
+    fromIndex === toIndex ||
+    fromIndex < 0 ||
+    toIndex < 0 ||
+    fromIndex >= items.length ||
+    toIndex >= items.length
+  ) {
+    return items;
+  }
+
+  const next = [...items];
+  const [moved] = next.splice(fromIndex, 1);
+  if (moved === undefined) return items;
+  const insertAt = fromIndex < toIndex ? toIndex - 1 : toIndex;
+  next.splice(insertAt, 0, moved);
   return next;
 }
 
@@ -20,12 +41,16 @@ export function RowControls({
   count,
   onMove,
   onRemove,
+  dragHandleProps,
+  disableReorder = false,
 }: {
   label: string;
   index: number;
   count: number;
   onMove: (delta: number) => void;
   onRemove: () => void;
+  dragHandleProps?: HTMLAttributes<HTMLButtonElement>;
+  disableReorder?: boolean;
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -33,10 +58,20 @@ export function RowControls({
         {label} {index + 1}
       </p>
       <div className="flex items-center gap-1">
+        {dragHandleProps && (
+          <button
+            type="button"
+            {...dragHandleProps}
+            aria-label={`Drag ${label} ${index + 1} to reorder`}
+            className={`${smallButtonClass} cursor-grab active:cursor-grabbing`}
+          >
+            Drag
+          </button>
+        )}
         <button
           type="button"
           onClick={() => onMove(-1)}
-          disabled={index === 0}
+          disabled={disableReorder || index === 0}
           aria-label={`Move ${label} ${index + 1} up`}
           className={smallButtonClass}
         >
@@ -45,7 +80,7 @@ export function RowControls({
         <button
           type="button"
           onClick={() => onMove(1)}
-          disabled={index === count - 1}
+          disabled={disableReorder || index === count - 1}
           aria-label={`Move ${label} ${index + 1} down`}
           className={smallButtonClass}
         >

@@ -49,8 +49,10 @@
   --font-display: var(--font-bricolage);
   --font-body: var(--font-dm-sans);
   --font-serif: var(--font-fraunces);
+  --font-didone: var(--font-bodoni);
   --font-label: var(--font-instrument);
   --font-script: var(--font-niconne);
+  --font-calligraphy: var(--font-nautigal);
   --font-cooper: var(--font-calistoga);
 }
 
@@ -139,6 +141,11 @@ body {
   background: var(--cream);
   color: var(--foreground);
   font-family: var(--font-body), system-ui, sans-serif;
+}
+
+/* Display optical size keeps Bodoni Moda hairlines sharp on section titles. */
+.font-didone {
+  font-optical-sizing: auto;
 }
 
 /*
@@ -290,6 +297,57 @@ body {
   }
 }
 
+/*
+ * Quote clouds use the same warm paper fill and bark-tinted elevation as
+ * .glass-panel. drop-shadow follows the puffy silhouette; box-shadow cannot.
+ */
+.testimonial-cloud {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  width: 100%;
+  aspect-ratio: 55 / 45;
+  flex-direction: column;
+  justify-content: center;
+  padding: 18% 16% 16%;
+  text-align: left;
+}
+
+.testimonial-cloud-shape {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  filter:
+    drop-shadow(0 10px 18px rgb(61 55 46 / 0.1))
+    drop-shadow(0 18px 36px rgb(61 55 46 / 0.08));
+}
+
+.testimonial-cloud-shape-flip {
+  transform: scaleX(-1);
+}
+
+.testimonial-cloud-shape path {
+  fill: rgb(255 253 249 / 0.9);
+  stroke: rgb(255 255 255 / 0.7);
+  stroke-width: 0.35;
+  stroke-linejoin: round;
+}
+
+.testimonial-cloud-body {
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 640px) {
+  .testimonial-cloud {
+    padding: 17% 15% 15%;
+  }
+}
+
 .service-glass-card {
   box-shadow: 0 10px 36px rgb(61 55 46 / 0.07);
 }
@@ -316,14 +374,6 @@ body {
     radial-gradient(circle at 16% 18%, rgb(255 253 249 / 0.18), transparent 22rem),
     radial-gradient(circle at 84% 76%, rgb(35 57 42 / 0.24), transparent 24rem),
     linear-gradient(145deg, #9baa8c 0%, #b3bfa4 48%, #82956f 100%);
-}
-
-/* Forest brand-logo band. Stands alone after photography. */
-.ugc-brands-section {
-  background:
-    radial-gradient(circle at 18% 22%, rgb(255 253 249 / 0.14), transparent 20rem),
-    radial-gradient(circle at 82% 78%, rgb(35 57 42 / 0.18), transparent 22rem),
-    linear-gradient(145deg, #82956f 0%, #8fa37c 42%, #7a8f68 100%);
 }
 
 /* Up to 5 marks per row on phones, 6 on desktop. A short last row stays centered. */
@@ -632,7 +682,7 @@ body {
 }
 
 /*
- * Shared wash behind the about/stats band and the photography collage.
+ * Shared wash behind photography, about, and the stats panel.
  * Same layered recipe as the UGC and recent-videos bands: paper highlight,
  * a darker corner, then an angled linear so the band reads as one gradient.
  */
@@ -641,6 +691,114 @@ body {
     radial-gradient(circle at 16% 14%, rgb(255 253 249 / 0.7), transparent 26rem),
     radial-gradient(circle at 84% 78%, rgb(155 170 140 / 0.22), transparent 28rem),
     linear-gradient(145deg, #fffdf9 0%, #e4eadb 48%, #cfd6c0 100%);
+}
+
+/*
+ * Photography title: calligraphy spines on wide frames, centered
+ * heading when the word cannot sit beside the collage.
+ */
+.photography-shell {
+  --photography-word-size: clamp(3.4rem, 8vw, 5.35rem);
+  container-type: inline-size;
+  container-name: photography-shell;
+  width: 100%;
+}
+
+.photography-frame {
+  display: grid;
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+}
+
+.photography-word,
+.photography-word-measure {
+  font-family: var(--font-calligraphy), cursive;
+  font-size: var(--photography-word-size);
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--forest);
+}
+
+.photography-word {
+  margin: 0;
+}
+
+.photography-word-left {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: center;
+  max-width: 100%;
+  padding-bottom: 0.22em;
+  margin-bottom: 0.2em;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.photography-center {
+  grid-column: 1;
+  grid-row: 2;
+  width: 100%;
+  max-width: 64rem;
+  min-width: 0;
+  margin-inline: auto;
+}
+
+.photography-word-right {
+  display: none;
+}
+
+.photography-word-measure {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: 0;
+  z-index: -1;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+}
+
+@container photography-shell (min-width: 46rem) {
+  .photography-frame[data-title-layout="auto"] {
+    grid-template-columns: auto minmax(0, 64rem) auto;
+    justify-content: center;
+    align-items: center;
+    column-gap: clamp(0.55rem, 1.6vw, 1.45rem);
+  }
+
+  .photography-frame[data-title-layout="auto"] .photography-word-left {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: center;
+    align-self: center;
+    max-width: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    padding-block: 0.32em;
+    overflow: visible;
+    text-align: start;
+    white-space: nowrap;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+
+  .photography-frame[data-title-layout="auto"] .photography-center {
+    grid-column: 2;
+    grid-row: 1;
+    max-width: none;
+    margin-inline: 0;
+  }
+
+  .photography-frame[data-title-layout="auto"] .photography-word-right {
+    display: block;
+    grid-column: 3;
+    grid-row: 1;
+    align-self: center;
+    padding-block: 0.32em;
+    overflow: visible;
+    white-space: nowrap;
+    writing-mode: vertical-rl;
+  }
 }
 
 /*

@@ -25,7 +25,7 @@ export function AboutSection() {
   return (
     <section
       id="about"
-      className="scroll-section-anchor relative overflow-hidden px-4 pt-20 pb-14 sm:px-6 sm:pt-24 sm:pb-20"
+      className="scroll-section-anchor relative overflow-hidden px-4 pt-10 pb-10 sm:px-6 sm:pt-12 sm:pb-14"
     >
       <DecorMotifs preset="right" />
       <SectionButterfly flight="about" />
@@ -33,7 +33,7 @@ export function AboutSection() {
       <AdminEditButton section="about" label="Edit about" />
       <div className="relative z-10 mx-auto max-w-5xl">
         <SectionReveal variant="fadeUp" className="mb-8 text-center md:mb-9 md:text-left">
-          <h2 className={`font-serif text-3xl sm:text-5xl ${text.heading}`}>
+          <h2 className={`font-didone text-3xl font-bold tracking-tight sm:text-5xl ${text.heading}`}>
             {site.about.headline}
           </h2>
           <p className={`mt-2 max-w-xl text-base sm:text-lg ${text.subheading}`}>

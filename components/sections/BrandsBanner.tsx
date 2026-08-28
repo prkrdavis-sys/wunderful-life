@@ -4,7 +4,6 @@ import Image from "next/image";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
-import { DecorMotifs } from "@/components/ui/DecorMotifs";
 import { SectionReveal } from "@/components/ui/motion";
 import { isRemoteMediaUrl } from "@/lib/media/urls";
 import { MAX_BRANDS, type BrandItem } from "@/lib/site/types";
@@ -44,25 +43,24 @@ export function BrandsBanner() {
     <section
       id="brands"
       aria-labelledby="brands-heading"
-      className="ugc-brands-section scroll-section-anchor relative overflow-hidden px-4 py-16 sm:px-6 sm:py-24"
+      className="scroll-section-anchor relative overflow-hidden px-4 pt-16 pb-12 sm:px-6 sm:pt-24 sm:pb-16"
     >
-      <DecorMotifs preset="scatter" tone="paper" />
-      <AdminEditButton section="brands" label="Edit brands" tone="light" />
+      <AdminEditButton section="brands" label="Edit brands" />
       <SectionButterfly flight="brandsBand" />
 
       <div className="relative z-10 mx-auto max-w-6xl">
         <SectionReveal variant="fadeUp" className="mx-auto max-w-2xl text-center">
           <h2
             id="brands-heading"
-            className="font-serif text-4xl tracking-tight text-paper sm:text-6xl"
+            className="font-didone text-3xl font-bold tracking-tight text-forest sm:text-5xl"
           >
             {heading}
           </h2>
         </SectionReveal>
 
         {items.length === 0 ? (
-          <p className="mt-8 text-center font-label text-sm text-paper/70">
-            No brands yet — add some in the site editor.
+          <p className="mt-8 text-center font-label text-sm text-brown/80">
+            No brands yet. Add some in the site editor.
           </p>
         ) : (
           <SectionReveal
@@ -92,7 +90,7 @@ export function BrandsBanner() {
         )}
 
         {isAdminView && !visible && (
-          <p className="mt-8 text-center font-label text-xs tracking-[0.14em] text-paper/80 uppercase">
+          <p className="mt-8 text-center font-label text-xs tracking-[0.14em] text-brown uppercase">
             Brands section hidden from visitors
           </p>
         )}

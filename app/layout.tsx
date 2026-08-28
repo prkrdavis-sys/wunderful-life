@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import {
+  Bodoni_Moda,
   Bricolage_Grotesque,
   Calistoga,
   DM_Sans,
   Fraunces,
   Instrument_Sans,
   Niconne,
+  The_Nautigal,
 } from "next/font/google";
 import { AdminModeBanner } from "@/components/admin/AdminModeBanner";
 import { SiteNav } from "@/components/layout/SiteNav";
@@ -61,11 +63,26 @@ const niconne = Niconne({
   preload: false,
 });
 
+const nautigal = The_Nautigal({
+  variable: "--font-nautigal",
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+  preload: false,
+});
+
 const calistoga = Calistoga({
   variable: "--font-calistoga",
   weight: "400",
   subsets: ["latin"],
   display: "swap",
+});
+
+const bodoniModa = Bodoni_Moda({
+  variable: "--font-bodoni",
+  subsets: ["latin"],
+  display: "swap",
+  axes: ["opsz"],
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -116,7 +133,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bricolage.variable} ${dmSans.variable} ${fraunces.variable} ${instrumentSans.variable} ${niconne.variable} ${calistoga.variable} h-full scroll-smooth`}
+      className={`${bricolage.variable} ${dmSans.variable} ${fraunces.variable} ${instrumentSans.variable} ${niconne.variable} ${nautigal.variable} ${calistoga.variable} ${bodoniModa.variable} h-full scroll-smooth`}
     >
       <body className="relative min-h-full flex flex-col bg-cream font-body antialiased">
         <AppProviders

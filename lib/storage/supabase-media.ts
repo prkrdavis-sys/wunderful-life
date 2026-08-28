@@ -47,6 +47,7 @@ function defaultExtensionForDir(dir: MediaUploadDir): string {
     case "home-grid-photos":
     case "brand-logos":
     case "cta-photos":
+    case "stats-photos":
       return ".jpg";
     case "hero-photos":
       return ".png";

@@ -39,7 +39,7 @@ export function SiteEditorSectionView({
     case "about":
       return <AboutEditor {...fields} />;
     case "stats":
-      return <StatsEditor form={fields.form} setForm={fields.setForm} />;
+      return <StatsEditor {...fields} />;
     case "work":
       return (
         <WorkEditor

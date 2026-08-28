@@ -273,7 +273,11 @@ export function useSiteEditorController(onSaved?: (site: SiteContent) => void) {
 
     try {
       const prepared = await preparePhotoForUpload(file, {
-        preferJpeg: kind === "about" || kind === "collage" || kind === "ctaPhoto",
+        preferJpeg:
+          kind === "about" ||
+          kind === "collage" ||
+          kind === "ctaPhoto" ||
+          kind === "statsPhoto",
         maxEdge: kind === "brandLogo" ? 800 : 1920,
       });
       const payload = new FormData();
@@ -321,7 +325,9 @@ export function useSiteEditorController(onSaved?: (site: SiteContent) => void) {
             ? "Creator photo is on your site now — no need to press Save."
             : kind === "ctaPhoto"
               ? "CTA photo is on your site now — no need to press Save."
-              : "Photo uploaded.",
+              : kind === "statsPhoto"
+                ? "Reach photo is on your site now — no need to press Save."
+                : "Photo uploaded.",
       );
     } catch (err) {
       setError(toErrorMessage(err, `Failed to upload ${descriptor.noun}.`));
@@ -370,7 +376,9 @@ export function useSiteEditorController(onSaved?: (site: SiteContent) => void) {
             ? "Creator photo removed."
             : kind === "ctaPhoto"
               ? "CTA photo removed."
-              : "Photo removed.",
+              : kind === "statsPhoto"
+                ? "Reach photo removed."
+                : "Photo removed.",
       );
     } catch (err) {
       setError(toErrorMessage(err, `Failed to remove ${descriptor.noun}.`));

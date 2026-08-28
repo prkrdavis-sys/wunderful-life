@@ -30,12 +30,9 @@ export function UgcBenefitsSection() {
 
       <div className="relative z-10 mx-auto max-w-6xl">
         <SectionReveal variant="fadeUp" className="mx-auto max-w-2xl text-center">
-          <p className="font-label text-[0.65rem] font-semibold tracking-[0.22em] text-paper/80 uppercase sm:text-xs">
-            {ugcBenefits.eyebrow}
-          </p>
           <h2
             id="ugc-heading"
-            className="mt-2 font-serif text-3xl tracking-tight text-paper sm:mt-3 sm:text-5xl"
+            className="font-didone text-3xl font-bold tracking-tight text-paper sm:text-5xl"
           >
             {whatIsUgc.heading}
           </h2>
@@ -81,10 +78,7 @@ export function UgcBenefitsSection() {
             delay={0.12}
             className="ugc-benefits-card rounded-[1.5rem] border border-paper/40 p-5 text-ink shadow-xl sm:rounded-[2rem] sm:p-8"
           >
-            <p className="font-label text-xs font-semibold tracking-[0.2em] text-forest/80 uppercase">
-              {ugcBenefits.benefitsEyebrow}
-            </p>
-            <h3 className="mt-2 font-serif text-xl text-forest sm:text-3xl">
+            <h3 className="font-serif text-xl text-forest sm:text-3xl">
               {ugcBenefits.benefitsHeading}
             </h3>
             <ul className="mt-4 grid gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-4">

@@ -32,7 +32,10 @@ type PhotoFolder =
   | "home-grid-photos"
   | "brand-logos"
   | "hero-photos"
-  | "cta-photos";
+  | "cta-photos"
+  | "stats-photos";
+
+type ListPhotoKind = "about" | "collage" | "stats";
 
 function hasServices(value: unknown): boolean {
   if (!value || typeof value !== "object") return false;
@@ -175,6 +178,7 @@ async function deleteStoredPhoto(imagePath: string) {
     imagePath.startsWith("/brand-logos/") ||
     imagePath.startsWith("/hero-photos/") ||
     imagePath.startsWith("/cta-photos/") ||
+    imagePath.startsWith("/stats-photos/") ||
     imagePath.startsWith("/uploads/photos/") ||
     imagePath.startsWith("/uploads/hero/") ||
     imagePath.startsWith("/uploads/cta/")
@@ -263,10 +267,25 @@ async function savePhotoFile(
   });
 }
 
+function photosForKind(site: SiteContent, kind: ListPhotoKind) {
+  switch (kind) {
+    case "about":
+      return site.about.photos;
+    case "collage":
+      return site.photography.photos;
+    case "stats":
+      return site.statsBanner.photos;
+    default: {
+      const _exhaustive: never = kind;
+      return _exhaustive;
+    }
+  }
+}
+
 async function setPhotoImagePath(
   photoId: string,
   imagePath: string,
-  kind: "about" | "collage",
+  kind: ListPhotoKind,
   expectedVersion?: number,
 ): Promise<SiteContent> {
   const record = await readSiteRecord();
@@ -278,8 +297,7 @@ async function setPhotoImagePath(
     );
   }
   const site = structuredClone(record.content);
-  const photos =
-    kind === "about" ? site.about.photos : site.photography.photos;
+  const photos = photosForKind(site, kind);
   const photoIndex = photos.findIndex((photo) => photo.id === photoId);
 
   if (photoIndex === -1) {
@@ -571,6 +589,96 @@ export async function clearCollagePhoto(
   const rest = { ...current };
   delete rest.imagePath;
   site.photography.photos[photoIndex] = rest;
+  await writeSiteContent(site, record.version);
+  if (current.imagePath) {
+    await deleteStoredPhoto(current.imagePath);
+  }
+  return site;
+}
+
+export async function reorderCollagePhotos(
+  orderedIds: string[],
+  expectedVersion?: number,
+): Promise<SiteContent> {
+  const record = await readSiteRecord();
+  if (expectedVersion !== undefined && record.version !== expectedVersion) {
+    throw new StorageError(
+      "This editor is out of date. The latest site content was saved elsewhere.",
+      409,
+    );
+  }
+
+  const site = structuredClone(record.content);
+  const photos = site.photography.photos;
+
+  if (photos.length === 0) {
+    return site;
+  }
+
+  if (orderedIds.length !== photos.length) {
+    throw new StorageError("Photo order must include every collage tile.", 400);
+  }
+
+  if (new Set(orderedIds).size !== orderedIds.length) {
+    throw new StorageError("Photo order contains duplicate tiles.", 400);
+  }
+
+  const byId = new Map(photos.map((photo) => [photo.id, photo]));
+  const ordered = orderedIds.map((id) => {
+    const photo = byId.get(id);
+    if (!photo) {
+      throw new StorageError("Photo not found.", 400);
+    }
+    return photo;
+  });
+
+  site.photography.photos = ordered;
+  await writeSiteContent(site, record.version);
+  return site;
+}
+
+export async function uploadStatsPhoto(
+  photoId: string,
+  file: File,
+  expectedVersion?: number,
+) {
+  const imagePath = await savePhotoFile(photoId, file, "stats-photos");
+  return setPhotoImagePath(photoId, imagePath, "stats", expectedVersion);
+}
+
+/** Production path: the file was client-uploaded to Supabase; persist its URL. */
+export async function setStatsPhotoUrl(
+  photoId: string,
+  url: string,
+  expectedVersion?: number,
+) {
+  return setPhotoImagePath(photoId, url, "stats", expectedVersion);
+}
+
+export async function clearStatsPhoto(
+  photoId: string,
+  expectedVersion?: number,
+) {
+  const record = await readSiteRecord();
+  if (expectedVersion !== undefined && record.version !== expectedVersion) {
+    throw new StorageError(
+      "This editor is out of date. The latest site content was saved elsewhere.",
+      409,
+    );
+  }
+  const site = structuredClone(record.content);
+  const photoIndex = site.statsBanner.photos.findIndex(
+    (photo) => photo.id === photoId,
+  );
+
+  if (photoIndex === -1) {
+    throw new StorageError("Photo not found.", 404);
+  }
+
+  const current = site.statsBanner.photos[photoIndex];
+  const rest = { ...current };
+  delete rest.imagePath;
+  site.statsBanner.photos[photoIndex] = rest;
   await writeSiteContent(site, record.version);
   if (current.imagePath) {
     await deleteStoredPhoto(current.imagePath);
