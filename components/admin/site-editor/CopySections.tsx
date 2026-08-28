@@ -1,6 +1,8 @@
 import { AutoResizeTextarea } from "@/components/admin/AutoResizeTextarea";
-import { inputClass } from "@/components/admin/site-editor/constants";
+import { cardClass, inputClass } from "@/components/admin/site-editor/constants";
+import { AddRowButton, moveItem, RowControls, uniqueId } from "@/components/admin/site-editor/list";
 import type { SiteEditorFieldsProps } from "@/components/admin/site-editor/types";
+import { MAX_TESTIMONIALS } from "@/lib/site/types";
 
 export function ServicesEditor({
   form,
@@ -207,15 +209,32 @@ export function TestimonialsEditor({
           className={inputClass}
         />
       </label>
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
         {form.testimonials.items.map((testimonial, index) => (
-          <div
-            key={testimonial.id}
-            className="space-y-3 rounded-2xl border border-brown/15 bg-cream/50 p-4"
-          >
-            <p className="font-label text-xs font-semibold tracking-[0.12em] text-muted uppercase">
-              Testimonial {index + 1}
-            </p>
+          <div key={testimonial.id} className={cardClass}>
+            <RowControls
+              label="Testimonial"
+              index={index}
+              count={form.testimonials.items.length}
+              onMove={(delta) =>
+                setForm((current) => ({
+                  ...current,
+                  testimonials: {
+                    ...current.testimonials,
+                    items: moveItem(current.testimonials.items, index, delta),
+                  },
+                }))
+              }
+              onRemove={() =>
+                setForm((current) => ({
+                  ...current,
+                  testimonials: {
+                    ...current.testimonials,
+                    items: current.testimonials.items.filter((_, i) => i !== index),
+                  },
+                }))
+              }
+            />
             <label className="block text-sm">
               <span className="text-muted">Quote</span>
               <AutoResizeTextarea
@@ -271,6 +290,33 @@ export function TestimonialsEditor({
           </div>
         ))}
       </div>
+
+      <AddRowButton
+        label={`Add testimonial (${form.testimonials.items.length} of ${MAX_TESTIMONIALS})`}
+        disabled={form.testimonials.items.length >= MAX_TESTIMONIALS}
+        onClick={() =>
+          setForm((current) => {
+            if (current.testimonials.items.length >= MAX_TESTIMONIALS) {
+              return current;
+            }
+            return {
+              ...current,
+              testimonials: {
+                ...current.testimonials,
+                items: [
+                  ...current.testimonials.items,
+                  {
+                    id: uniqueId("testimonial"),
+                    quote: "",
+                    name: "",
+                    role: "",
+                  },
+                ],
+              },
+            };
+          })
+        }
+      />
     </section>
   );
 }

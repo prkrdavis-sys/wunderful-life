@@ -32,7 +32,7 @@ export function UgcBenefitsSection() {
         <SectionReveal variant="fadeUp" className="mx-auto max-w-2xl text-center">
           <h2
             id="ugc-heading"
-            className="font-didone text-3xl font-bold tracking-tight text-paper sm:text-5xl"
+            className="font-didone text-3xl font-black tracking-tight text-paper sm:text-5xl"
           >
             {whatIsUgc.heading}
           </h2>

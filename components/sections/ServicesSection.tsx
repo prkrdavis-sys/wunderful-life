@@ -24,7 +24,7 @@ export function ServicesSection() {
 
       <div className="relative z-10 mx-auto max-w-6xl">
         <SectionReveal variant="fadeUp" className="text-center">
-          <h2 className={`font-didone text-3xl font-bold tracking-tight sm:text-5xl ${text.heading}`}>
+          <h2 className={`font-didone text-3xl font-black tracking-tight sm:text-5xl ${text.heading}`}>
             {site.services.heading}
           </h2>
           <p className={`mx-auto mt-4 max-w-2xl leading-relaxed ${text.body}`}>

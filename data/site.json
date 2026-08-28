@@ -303,6 +303,18 @@
         "name": "Example Client",
         "role": "Wellness launch",
         "quote": "The creative direction was thoughtful, on-brand, and easy to use across our social channels."
+      },
+      {
+        "id": "easy-to-book",
+        "name": "Sample Studio Lead",
+        "role": "Product story",
+        "quote": "Booking Emily was simple, and the turnaround gave us more than we needed for the launch week."
+      },
+      {
+        "id": "audience-fit",
+        "name": "Example Shop Owner",
+        "role": "Seasonal collection",
+        "quote": "Her delivery felt like a friend sharing a find, which is exactly the tone we wanted for this line."
       }
     ],
     "eyebrow": "Social Proof",

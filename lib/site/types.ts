@@ -57,6 +57,9 @@ export const MAX_COLLAGE_TILES = 20;
 /** Hard cap for brand logos in the editor, on save, and on the public page. */
 export const MAX_BRANDS = 30;
 
+/** Hard cap for testimonial quote clouds in the editor, on save, and on the page. */
+export const MAX_TESTIMONIALS = 4;
+
 /** Hard cap for framed photos in the audience reach panel. */
 export const MAX_STATS_PHOTOS = 6;
 

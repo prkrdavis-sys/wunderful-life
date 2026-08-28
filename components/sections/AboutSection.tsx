@@ -33,7 +33,7 @@ export function AboutSection() {
       <AdminEditButton section="about" label="Edit about" />
       <div className="relative z-10 mx-auto max-w-5xl">
         <SectionReveal variant="fadeUp" className="mb-8 text-center md:mb-9 md:text-left">
-          <h2 className={`font-didone text-3xl font-bold tracking-tight sm:text-5xl ${text.heading}`}>
+          <h2 className={`font-didone text-3xl font-black tracking-tight sm:text-5xl ${text.heading}`}>
             {site.about.headline}
           </h2>
           <p className={`mt-2 max-w-xl text-base sm:text-lg ${text.subheading}`}>

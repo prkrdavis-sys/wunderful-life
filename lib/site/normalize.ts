@@ -2,6 +2,7 @@ import {
   MAX_BRANDS,
   MAX_COLLAGE_TILES,
   MAX_STATS_PHOTOS,
+  MAX_TESTIMONIALS,
   isAboutPhotoFrame,
   type AboutPhoto,
   type AboutPhotoFrame,
@@ -174,6 +175,20 @@ const DEFAULT_TESTIMONIALS: SiteContent["testimonials"] = {
         "The creative direction was thoughtful, on-brand, and easy to use across our social channels.",
       name: "Example Client",
       role: "Wellness launch",
+    },
+    {
+      id: "easy-to-book",
+      quote:
+        "Booking Emily was simple, and the turnaround gave us more than we needed for the launch week.",
+      name: "Sample Studio Lead",
+      role: "Product story",
+    },
+    {
+      id: "audience-fit",
+      quote:
+        "Her delivery felt like a friend sharing a find, which is exactly the tone we wanted for this line.",
+      name: "Example Shop Owner",
+      role: "Seasonal collection",
     },
   ],
 };
@@ -632,21 +647,23 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
       heading: text(testimonials.heading, DEFAULT_TESTIMONIALS.heading),
       intro: text(testimonials.intro, DEFAULT_TESTIMONIALS.intro),
       items: Array.isArray(testimonials.items)
-        ? testimonials.items.map((testimonial, index) => ({
-            id: text(testimonial.id, `testimonial-${index + 1}`),
-            quote: text(
-              testimonial.quote,
-              DEFAULT_TESTIMONIALS.items[index]?.quote ?? "",
-            ),
-            name: text(
-              testimonial.name,
-              DEFAULT_TESTIMONIALS.items[index]?.name ?? "",
-            ),
-            role: text(
-              testimonial.role,
-              DEFAULT_TESTIMONIALS.items[index]?.role ?? "",
-            ),
-          }))
+        ? testimonials.items
+            .map((testimonial, index) => ({
+              id: text(testimonial.id, `testimonial-${index + 1}`),
+              quote: text(
+                testimonial.quote,
+                DEFAULT_TESTIMONIALS.items[index]?.quote ?? "",
+              ),
+              name: text(
+                testimonial.name,
+                DEFAULT_TESTIMONIALS.items[index]?.name ?? "",
+              ),
+              role: text(
+                testimonial.role,
+                DEFAULT_TESTIMONIALS.items[index]?.role ?? "",
+              ),
+            }))
+            .slice(0, MAX_TESTIMONIALS)
         : DEFAULT_TESTIMONIALS.items,
     },
   };

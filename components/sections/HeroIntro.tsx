@@ -136,7 +136,7 @@ export function HeroIntro() {
 
   return (
     <section
-      className={`hero-intro relative overflow-visible bg-paper${
+      className={`hero-intro relative overflow-hidden bg-paper${
         subtitle ? " hero-intro--belt-copy" : ""
       }`}
     >

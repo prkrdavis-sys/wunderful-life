@@ -52,7 +52,7 @@ export function BrandsBanner() {
         <SectionReveal variant="fadeUp" className="mx-auto max-w-2xl text-center">
           <h2
             id="brands-heading"
-            className="font-didone text-3xl font-bold tracking-tight text-forest sm:text-5xl"
+            className="font-didone text-3xl font-black tracking-tight text-forest sm:text-5xl"
           >
             {heading}
           </h2>
@@ -66,7 +66,7 @@ export function BrandsBanner() {
           <SectionReveal
             variant="fadeUp"
             delay={0.12}
-            className="ugc-benefits-card mx-auto mt-10 max-w-5xl rounded-[2rem] border border-paper/40 px-4 py-5 text-ink shadow-xl sm:mt-12 sm:px-6 sm:py-6 lg:p-8"
+            className="ugc-brands-card mx-auto mt-10 max-w-5xl rounded-[2rem] border border-lavender/35 px-4 py-5 text-ink shadow-xl sm:mt-12 sm:px-6 sm:py-6 lg:p-8"
           >
             <ul className="ugc-brands-list">
               {items.map((brand) => (

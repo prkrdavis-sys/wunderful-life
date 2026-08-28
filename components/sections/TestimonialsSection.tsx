@@ -6,6 +6,14 @@ import { SectionReveal, StaggerChildren, StaggerItem } from "@/components/ui/mot
 import { TestimonialCloud } from "@/components/ui/TestimonialCloud";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
 import { sectionText } from "@/lib/sectionText";
+import { MAX_TESTIMONIALS } from "@/lib/site/types";
+
+const CLOUD_SLOT = [
+  "testimonial-cloud-slot-a",
+  "testimonial-cloud-slot-b",
+  "testimonial-cloud-slot-c",
+  "testimonial-cloud-slot-d",
+] as const;
 
 export function TestimonialsSection() {
   const { site, viewMode } = useAdminView();
@@ -33,7 +41,7 @@ export function TestimonialsSection() {
         )}
 
         <SectionReveal variant="fadeUp" className="mx-auto max-w-3xl text-center">
-          <h2 className={`font-didone text-3xl font-bold tracking-tight sm:text-5xl ${text.heading}`}>
+          <h2 className={`font-didone text-3xl font-black tracking-tight sm:text-5xl ${text.heading}`}>
             {site.testimonials.heading}
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-ink/88 sm:text-lg">
@@ -41,21 +49,24 @@ export function TestimonialsSection() {
           </p>
         </SectionReveal>
 
-        <StaggerChildren className="mx-auto mt-10 grid max-w-5xl gap-8 md:grid-cols-2 md:gap-10">
-          {site.testimonials.items.map((testimonial, index) => (
+        <StaggerChildren className="testimonial-cloud-drift mx-auto mt-10 max-w-6xl">
+          {site.testimonials.items.slice(0, MAX_TESTIMONIALS).map((testimonial, index) => (
             <StaggerItem
               key={testimonial.id}
+              className="testimonial-cloud-row"
               variant={index % 2 === 0 ? "fadeLeft" : "fadeRight"}
             >
-              <TestimonialCloud flip={index % 2 === 1}>
-                <blockquote className="font-serif text-xl leading-relaxed text-forest sm:text-2xl">
-                  &ldquo;{testimonial.quote}&rdquo;
-                </blockquote>
-                <figcaption className="mt-6 border-t border-brown/10 pt-4">
-                  <p className="font-semibold text-ink">{testimonial.name}</p>
-                  <p className="mt-1 text-sm text-muted">{testimonial.role}</p>
-                </figcaption>
-              </TestimonialCloud>
+              <div className={`testimonial-cloud-slot ${CLOUD_SLOT[index] ?? CLOUD_SLOT[0]}`}>
+                <TestimonialCloud flip={index % 2 === 1}>
+                  <blockquote className="font-serif text-xl leading-relaxed text-forest sm:text-2xl">
+                    &ldquo;{testimonial.quote}&rdquo;
+                  </blockquote>
+                  <figcaption className="mt-5 border-t border-brown/10 pt-3">
+                    <p className="font-semibold text-ink">{testimonial.name}</p>
+                    <p className="mt-1 text-sm text-muted">{testimonial.role}</p>
+                  </figcaption>
+                </TestimonialCloud>
+              </div>
             </StaggerItem>
           ))}
         </StaggerChildren>
