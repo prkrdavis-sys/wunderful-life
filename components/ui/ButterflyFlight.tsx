@@ -1,14 +1,10 @@
 "use client";
 
-import {
-  animate,
-  useMotionValue,
-  useMotionValueEvent,
-  useReducedMotion,
-} from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -148,46 +144,25 @@ export function ButterflyFlight({
   trailOpacity = 0.6,
   startDelay = 0,
 }: ButterflyFlightProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [canFly, setCanFly] = useState(false);
+  const [delayElapsed, setDelayElapsed] = useState(startDelay <= 0);
   const geometryRef = useRef<SVGPathElement>(null);
   const dashRefs = useRef<(SVGPathElement | null)[]>([]);
   const butterflyRef = useRef<HTMLDivElement>(null);
   const curveRef = useRef<{ points: { x: number; y: number }[]; total: number } | null>(
     null,
   );
+  const progressRef = useRef(0);
 
   const reduceMotion = useReducedMotion();
-  const isFlying = !reduceMotion && canFly;
+  // Do not wait on IntersectionObserver. Host sections are overflow-hidden, so
+  // intersection checks have left every butterfly paused on first paint.
+  const isFlying = !reduceMotion && delayElapsed;
 
   useEffect(() => {
-    const node = containerRef.current;
-    if (!node) return;
-    const target = node.closest("section") ?? node;
-    let timeoutId = 0;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        window.clearTimeout(timeoutId);
-        if (!entry.isIntersecting) {
-          setCanFly(false);
-          return;
-        }
-        if (startDelay <= 0) {
-          setCanFly(true);
-          return;
-        }
-        timeoutId = window.setTimeout(() => setCanFly(true), startDelay * 1000);
-      },
-      { threshold: 0, rootMargin: "18% 0px" },
-    );
-    observer.observe(target);
-    return () => {
-      observer.disconnect();
-      window.clearTimeout(timeoutId);
-    };
+    if (startDelay <= 0) return;
+    const timeoutId = window.setTimeout(() => setDelayElapsed(true), startDelay * 1000);
+    return () => window.clearTimeout(timeoutId);
   }, [startDelay]);
-
-  const progress = useMotionValue(0);
 
   // One element per dash, sized to cover the longest trail this route will show.
   const dashCount = Math.ceil(trailLength / DASH_PERIOD) + 1;
@@ -292,64 +267,72 @@ export function ButterflyFlight({
   /**
    * The route is sampled once into a lookup table, so placing dashes each frame is
    * arithmetic rather than repeated getPointAtLength calls across every butterfly.
+   * Some browsers report a 0 length until the SVG has been painted, so we retry
+   * for a few frames instead of leaving the sprite parked forever.
    */
   useEffect(() => {
     const geometry = geometryRef.current;
     if (!geometry) return;
 
-    const total = geometry.getTotalLength();
-    if (!total) return;
+    let cancelled = false;
+    let attempts = 0;
 
-    const steps = Math.max(2, Math.ceil(total / SAMPLE_STEP));
-    curveRef.current = {
-      total,
-      points: Array.from({ length: steps + 1 }, (_, index) => {
-        const { x, y } = geometry.getPointAtLength((index / steps) * total);
-        return { x, y };
-      }),
+    const sample = () => {
+      if (cancelled) return;
+      const total = geometry.getTotalLength();
+      if (!total) {
+        attempts += 1;
+        if (attempts < 12) {
+          window.requestAnimationFrame(sample);
+        }
+        return;
+      }
+
+      const steps = Math.max(2, Math.ceil(total / SAMPLE_STEP));
+      curveRef.current = {
+        total,
+        points: Array.from({ length: steps + 1 }, (_, index) => {
+          const { x, y } = geometry.getPointAtLength((index / steps) * total);
+          return { x, y };
+        }),
+      };
+
+      applyProgress(progressRef.current);
     };
 
-    applyProgress(progress.get());
-  }, [path, applyProgress, progress]);
-
-  useMotionValueEvent(progress, "change", applyProgress);
+    sample();
+    return () => {
+      cancelled = true;
+    };
+  }, [path, applyProgress]);
 
   // With motion reduced there is no flight: the butterfly simply rests somewhere on
   // its route with the short trail behind it.
   useEffect(() => {
     if (!reduceMotion) return;
-    progress.set(1);
-  }, [reduceMotion, progress]);
+    progressRef.current = 1;
+    applyProgress(1);
+  }, [reduceMotion, applyProgress]);
 
   useEffect(() => {
     if (!isFlying) return;
 
-    let cancelled = false;
-    let running: { stop: () => void } | undefined;
+    let frame = 0;
+    let last = performance.now();
 
-    const flyCircuit = async () => {
-      while (!cancelled) {
-        // Progress is the number of laps flown, not a 0–1 loop. Animating to the
-        // next integer keeps the trail's unwrapped distances continuous so the
-        // dash grid never snaps when the sprite crosses the path close.
-        const from = progress.get();
-        const flight = animate(progress, from + 1, {
-          duration,
-          ease: "linear",
-        });
-        running = flight;
-        await flight;
-        if (cancelled) return;
-      }
+    const tick = (now: number) => {
+      // Progress is the number of laps flown, not a 0–1 loop, so the trail's
+      // unwrapped distances stay continuous when the sprite crosses the path close.
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      progressRef.current += dt / duration;
+      applyProgress(progressRef.current);
+      frame = window.requestAnimationFrame(tick);
     };
 
-    void flyCircuit();
-
-    return () => {
-      cancelled = true;
-      running?.stop();
-    };
-  }, [isFlying, duration, progress]);
+    frame = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frame);
+  }, [isFlying, duration, applyProgress]);
 
   /**
    * The path's own move-to command gives the butterfly a correct starting position
@@ -366,9 +349,14 @@ export function ButterflyFlight({
     "--butterfly-flap-duration": `${flapDuration}s`,
   } as CSSProperties;
 
+  useLayoutEffect(() => {
+    const butterfly = butterflyRef.current;
+    if (!butterfly || !startTransform || curveRef.current) return;
+    butterfly.style.transform = startTransform;
+  }, [startTransform]);
+
   return (
     <div
-      ref={containerRef}
       aria-hidden
       className={`pointer-events-none absolute ${colorClassName} ${className}`}
       style={{
@@ -383,7 +371,7 @@ export function ButterflyFlight({
         className="absolute inset-0 h-full w-full overflow-visible"
       >
         {/* Never painted: this carries the route so its geometry can be measured. */}
-        <path ref={geometryRef} d={path} fill="none" stroke="none" />
+        <path ref={geometryRef} d={path} fill="none" stroke="transparent" />
 
         <g opacity={trailOpacity}>
           {Array.from({ length: dashCount }, (_, index) => (
@@ -412,7 +400,6 @@ export function ButterflyFlight({
           width: `${(spriteUnits.width / AREA.width) * 100}%`,
           height: `${(spriteUnits.height / AREA.height) * 100}%`,
           transformOrigin: "0 0",
-          transform: startTransform,
         }}
       />
     </div>
