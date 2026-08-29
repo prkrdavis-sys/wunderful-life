@@ -68,7 +68,10 @@ type AdminViewContextValue = {
   enterAdminView: () => void;
   completeAdminLogin: () => void;
   exitAdminView: () => Promise<void>;
-  refreshSession: () => Promise<void>;
+  refreshSession: () => Promise<{
+    authenticated: boolean;
+    authRequired: boolean;
+  } | null>;
   site: SiteContent;
   setSite: Dispatch<SetStateAction<SiteContent>>;
   siteVersion: number;
@@ -114,7 +117,7 @@ export function AdminViewProvider({
 
   const refreshSession = useCallback(async () => {
     const response = await fetch("/api/admin/session");
-    if (!response.ok) return;
+    if (!response.ok) return null;
     const data = (await response.json()) as {
       authenticated: boolean;
       authRequired: boolean;
@@ -125,7 +128,35 @@ export function AdminViewProvider({
       setViewModeState("regular");
       setPanelOpen(false);
     }
+    return data;
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("admin") !== "1") return;
+
+    let cancelled = false;
+    void (async () => {
+      const data = await refreshSession();
+      if (cancelled || !data) return;
+      if (!data.authRequired || data.authenticated) {
+        setViewModeState("admin");
+        setPanelOpen(true);
+      }
+      const url = new URL(window.location.href);
+      url.searchParams.delete("admin");
+      const search = url.searchParams.toString();
+      window.history.replaceState(
+        null,
+        "",
+        `${url.pathname}${search ? `?${search}` : ""}${url.hash}`,
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshSession]);
 
   useEffect(() => {
     let idleId = 0;

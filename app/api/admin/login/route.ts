@@ -31,14 +31,7 @@ async function readPassword(request: Request): Promise<string> {
   return "";
 }
 
-export async function POST(request: Request) {
-  const password = await readPassword(request);
-
-  if (!verifyAdminPassword(password)) {
-    return NextResponse.json({ error: "Invalid password." }, { status: 401 });
-  }
-
-  const response = NextResponse.json({ success: true });
+function setAdminCookie(response: NextResponse) {
   response.cookies.set(ADMIN_COOKIE, adminSessionCookieValue(), {
     httpOnly: true,
     sameSite: "lax",
@@ -46,4 +39,25 @@ export async function POST(request: Request) {
     path: "/",
   });
   return response;
+}
+
+export async function POST(request: Request) {
+  const password = await readPassword(request);
+  const contentType = request.headers.get("content-type") ?? "";
+  const isJson = contentType.includes("application/json");
+
+  if (!verifyAdminPassword(password)) {
+    if (!isJson) {
+      return NextResponse.redirect(new URL("/admin/login?error=1", request.url), 303);
+    }
+    return NextResponse.json({ error: "Invalid password." }, { status: 401 });
+  }
+
+  if (!isJson) {
+    return setAdminCookie(
+      NextResponse.redirect(new URL("/?admin=1", request.url), 303),
+    );
+  }
+
+  return setAdminCookie(NextResponse.json({ success: true }));
 }

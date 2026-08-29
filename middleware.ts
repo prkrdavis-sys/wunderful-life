@@ -20,6 +20,10 @@ function isProtectedApiRoute(pathname: string, method: string): boolean {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  if (pathname === "/admin/login") {
+    return NextResponse.next();
+  }
+
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     return NextResponse.redirect(new URL("/", request.url));
   }
