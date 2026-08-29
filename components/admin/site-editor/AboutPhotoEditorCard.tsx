@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import {
   ABOUT_PHOTO_FRAMES,
   resolveAboutPhotoFrame,
+  resolveAboutPhotoShowShadow,
   type AboutPhoto,
   type AboutPhotoFrame,
 } from "@/lib/site/types";
@@ -26,6 +27,7 @@ export function AboutPhotoEditorCard({
   loading,
   onCaptionChange,
   onShowCaptionChange,
+  onShowShadowChange,
   onFrameChange,
   onRotateChange,
   onUpload,
@@ -38,6 +40,7 @@ export function AboutPhotoEditorCard({
   loading: boolean;
   onCaptionChange: (caption: string) => void;
   onShowCaptionChange: (showCaption: boolean) => void;
+  onShowShadowChange?: (showShadow: boolean) => void;
   onFrameChange: (frame: AboutPhotoFrame) => void;
   onRotateChange: (rotate: number) => void;
   onUpload: (file: File) => void;
@@ -88,6 +91,21 @@ export function AboutPhotoEditorCard({
           ))}
         </select>
       </label>
+      {onShowShadowChange ? (
+        <label className="block text-sm">
+          <span className="text-muted">Shadow effect</span>
+          <select
+            value={resolveAboutPhotoShowShadow(photo.showShadow) ? "on" : "off"}
+            onChange={(event) =>
+              onShowShadowChange(event.target.value === "on")
+            }
+            className={inputClass}
+          >
+            <option value="on">On</option>
+            <option value="off">Off</option>
+          </select>
+        </label>
+      ) : null}
       {frame === "polaroid" ? (
         <label className="block text-sm">
           <span className="text-muted">Rotate (deg)</span>

@@ -502,6 +502,7 @@ export function StatsEditor({
                 id: uniqueId("reach"),
                 caption: "",
                 showCaption: true,
+                showShadow: true,
                 rotate: 0,
                 frame:
                   ABOUT_PHOTO_FRAMES[existing.length % ABOUT_PHOTO_FRAMES.length],
@@ -600,6 +601,11 @@ export function CtaEditor({
           onShowCaptionChange={(showCaption) =>
             applyAboutSite(setForm, setSite, (current) =>
               withCtaPhoto(current, { showCaption }),
+            )
+          }
+          onShowShadowChange={(showShadow) =>
+            applyAboutSite(setForm, setSite, (current) =>
+              withCtaPhoto(current, { showShadow }),
             )
           }
           onFrameChange={(frame) =>

@@ -43,10 +43,16 @@ export type AboutPhoto = {
   id: string;
   caption: string;
   showCaption: boolean;
+  /** When false, the frame-shaped drop shadow under the photo is hidden. */
+  showShadow: boolean;
   rotate: number;
   frame: AboutPhotoFrame;
   imagePath?: string;
 };
+
+export function resolveAboutPhotoShowShadow(value: unknown): boolean {
+  return value !== false;
+}
 
 /** Tile in the photography collage. `shape` drives its span in the masonry. */
 export type CollagePhotoShape = "square" | "tall" | "wide";

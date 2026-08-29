@@ -2,6 +2,7 @@ import Image from "next/image";
 import { isRemoteMediaUrl } from "@/lib/media/urls";
 import {
   resolveAboutPhotoFrame,
+  resolveAboutPhotoShowShadow,
   type AboutPhoto,
   type AboutPhotoFrame,
 } from "@/lib/site/types";
@@ -127,9 +128,11 @@ function PolaroidPhoto({
   className: string;
   captionClassName?: string;
 }) {
+  const showShadow = resolveAboutPhotoShowShadow(photo.showShadow);
+
   return (
     <figure
-      className={`max-w-full ${sizeClasses[size]} ${polaroidPadClasses[size]} rotate-[var(--photo-rotate)] rounded-sm border border-white/90 bg-paper ${POLAROID_SHADOW} ring-1 ring-lavender/20 ${className}`}
+      className={`max-w-full ${sizeClasses[size]} ${polaroidPadClasses[size]} rotate-[var(--photo-rotate)] rounded-sm border border-white/90 bg-paper ${showShadow ? POLAROID_SHADOW : ""} ring-1 ring-lavender/20 ${className}`}
       style={{ ["--photo-rotate" as string]: `${photo.rotate}deg` }}
     >
       <div
@@ -157,13 +160,17 @@ function ShapedPhoto({
   className: string;
   captionClassName?: string;
 }) {
+  const showShadow = resolveAboutPhotoShowShadow(photo.showShadow);
+
   return (
     <figure className={`max-w-full ${sizeClasses[size]} ${className}`}>
       <div className="relative">
-        <div
-          aria-hidden
-          className={`pointer-events-none absolute inset-0 ${shapedShadowLayerClasses[frame]}`}
-        />
+        {showShadow ? (
+          <div
+            aria-hidden
+            className={`pointer-events-none absolute inset-0 ${shapedShadowLayerClasses[frame]}`}
+          />
+        ) : null}
         <div
           className={`relative overflow-hidden bg-gradient-to-br ${PHOTO_FRAME_GRADIENT} ${shapedWindowClasses[frame]}`}
         >

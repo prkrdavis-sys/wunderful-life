@@ -4,6 +4,7 @@ import {
   MAX_STATS_PHOTOS,
   MAX_TESTIMONIALS,
   isAboutPhotoFrame,
+  resolveAboutPhotoShowShadow,
   type AboutPhoto,
   type AboutPhotoFrame,
   type BrandItem,
@@ -210,6 +211,7 @@ const DEFAULT_FOURTH_GALLERY_PHOTO: AboutPhoto = {
   id: "ugc-moment",
   caption: "New UGC moment — upload Emily's fourth gallery photo here",
   showCaption: true,
+  showShadow: true,
   rotate: 3,
   frame: "polaroid",
 };
@@ -292,6 +294,7 @@ const DEFAULT_CTA_PHOTO: AboutPhoto = {
   id: "cta-photo",
   caption: "",
   showCaption: true,
+  showShadow: true,
   rotate: 0,
   frame: "rounded",
 };
@@ -305,6 +308,7 @@ function normalizeCtaPhoto(
     id: text(photo?.id, DEFAULT_CTA_PHOTO.id),
     caption: typeof photo?.caption === "string" ? photo.caption : "",
     showCaption: photo?.showCaption !== false,
+    showShadow: resolveAboutPhotoShowShadow(photo?.showShadow),
     rotate:
       typeof photo?.rotate === "number" && Number.isFinite(photo.rotate)
         ? photo.rotate
@@ -325,6 +329,7 @@ function normalizeFramedPhoto(
     id: text(photo.id, idFallback),
     caption: typeof photo.caption === "string" ? photo.caption : "",
     showCaption: photo.showCaption !== false,
+    showShadow: resolveAboutPhotoShowShadow(photo.showShadow),
     rotate:
       typeof photo.rotate === "number" && Number.isFinite(photo.rotate)
         ? photo.rotate

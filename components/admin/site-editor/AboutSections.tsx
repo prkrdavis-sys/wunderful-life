@@ -104,6 +104,11 @@ export function AboutEditor({
                 withAboutPhoto(current, index, { showCaption }),
               )
             }
+            onShowShadowChange={(showShadow) =>
+              applyAboutSite(setForm, setSite, (current) =>
+                withAboutPhoto(current, index, { showShadow }),
+              )
+            }
             onFrameChange={(frame) =>
               applyAboutSite(setForm, setSite, (current) =>
                 withAboutPhoto(current, index, { frame }),
@@ -219,6 +224,11 @@ export function GalleryEditor({
                     withAboutPhoto(current, index, { showCaption }),
                   )
                 }
+                onShowShadowChange={(showShadow) =>
+                  applyAboutSite(setForm, setSite, (current) =>
+                    withAboutPhoto(current, index, { showShadow }),
+                  )
+                }
                 onFrameChange={(frame) =>
                   applyAboutSite(setForm, setSite, (current) =>
                     withAboutPhoto(current, index, { frame }),
@@ -258,6 +268,7 @@ export function GalleryEditor({
                 id: uniqueId("vibe"),
                 caption: "",
                 showCaption: true,
+                showShadow: true,
                 rotate: 0,
                 frame: "polaroid",
               },

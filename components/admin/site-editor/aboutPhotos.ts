@@ -4,7 +4,9 @@ import { MAX_STATS_PHOTOS, type AboutPhoto, type SiteContent } from "@/lib/site/
 export function withAboutPhoto(
   site: SiteContent,
   index: number,
-  patch: Partial<Pick<AboutPhoto, "caption" | "showCaption" | "rotate" | "frame">>,
+  patch: Partial<
+    Pick<AboutPhoto, "caption" | "showCaption" | "showShadow" | "rotate" | "frame">
+  >,
 ): SiteContent {
   const current = site.about.photos[index];
   if (!current) return site;
@@ -18,7 +20,9 @@ export function withAboutPhoto(
 
 export function withCtaPhoto(
   site: SiteContent,
-  patch: Partial<Pick<AboutPhoto, "caption" | "showCaption" | "rotate" | "frame">>,
+  patch: Partial<
+    Pick<AboutPhoto, "caption" | "showCaption" | "showShadow" | "rotate" | "frame">
+  >,
 ): SiteContent {
   return {
     ...site,
@@ -62,7 +66,9 @@ export function withStatsShowPhotos(
 export function withStatsPhoto(
   site: SiteContent,
   index: number,
-  patch: Partial<Pick<AboutPhoto, "caption" | "showCaption" | "rotate" | "frame">>,
+  patch: Partial<
+    Pick<AboutPhoto, "caption" | "showCaption" | "showShadow" | "rotate" | "frame">
+  >,
 ): SiteContent {
   const photos = [...(site.statsBanner.photos ?? [])];
   const current = photos[index];
