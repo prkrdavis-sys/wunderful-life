@@ -59,16 +59,16 @@ const shapedWindowClasses: Record<ShapedFrame, string> = {
   square: "aspect-square rounded-2xl",
 };
 
-const shapedShadowLayerClasses: Record<ShapedFrame, string> = {
-  arch: "rounded-t-full origin-bottom translate-y-3 scale-x-[0.94] bg-ink/30 blur-md",
-  oval: "rounded-full origin-bottom translate-y-2.5 scale-[0.96] bg-ink/28 blur-lg",
-  circle: "rounded-full origin-bottom translate-y-2.5 scale-[0.93] bg-ink/28 blur-lg",
-  rounded: "rounded-3xl translate-y-2.5 bg-ink/26 blur-md",
-  square: "rounded-2xl translate-y-2 bg-ink/28 blur-[10px]",
-};
-
 const POLAROID_SHADOW =
   "shadow-[0_10px_24px_-6px_rgba(61,55,46,0.3),0_3px_8px_-2px_rgba(61,55,46,0.12)]";
+
+const SHAPED_FRAME_SHADOW: Record<ShapedFrame, string> = {
+  arch: "shadow-[0_14px_26px_-8px_rgba(61,55,46,0.32),0_5px_12px_-3px_rgba(61,55,46,0.14)]",
+  oval: "shadow-[0_12px_26px_-6px_rgba(61,55,46,0.3),0_4px_10px_-2px_rgba(61,55,46,0.14)]",
+  circle: "shadow-[0_12px_26px_-6px_rgba(61,55,46,0.3),0_4px_10px_-2px_rgba(61,55,46,0.14)]",
+  rounded: POLAROID_SHADOW,
+  square: POLAROID_SHADOW,
+};
 
 function PhotoCaption({
   caption,
@@ -164,18 +164,12 @@ function ShapedPhoto({
 
   return (
     <figure className={`max-w-full ${sizeClasses[size]} ${className}`}>
-      <div className="relative">
-        {showShadow ? (
-          <div
-            aria-hidden
-            className={`pointer-events-none absolute inset-0 ${shapedShadowLayerClasses[frame]}`}
-          />
-        ) : null}
-        <div
-          className={`relative overflow-hidden bg-gradient-to-br ${PHOTO_FRAME_GRADIENT} ${shapedWindowClasses[frame]}`}
-        >
-          <PhotoMedia photo={photo} size={size} />
-        </div>
+      <div
+        className={`relative overflow-hidden bg-gradient-to-br ${PHOTO_FRAME_GRADIENT} ${shapedWindowClasses[frame]} ${
+          showShadow ? SHAPED_FRAME_SHADOW[frame] : ""
+        }`}
+      >
+        <PhotoMedia photo={photo} size={size} />
       </div>
       {photo.showCaption !== false ? (
         <PhotoCaption caption={photo.caption} className={captionClassName} />

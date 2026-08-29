@@ -1,18 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { motion } from "framer-motion";
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 const FINISHES = ["natural", "white", "blue", "black"] as const;
 type PhoneFinish = (typeof FINISHES)[number];
-
-const FRAME_SRC: Record<PhoneFinish, string> = {
-  natural: "/mockify/devices/iPhone 15 Pro - Natural Titanium.png",
-  white: "/mockify/devices/iPhone 15 Pro - White Titanium.png",
-  blue: "/mockify/devices/iPhone 15 Pro - Blue Titanium.png",
-  black: "/mockify/devices/iPhone 15 Pro - Black Titanium.png",
-};
 
 type PhoneFrameProps = {
   children: ReactNode;
@@ -34,21 +26,13 @@ function finishForIndex(index: number): PhoneFinish {
   return FINISHES[normalized];
 }
 
-function PhoneScreen({
-  children,
-  showIsland = false,
-}: {
-  children: ReactNode;
-  showIsland?: boolean;
-}) {
+function PhoneScreen({ children }: { children: ReactNode }) {
   return (
     <div className="phone-screen">
       <div className="relative h-full w-full">{children}</div>
-      {showIsland ? (
-        <span className="phone-island" aria-hidden>
-          <span className="phone-island-lens" />
-        </span>
-      ) : null}
+      <span className="phone-island" aria-hidden>
+        <span className="phone-island-lens" />
+      </span>
     </div>
   );
 }
@@ -66,7 +50,7 @@ function CssPhoneChassis({
       <span className="phone-btn phone-btn-vol-up" aria-hidden />
       <span className="phone-btn phone-btn-vol-down" aria-hidden />
       <span className="phone-btn phone-btn-power" aria-hidden />
-      <PhoneScreen showIsland>{children}</PhoneScreen>
+      <PhoneScreen>{children}</PhoneScreen>
     </div>
   );
 }
@@ -81,7 +65,6 @@ export function PhoneFrame({
 }: PhoneFrameProps) {
   const finish = finishForIndex(accentIndex);
   const width = widths[size];
-  const [frameFailed, setFrameFailed] = useState(false);
 
   return (
     <motion.div
@@ -92,25 +75,7 @@ export function PhoneFrame({
       data-finish={finish}
     >
       <span className="phone-float-shadow" aria-hidden />
-      {frameFailed ? (
-        <CssPhoneChassis finish={finish}>{children}</CssPhoneChassis>
-      ) : (
-        <>
-          <PhoneScreen>{children}</PhoneScreen>
-          <div className="pointer-events-none absolute inset-0 z-20">
-            {/* Keep the PNG as-is. The optimizer's AVIF turns the screen hole black in Safari. */}
-            <Image
-              src={FRAME_SRC[finish]}
-              alt=""
-              fill
-              unoptimized
-              sizes={`${width}px`}
-              className="select-none object-contain"
-              onError={() => setFrameFailed(true)}
-            />
-          </div>
-        </>
-      )}
+      <CssPhoneChassis finish={finish}>{children}</CssPhoneChassis>
     </motion.div>
   );
 }
