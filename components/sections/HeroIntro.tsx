@@ -36,7 +36,7 @@ function HeroHillSilhouettes() {
   return (
     <div
       aria-hidden
-      className="hero-intro-silhouettes absolute inset-x-0 bottom-0 z-0 h-full"
+      className="hero-intro-silhouettes absolute inset-x-0 z-0"
     >
       {HILL_LAYERS.map((layer) => (
         <div
@@ -47,7 +47,7 @@ function HeroHillSilhouettes() {
           <svg
             viewBox="0 0 1600 600"
             preserveAspectRatio="xMidYMax slice"
-            className="h-full w-full"
+            className="block h-full w-full"
           >
             <path d={layer.d} fill="currentColor" opacity={layer.opacity} />
           </svg>
@@ -136,7 +136,7 @@ export function HeroIntro() {
 
   return (
     <section
-      className={`hero-intro relative overflow-hidden bg-paper${
+      className={`hero-intro relative overflow-hidden${
         subtitle ? " hero-intro--belt-copy" : ""
       }`}
     >

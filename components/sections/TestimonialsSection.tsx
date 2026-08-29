@@ -58,10 +58,10 @@ export function TestimonialsSection() {
             >
               <div className={`testimonial-cloud-slot ${CLOUD_SLOT[index] ?? CLOUD_SLOT[0]}`}>
                 <TestimonialCloud flip={index % 2 === 1}>
-                  <blockquote className="font-serif text-xl leading-relaxed text-forest sm:text-2xl">
+                  <blockquote className="font-serif text-base leading-snug text-forest sm:text-lg">
                     &ldquo;{testimonial.quote}&rdquo;
                   </blockquote>
-                  <figcaption className="mt-5 border-t border-brown/10 pt-3">
+                  <figcaption className="mt-3 border-t border-brown/10 pt-2">
                     <p className="font-semibold text-ink">{testimonial.name}</p>
                     <p className="mt-1 text-sm text-muted">{testimonial.role}</p>
                   </figcaption>

@@ -83,8 +83,8 @@ export function PhoneMarquee({
   captionClasses,
 }: PhoneMarqueeProps) {
   const [activeSlideKey, setActiveSlideKey] = useState<string | null>(null);
-  const [isHovered, setIsHovered] = useState(false);
-  const [marqueeInView, setMarqueeInView] = useState(false);
+  // Start in view so Safari can still scroll if IntersectionObserver is late.
+  const [marqueeInView, setMarqueeInView] = useState(true);
   // Two copies already overflow a phone; the observer grows this on desktop.
   const [minSlides, setMinSlides] = useState(() => slidesNeededForWidth(640));
   const { viewMode } = useAdminView();
@@ -106,7 +106,7 @@ export function PhoneMarquee({
       AutoScroll({
         speed: AUTO_SCROLL_SPEED,
         direction: "forward",
-        playOnInit: false,
+        playOnInit: true,
         startDelay: 0,
         stopOnInteraction: false,
         stopOnMouseEnter: false,
@@ -170,13 +170,13 @@ export function PhoneMarquee({
     const autoScroll = emblaApi?.plugins()?.autoScroll;
     if (!autoScroll) return;
 
-    const shouldPause = Boolean(activeSlideKey) || isHovered || !marqueeInView;
+    const shouldPause = Boolean(activeSlideKey) || !marqueeInView;
     if (shouldPause) {
       autoScroll.stop();
     } else {
       autoScroll.play();
     }
-  }, [emblaApi, activeSlideKey, isHovered, marqueeInView]);
+  }, [emblaApi, activeSlideKey, marqueeInView]);
 
   useEffect(() => {
     syncAutoScroll();
@@ -186,13 +186,16 @@ export function PhoneMarquee({
     if (!emblaApi) return;
 
     const onPointerDown = () => emblaApi.plugins()?.autoScroll?.stop();
+    const onReInit = () => syncAutoScroll();
     const onSettle = () => syncAutoScroll();
 
     emblaApi.on("pointerDown", onPointerDown);
+    emblaApi.on("reInit", onReInit);
     emblaApi.on("settle", onSettle);
 
     return () => {
       emblaApi.off("pointerDown", onPointerDown);
+      emblaApi.off("reInit", onReInit);
       emblaApi.off("settle", onSettle);
     };
   }, [emblaApi, syncAutoScroll]);
@@ -211,8 +214,6 @@ export function PhoneMarquee({
       <div
         ref={setViewportRef}
         className="cursor-grab select-none overflow-hidden px-4 active:cursor-grabbing"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         <div className="flex gap-8 py-4">
           {marqueeSlides.map((video, index) => {

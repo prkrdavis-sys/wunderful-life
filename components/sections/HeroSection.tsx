@@ -3,7 +3,7 @@ import { HeroVideoSection } from "@/components/sections/HeroVideoSection";
 
 export function HeroSection() {
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-hidden bg-forest-deep">
       <HeroIntro />
       <HeroVideoSection />
     </div>

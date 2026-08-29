@@ -32,7 +32,7 @@ function WorkPreviewFallback() {
 export default function HomePage() {
   return (
     <>
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden bg-forest-deep">
         <HeroIntro />
         <HeroVideoSection />
       </div>

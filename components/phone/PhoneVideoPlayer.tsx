@@ -117,6 +117,7 @@ export function PhoneVideoPlayer({
                   src={video.thumbnailPath}
                   alt={video.title}
                   sizes="(max-width: 768px) 160px, 260px"
+                  videoSrc={video.videoPath}
                 />
                 <div className="absolute inset-0 bg-brown/10 transition group-hover:bg-brown/5" />
                 <div className="play-pulse absolute inset-0 flex items-center justify-center">

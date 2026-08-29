@@ -6,7 +6,9 @@ const nextConfig: NextConfig = {
     root: path.join(process.cwd()),
   },
   images: {
-    formats: ["image/avif", "image/webp"],
+    // WebP keeps PNG alpha intact in Safari. AVIF punches a black hole
+    // through transparent device frames and logos.
+    formats: ["image/webp"],
     // This site never needs 2K/4K variants; smaller srcset keeps HTML and
     // image optimization off the critical path.
     deviceSizes: [640, 750, 828, 1080, 1200, 1600],

@@ -46,7 +46,13 @@ export function SectionLink({
   };
 
   return (
-    <Link href={href} className={className} onClick={handleClick} {...rest}>
+    <Link
+      href={href}
+      className={className}
+      onClick={handleClick}
+      scroll={sectionId ? false : undefined}
+      {...rest}
+    >
       {children}
     </Link>
   );

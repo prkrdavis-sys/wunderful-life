@@ -98,10 +98,12 @@ export function PhoneFrame({
         <>
           <PhoneScreen>{children}</PhoneScreen>
           <div className="pointer-events-none absolute inset-0 z-20">
+            {/* Keep the PNG as-is. The optimizer's AVIF turns the screen hole black in Safari. */}
             <Image
               src={FRAME_SRC[finish]}
               alt=""
               fill
+              unoptimized
               sizes={`${width}px`}
               className="select-none object-contain"
               onError={() => setFrameFailed(true)}

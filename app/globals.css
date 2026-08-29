@@ -23,6 +23,9 @@
   --foreground: #2d2a26;
   --muted: #5c564e;
   --background: var(--cream);
+  /* Fallback until SiteHeaderHeightSync measures the sticky nav. */
+  --site-header-height: 5.25rem;
+  --site-scroll-gap: 1.25rem;
 }
 
 @theme inline {
@@ -58,7 +61,7 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: var(--site-header-height, 0px);
+  scroll-padding-top: calc(var(--site-header-height) + var(--site-scroll-gap));
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -230,8 +233,9 @@ body {
   height: 0 !important;
 }
 
-.scroll-section-anchor {
-  scroll-margin-top: var(--site-header-height, 0px);
+.scroll-section-anchor,
+.scroll-section-anchor :is(h1, h2, h3, h4, h5, h6) {
+  scroll-margin-top: calc(var(--site-header-height) + var(--site-scroll-gap));
 }
 
 .glass-header {
@@ -314,7 +318,9 @@ body {
   aspect-ratio: 55 / 45;
   flex-direction: column;
   justify-content: center;
-  padding: 18% 16% 16%;
+  box-sizing: border-box;
+  /* Keep copy in the fat middle of the silhouette, clear of the puffs. */
+  padding: 4.5rem 4.75rem 5rem;
   text-align: left;
 }
 
@@ -345,11 +351,18 @@ body {
 .testimonial-cloud-body {
   position: relative;
   z-index: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+.testimonial-cloud-body blockquote {
+  text-wrap: pretty;
+  overflow-wrap: break-word;
 }
 
 @media (min-width: 640px) {
   .testimonial-cloud {
-    padding: 17% 15% 15%;
+    padding: 4.75rem 5.25rem 5.25rem;
   }
 }
 
@@ -702,8 +715,8 @@ body {
 }
 
 /*
- * CSS iPhone 15 Pro chassis. Replaces @mockifydev/react PNG bezels so the
- * carousel never paints a broken <img alt="iPhone 15 Pro"> over the video.
+ * CSS iPhone 15 Pro chassis. Used when a PNG bezel fails to load so the
+ * carousel never paints a broken frame over the video.
  * Geometry matches the official frame fractions (1419×2796).
  */
 .phone-device {
@@ -1067,6 +1080,9 @@ body {
   overflow: hidden;
   color: var(--sage-deep);
   opacity: 0.94;
+  /* Tuck under the forest belt so a subpixel seam cannot flash paper. */
+  bottom: -2px;
+  height: calc(100% + 2px);
 }
 
 .hero-intro-silhouette-layer {
@@ -1387,11 +1403,14 @@ body {
   overflow: hidden;
   container-type: inline-size;
   container-name: hero-intro;
+  /* Forest, not paper: a 1px sibling gap must match the belt, not the page. */
+  background-color: var(--forest);
 }
 
 .hero-intro-visual {
   position: relative;
   overflow: visible;
+  background-color: var(--paper);
 }
 
 .hero-intro-stage {
@@ -1466,6 +1485,9 @@ body {
   height: auto;
   padding-block: 0;
   padding-inline: clamp(1rem, 4vw, 2.5rem);
+  background-color: var(--forest);
+  /* Overlap the sage visual and the video band so neither seam can hairline. */
+  margin-block: -2px;
 }
 
 .hero-intro--belt-copy .hero-intro-belt {
