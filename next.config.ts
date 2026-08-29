@@ -38,6 +38,15 @@ const nextConfig: NextConfig = {
   },
   headers: async () => [
     {
+      source: "/admin/login",
+      headers: [
+        {
+          key: "Cache-Control",
+          value: "private, no-store, must-revalidate",
+        },
+      ],
+    },
+    {
       source: "/sw.js",
       headers: [
         {

@@ -11,7 +11,7 @@ import {
   type ReactNode,
   type SetStateAction,
 } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { SiteContent } from "@/lib/site/types";
 import type { ContentStoreSource } from "@/lib/storage/runtime";
 
@@ -103,6 +103,7 @@ export function AdminViewProvider({
   initialAuthRequired,
 }: AdminViewProviderProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [viewMode, setViewModeState] = useState<ViewMode>(() =>
     initialAuthRequired && initialAuthenticated ? "admin" : "regular",
   );
@@ -156,7 +157,7 @@ export function AdminViewProvider({
     return () => {
       cancelled = true;
     };
-  }, [refreshSession]);
+  }, [pathname, refreshSession]);
 
   useEffect(() => {
     let idleId = 0;

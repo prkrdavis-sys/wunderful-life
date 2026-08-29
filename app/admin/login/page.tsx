@@ -1,11 +1,3 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import {
-  ADMIN_COOKIE,
-  canAccessAdmin,
-  isAdminAuthRequired,
-} from "@/lib/auth";
-
 export const dynamic = "force-dynamic";
 
 type AdminLoginPageProps = {
@@ -16,11 +8,6 @@ export default async function AdminLoginPage({
   searchParams,
 }: AdminLoginPageProps) {
   const { error } = await searchParams;
-  const session = (await cookies()).get(ADMIN_COOKIE)?.value;
-
-  if (!isAdminAuthRequired() || canAccessAdmin(session)) {
-    redirect("/?admin=1");
-  }
 
   return (
     <section className="flex min-h-[70vh] items-center justify-center px-4 py-16 sm:px-6">
