@@ -123,7 +123,7 @@ export function AdminUnlockButton() {
       <button
         type="button"
         onClick={handleOpen}
-        className="text-[11px] tracking-wide text-ink/35 transition hover:text-ink/55"
+        className="relative z-10 text-[11px] tracking-wide text-ink/35 transition hover:text-ink/55 before:absolute before:-inset-3 before:content-['']"
       >
         Admin
       </button>
