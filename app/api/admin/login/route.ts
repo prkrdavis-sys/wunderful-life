@@ -31,12 +31,13 @@ async function readPassword(request: Request): Promise<string> {
   return "";
 }
 
-function setAdminCookie(response: NextResponse) {
-  response.cookies.set(ADMIN_COOKIE, adminSessionCookieValue(), {
+async function setAdminCookie(response: NextResponse) {
+  response.cookies.set(ADMIN_COOKIE, await adminSessionCookieValue(), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
+    maxAge: 60 * 60 * 12,
   });
   return response;
 }
@@ -54,10 +55,10 @@ export async function POST(request: Request) {
   }
 
   if (!isJson) {
-    return setAdminCookie(
+    return await setAdminCookie(
       NextResponse.redirect(new URL("/?admin=1", request.url), 303),
     );
   }
 
-  return setAdminCookie(NextResponse.json({ success: true }));
+  return await setAdminCookie(NextResponse.json({ success: true }));
 }

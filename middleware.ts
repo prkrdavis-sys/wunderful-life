@@ -17,7 +17,7 @@ function isProtectedApiRoute(pathname: string, method: string): boolean {
   return true;
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname === "/admin/login") {
@@ -34,7 +34,10 @@ export function middleware(request: NextRequest) {
 
   const session = request.cookies.get(ADMIN_COOKIE)?.value;
 
-  if (isProtectedApiRoute(pathname, request.method) && !canAccessAdmin(session)) {
+  if (
+    isProtectedApiRoute(pathname, request.method) &&
+    !(await canAccessAdmin(session))
+  ) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 

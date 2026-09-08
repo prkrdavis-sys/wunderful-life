@@ -28,6 +28,9 @@ export default async function AdminLoginPage({
           className="mt-4 w-full min-w-0 rounded-xl border border-lavender/40 bg-cream py-2 px-3 text-base text-ink outline-none focus:border-forest/50"
           required
           autoComplete="current-password"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
         />
         {error ? (
           <p className="mt-3 rounded-lg bg-blush/15 px-3 py-2 text-xs text-forest">
