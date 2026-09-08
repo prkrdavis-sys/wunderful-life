@@ -1427,11 +1427,9 @@ body {
 
 /*
  * Hero intro stacking. Hills and title stay in .hero-intro-visual, above
- * the forest belt. The portrait is tall enough to reach the palest hill.
- * The 2:3 cutout only reserves 75% of that in flow so the bottom 25%
- * hangs behind the belt. Overflow stays visible so the near hill can
- * start behind the belt and video; the video sibling (z-20) and the page
- * wrapper hide the creator hang.
+ * the forest belt. The visual is a fixed hill canvas; the portrait is
+ * taken out of flow and sized against that canvas so the head reaches
+ * the palest (far) ridge. The figure hangs behind the belt.
  *   0  silhouettes
  *   2  creator cutout
  *   5  butterfly
@@ -1439,10 +1437,6 @@ body {
  *  30  name (bottom left)
  */
 .hero-intro {
-  --creator-visible: 0.75;
-  /* Tall enough that the head reaches the palest (far) hill / cream line. */
-  --creator-height: min(92svh, 56rem);
-  --creator-width: min(90vw, calc(var(--creator-height) * 2 / 3));
   overflow: visible;
   container-type: inline-size;
   container-name: hero-intro;
@@ -1451,54 +1445,46 @@ body {
 }
 
 .hero-intro-visual {
+  --hero-visual-height: 82svh;
   position: relative;
   overflow: visible;
   background-color: var(--paper);
+  min-height: var(--hero-visual-height);
 }
 
 .hero-intro-stage {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 2;
   overflow: visible;
+  pointer-events: none;
 }
 
 .hero-intro-composer {
-  position: relative;
-  display: grid;
-  /* Definite middle track so the 2:3 slot cannot collapse. Do not use
-   * minmax(40%, width) — the 1fr columns steal leftover space and the
-   * portrait stays stuck at 40%. */
-  grid-template-columns: minmax(0, 1fr) min(100%, var(--creator-width))
-    minmax(0, 1.25fr);
-  align-items: start;
-  column-gap: clamp(0.2rem, 1.4vw, 1.1rem);
-  width: 100%;
-  max-width: 80rem;
-  margin-inline: auto;
-  padding-inline: clamp(0.55rem, 3vw, 2.25rem);
-  padding-top: clamp(0.2rem, 1vw, 0.55rem);
-  padding-bottom: 0;
+  position: absolute;
+  inset: 0;
 }
 
 .hero-intro-creator-slot {
-  /* PNG is ~75% of the hero height. In-flow box is the visible 75% of
-   * that cutout; the bottom 25% hangs behind the forest belt. */
-  position: relative;
+  /* Start at the cream / palest-hill line; hang ~16% behind the belt. */
+  --portrait-height: calc(var(--hero-visual-height) * 1.16);
+  position: absolute;
+  left: 50%;
+  top: 10%;
   z-index: 2;
+  width: min(94vw, calc(var(--portrait-height) * 2 / 3));
+  height: auto;
+  aspect-ratio: 2 / 3;
   overflow: visible;
-  grid-column: 2;
-  width: 100%;
-  min-width: 0;
-  aspect-ratio: 2 / calc(3 * var(--creator-visible));
+  translate: -50% 0;
 }
 
 .hero-intro-creator-image {
   position: absolute;
-  inset-inline: 0;
-  top: 0;
+  inset: 0;
   z-index: 0;
   width: 100%;
-  height: calc(100% / var(--creator-visible));
+  height: 100%;
   pointer-events: none;
 }
 
@@ -1563,22 +1549,16 @@ body {
 }
 
 @container hero-intro (max-width: 40rem) {
-  .hero-intro-composer {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    row-gap: 0.75rem;
-    padding-inline: 0.5rem;
-  }
-
   .hero-intro-creator-slot {
-    grid-column: 1;
-    width: min(92%, var(--creator-width));
+    top: 12%;
+    width: min(86vw, calc(var(--portrait-height) * 2 / 3));
   }
 }
 
 @container hero-intro (max-width: 24rem) {
   .hero-intro-creator-slot {
-    width: min(94%, var(--creator-width));
+    top: 13%;
+    width: min(90vw, calc(var(--portrait-height) * 2 / 3));
   }
 
   .hero-intro-title {
@@ -1588,12 +1568,13 @@ body {
 }
 
 @media (max-height: 40rem) and (orientation: landscape) {
-  .hero-intro {
-    --creator-height: min(68svh, 22rem);
+  .hero-intro-visual {
+    --hero-visual-height: 70svh;
   }
 
-  .hero-intro-composer {
-    max-width: 42rem;
+  .hero-intro-creator-slot {
+    top: 6%;
+    width: min(36vw, calc(var(--hero-visual-height) * 1.2 * 2 / 3));
   }
 }
 
