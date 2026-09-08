@@ -86,7 +86,7 @@ function HeroLockup({
         as="span"
         variant="fadeLeft"
         delay={delay}
-        className="block font-serif text-[clamp(1.45rem,7vw,4.6rem)] text-sage-deep"
+        className="-translate-y-[3px] block font-serif text-[clamp(1.45rem,7vw,4.6rem)] text-sage-deep"
       >
         {first}
       </HeroEntrance>
@@ -181,7 +181,7 @@ export function HeroIntro() {
                   width={HERO_CREATOR_FALLBACK.width}
                   height={HERO_CREATOR_FALLBACK.height}
                   preload
-                  sizes="(max-height: 40rem) and (orientation: landscape) 22rem, (min-width: 1024px) 32rem, 92vw"
+                  sizes="(max-height: 40rem) and (orientation: landscape) 22rem, (min-width: 1024px) 40rem, 92vw"
                   unoptimized={isRemoteMediaUrl(creatorImage)}
                   className="h-full w-full object-cover object-top"
                 />

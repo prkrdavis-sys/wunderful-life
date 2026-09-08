@@ -1427,10 +1427,10 @@ body {
 
 /*
  * Hero intro stacking. Hills and title stay in .hero-intro-visual, above
- * the forest belt. The portrait is sized to ~75% of the hero height. The
- * 2:3 cutout only reserves 75% of that in flow so the bottom 25% hangs
- * behind the belt. Overflow stays visible so the near hill can start
- * behind the belt and video; the video sibling (z-20) and the page
+ * the forest belt. The portrait is tall enough to reach the palest hill.
+ * The 2:3 cutout only reserves 75% of that in flow so the bottom 25%
+ * hangs behind the belt. Overflow stays visible so the near hill can
+ * start behind the belt and video; the video sibling (z-20) and the page
  * wrapper hide the creator hang.
  *   0  silhouettes
  *   2  creator cutout
@@ -1440,8 +1440,9 @@ body {
  */
 .hero-intro {
   --creator-visible: 0.75;
-  --creator-height: min(75svh, 48rem);
-  --creator-width: calc(var(--creator-height) * 2 / 3);
+  /* Tall enough that the head reaches the palest (far) hill / cream line. */
+  --creator-height: min(92svh, 56rem);
+  --creator-width: min(90vw, calc(var(--creator-height) * 2 / 3));
   overflow: visible;
   container-type: inline-size;
   container-name: hero-intro;
@@ -1464,18 +1465,18 @@ body {
 .hero-intro-composer {
   position: relative;
   display: grid;
-  /* Definite max track (svh/rem), not `auto`, so width: 100% can resolve
-   * and the 2:3 slot keeps height. An auto column + percentage width
-   * collapses the portrait to 0. */
-  grid-template-columns: minmax(0, 1fr) minmax(40%, var(--creator-width))
+  /* Definite middle track so the 2:3 slot cannot collapse. Do not use
+   * minmax(40%, width) — the 1fr columns steal leftover space and the
+   * portrait stays stuck at 40%. */
+  grid-template-columns: minmax(0, 1fr) min(100%, var(--creator-width))
     minmax(0, 1.25fr);
   align-items: start;
   column-gap: clamp(0.2rem, 1.4vw, 1.1rem);
   width: 100%;
-  max-width: 72rem;
+  max-width: 80rem;
   margin-inline: auto;
   padding-inline: clamp(0.55rem, 3vw, 2.25rem);
-  padding-top: clamp(1.1rem, 3.2vw, 2.25rem);
+  padding-top: clamp(0.2rem, 1vw, 0.55rem);
   padding-bottom: 0;
 }
 
