@@ -1439,6 +1439,9 @@ body {
  *  30  name (bottom left)
  */
 .hero-intro {
+  --creator-visible: 0.75;
+  --creator-height: min(75svh, 48rem);
+  --creator-width: calc(var(--creator-height) * 2 / 3);
   overflow: visible;
   container-type: inline-size;
   container-name: hero-intro;
@@ -1461,9 +1464,12 @@ body {
 .hero-intro-composer {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.25fr);
+  /* Definite max track (svh/rem), not `auto`, so width: 100% can resolve
+   * and the 2:3 slot keeps height. An auto column + percentage width
+   * collapses the portrait to 0. */
+  grid-template-columns: minmax(0, 1fr) minmax(40%, var(--creator-width))
+    minmax(0, 1.25fr);
   align-items: start;
-  justify-items: center;
   column-gap: clamp(0.2rem, 1.4vw, 1.1rem);
   width: 100%;
   max-width: 72rem;
@@ -1476,13 +1482,11 @@ body {
 .hero-intro-creator-slot {
   /* PNG is ~75% of the hero height. In-flow box is the visible 75% of
    * that cutout; the bottom 25% hangs behind the forest belt. */
-  --creator-visible: 0.75;
-  --creator-height: min(75svh, 48rem);
   position: relative;
   z-index: 2;
   overflow: visible;
   grid-column: 2;
-  width: min(100%, calc(var(--creator-height) * 2 / 3));
+  width: 100%;
   min-width: 0;
   aspect-ratio: 2 / calc(3 * var(--creator-visible));
 }
@@ -1567,13 +1571,13 @@ body {
 
   .hero-intro-creator-slot {
     grid-column: 1;
-    width: min(92%, calc(var(--creator-height) * 2 / 3));
+    width: min(92%, var(--creator-width));
   }
 }
 
 @container hero-intro (max-width: 24rem) {
   .hero-intro-creator-slot {
-    width: min(94%, calc(var(--creator-height) * 2 / 3));
+    width: min(94%, var(--creator-width));
   }
 
   .hero-intro-title {
@@ -1583,12 +1587,12 @@ body {
 }
 
 @media (max-height: 40rem) and (orientation: landscape) {
-  .hero-intro-composer {
-    max-width: 42rem;
+  .hero-intro {
+    --creator-height: min(68svh, 22rem);
   }
 
-  .hero-intro-creator-slot {
-    --creator-height: min(68svh, 22rem);
+  .hero-intro-composer {
+    max-width: 42rem;
   }
 }
 
