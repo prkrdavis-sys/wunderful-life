@@ -86,7 +86,7 @@ function HeroLockup({
         as="span"
         variant="fadeLeft"
         delay={delay}
-        className="-translate-y-[3px] block font-serif text-[clamp(1.45rem,7vw,4.6rem)] text-sage-deep"
+        className="-translate-y-[7px] block font-serif text-[clamp(1.45rem,7vw,4.6rem)] text-sage-deep"
       >
         {first}
       </HeroEntrance>
@@ -155,7 +155,7 @@ export function HeroIntro() {
             delay={0.06}
             className="relative z-20 w-full min-w-0"
           >
-            <p className="flex w-full min-w-0 flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3 pt-4 font-label text-[clamp(0.7rem,2.4vw,1.45rem)] font-medium tracking-[0.06em] text-brown sm:gap-x-4 sm:px-4 sm:pt-5 sm:tracking-[0.16em]">
+            <p className="hero-intro-services flex w-full min-w-0 flex-wrap items-center justify-center gap-x-2 gap-y-1 px-3 font-label text-[clamp(0.7rem,2.4vw,1.45rem)] font-medium tracking-[0.06em] text-brown sm:gap-x-4 sm:px-4 sm:tracking-[0.16em]">
               {services.map((service, index) => (
                 <span key={`${service}-${index}`} className="contents">
                   {index > 0 ? (
@@ -181,9 +181,9 @@ export function HeroIntro() {
                   width={HERO_CREATOR_FALLBACK.width}
                   height={HERO_CREATOR_FALLBACK.height}
                   preload
-                  sizes="(max-height: 40rem) and (orientation: landscape) 36vw, (min-width: 1024px) 40rem, 70vh"
+                  sizes="(max-height: 40rem) and (orientation: landscape) 40vw, (min-width: 1024px) 50rem, 92vw"
                   unoptimized={isRemoteMediaUrl(creatorImage)}
-                  className="h-full w-full object-contain object-bottom"
+                  className="h-full w-full object-cover object-top"
                 />
               </div>
             </div>
