@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
     // image optimization off the critical path.
     deviceSizes: [640, 750, 828, 1080, 1200, 1600],
     imageSizes: [32, 48, 64, 96, 128, 256, 384],
+    // Hold optimized variants for 31 days. Each uploaded still is then pulled
+    // from Supabase roughly once a month instead of on every page view, which
+    // is what exhausted the free egress quota.
+    minimumCacheTTL: 2_678_400,
     remotePatterns: [
       {
         protocol: "https",

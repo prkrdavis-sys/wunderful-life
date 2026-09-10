@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { isRemoteMediaUrl } from "@/lib/media/urls";
+import { shouldBypassImageOptimizer } from "@/lib/media/urls";
 import type { CollagePhoto, CollagePhotoShape } from "@/lib/site/types";
 
 /** Row/column spans that give the collage its irregular, scrapbook rhythm. */
@@ -30,7 +30,7 @@ export function CollageTileMedia({
         fill
         sizes="(max-width: 640px) 33vw, 25vw"
         decoding="async"
-        unoptimized={isRemoteMediaUrl(photo.imagePath)}
+        unoptimized={shouldBypassImageOptimizer(photo.imagePath)}
         className="object-cover"
       />
     );

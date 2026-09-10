@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { isRemoteMediaUrl } from "@/lib/media/urls";
+import { shouldBypassImageOptimizer } from "@/lib/media/urls";
 import {
   resolveAboutPhotoFrame,
   resolveAboutPhotoShowShadow,
@@ -101,7 +101,7 @@ function PhotoMedia({
         fill
         sizes={imageSizes[size]}
         decoding="async"
-        unoptimized={isRemoteMediaUrl(photo.imagePath)}
+        unoptimized={shouldBypassImageOptimizer(photo.imagePath)}
         className="object-cover object-center"
       />
     );

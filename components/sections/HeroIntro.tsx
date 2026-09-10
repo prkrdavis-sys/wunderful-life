@@ -6,7 +6,7 @@ import { useSiteContent } from "@/components/admin/AdminViewProvider";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { HeroEntrance } from "@/components/ui/motion";
 import { SectionSurface } from "@/components/ui/SectionSurface";
-import { isRemoteMediaUrl } from "@/lib/media/urls";
+import { shouldBypassImageOptimizer } from "@/lib/media/urls";
 
 const HERO_CREATOR_FALLBACK = {
   src: "/hero/creator-placeholder.webp",
@@ -182,7 +182,7 @@ export function HeroIntro() {
                   height={HERO_CREATOR_FALLBACK.height}
                   preload
                   sizes="(max-height: 40rem) and (orientation: landscape) 40vw, (min-width: 1024px) 50rem, 92vw"
-                  unoptimized={isRemoteMediaUrl(creatorImage)}
+                  unoptimized={shouldBypassImageOptimizer(creatorImage)}
                   className="h-full w-full object-cover object-top"
                 />
               </div>

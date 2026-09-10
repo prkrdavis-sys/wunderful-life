@@ -15,6 +15,11 @@ const WEB_SAFE_PHOTO_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".gif"] as 
 /** Max edge length when re-encoding iPhone / large camera photos for the web. */
 const MAX_PHOTO_EDGE = 1920;
 const COMPRESS_PHOTO_OVER_BYTES = 300_000;
+/**
+ * Hard ceiling for any stored still. PNGs used to skip compression entirely,
+ * which is how a 3.9MB hero cutout reached production and ate free egress.
+ */
+const ALWAYS_COMPRESS_OVER_BYTES = 600_000;
 
 type PhotoFolder =
   | "about-photos"
@@ -105,11 +110,12 @@ export function isWebSafePhoto(file: Pick<File, "name" | "type">): boolean {
   );
 }
 
-async function canvasToJpegFile(
+async function canvasToEncodedFile(
   source: CanvasImageSource,
   width: number,
   height: number,
-  filename: string,
+  id: string,
+  mimeType: "image/jpeg" | "image/webp",
   quality = 0.8,
 ): Promise<File> {
   const canvas = document.createElement("canvas");
@@ -127,12 +133,17 @@ async function canvasToJpegFile(
         if (result) resolve(result);
         else reject(new Error("Could not convert this photo for upload."));
       },
-      "image/jpeg",
+      mimeType,
       quality,
     );
   });
 
-  return new File([blob], filename, { type: "image/jpeg" });
+  // Safari falls back to PNG when it cannot encode the requested type, which
+  // would be larger than the original. Trust the blob's own type.
+  const encodedType = blob.type || mimeType;
+  return new File([blob], `${id}${extensionForMime(encodedType)}`, {
+    type: encodedType,
+  });
 }
 
 function scaledSize(
@@ -166,12 +177,22 @@ export async function preparePhotoForUpload(
   const id = `photo-${crypto.randomUUID()}`;
   const maxEdge = options?.maxEdge ?? MAX_PHOTO_EDGE;
   const quality = options?.quality ?? 0.8;
-  const preferJpeg = options?.preferJpeg ?? !file.type.toLowerCase().includes("png");
+  const mime = file.type.toLowerCase();
+  const preferJpeg = options?.preferJpeg ?? !mime.includes("png");
+  // Re-encoding a GIF through canvas would flatten an animation, so leave it.
+  const isGif = mime === "image/gif" || extensionFromFilename(file.name) === ".gif";
   const needsEncode =
     options?.forceEncode ||
     isHeicLike(file) ||
     !isWebSafePhoto(file) ||
-    (preferJpeg && file.size > COMPRESS_PHOTO_OVER_BYTES);
+    (preferJpeg && file.size > COMPRESS_PHOTO_OVER_BYTES) ||
+    (!isGif && file.size > ALWAYS_COMPRESS_OVER_BYTES);
+  // PNG cutouts (the hero portrait) and logos carry transparency that JPEG
+  // would fill with black, so those compress to WebP instead.
+  const targetMime =
+    preferJpeg && !mime.includes("png") && !mime.includes("webp")
+      ? ("image/jpeg" as const)
+      : ("image/webp" as const);
 
   if (!needsEncode) {
     const name = asciiPhotoName(file, id);
@@ -186,7 +207,14 @@ export async function preparePhotoForUpload(
     const bitmap = await createImageBitmap(file);
     const { width, height } = scaledSize(bitmap.width, bitmap.height, maxEdge);
     try {
-      return await canvasToJpegFile(bitmap, width, height, `${id}.jpg`, quality);
+      return await canvasToEncodedFile(
+        bitmap,
+        width,
+        height,
+        id,
+        targetMime,
+        quality,
+      );
     } finally {
       bitmap.close();
     }
@@ -208,7 +236,7 @@ export async function preparePhotoForUpload(
       element.src = objectUrl;
     });
     const { width, height } = scaledSize(image.naturalWidth, image.naturalHeight, maxEdge);
-    return await canvasToJpegFile(image, width, height, `${id}.jpg`, quality);
+    return await canvasToEncodedFile(image, width, height, id, targetMime, quality);
   } finally {
     URL.revokeObjectURL(objectUrl);
   }

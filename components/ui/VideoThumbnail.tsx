@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { isRemoteMediaUrl } from "@/lib/media/urls";
+import { shouldBypassImageOptimizer } from "@/lib/media/urls";
 
 type VideoThumbnailProps = {
   src: string;
@@ -97,7 +97,7 @@ export function VideoThumbnail({
       className={className}
       sizes={sizes}
       decoding="async"
-      unoptimized={isRemoteMediaUrl(src) || src.endsWith(".svg")}
+      unoptimized={shouldBypassImageOptimizer(src)}
       onError={() => setFailed(true)}
     />
   );

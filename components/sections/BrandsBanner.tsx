@@ -5,7 +5,7 @@ import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { useAdminView } from "@/components/admin/AdminViewProvider";
 import { SectionButterfly } from "@/components/ui/ButterflyFlight";
 import { SectionReveal } from "@/components/ui/motion";
-import { isRemoteMediaUrl } from "@/lib/media/urls";
+import { shouldBypassImageOptimizer } from "@/lib/media/urls";
 import { MAX_BRANDS, type BrandItem } from "@/lib/site/types";
 
 function BrandMark({ brand }: { brand: BrandItem }) {
@@ -18,7 +18,7 @@ function BrandMark({ brand }: { brand: BrandItem }) {
         height={48}
         sizes="(max-width: 1023px) 20vw, 8rem"
         decoding="async"
-        unoptimized={isRemoteMediaUrl(brand.logoPath)}
+        unoptimized={shouldBypassImageOptimizer(brand.logoPath)}
         className="max-h-full max-w-full object-contain opacity-90"
       />
     );
