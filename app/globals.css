@@ -1427,9 +1427,9 @@ body {
 
 /*
  * Hero intro stacking. Hills and title stay in .hero-intro-visual, above
- * the forest belt. The visual is a fixed hill canvas; the portrait is
- * taken out of flow and sized against that canvas so the head reaches
- * the palest (far) ridge. The figure hangs behind the belt.
+ * the forest belt. The visual is a fixed hill canvas. The portrait is
+ * 75% of that canvas, then hangs behind the forest belt so the figure
+ * is tucked into the banner instead of floating above it.
  *   0  silhouettes
  *   2  creator cutout
  *   5  butterfly
@@ -1466,15 +1466,17 @@ body {
 }
 
 .hero-intro-creator-slot {
-  /* Start at the cream / palest-hill line; hang ~16% behind the belt. */
-  --portrait-height: calc(var(--hero-visual-height) * 1.16);
+  /* Height-first so a phone width cap cannot shrink the figure off the belt. */
+  --portrait-visible: calc(var(--hero-visual-height) * 0.75);
+  --portrait-tuck: clamp(2.75rem, 10svh, 5.5rem);
+  --portrait-height: calc(var(--portrait-visible) + var(--portrait-tuck));
   position: absolute;
   left: 50%;
-  top: 10%;
+  top: auto;
+  bottom: calc(var(--portrait-tuck) * -1);
   z-index: 2;
-  width: min(94vw, calc(var(--portrait-height) * 2 / 3));
-  height: auto;
-  aspect-ratio: 2 / 3;
+  width: calc(var(--portrait-height) * 2 / 3);
+  height: var(--portrait-height);
   overflow: visible;
   translate: -50% 0;
 }
@@ -1550,17 +1552,11 @@ body {
 
 @container hero-intro (max-width: 40rem) {
   .hero-intro-creator-slot {
-    top: 12%;
-    width: min(86vw, calc(var(--portrait-height) * 2 / 3));
+    --portrait-tuck: clamp(3.25rem, 12svh, 6rem);
   }
 }
 
 @container hero-intro (max-width: 24rem) {
-  .hero-intro-creator-slot {
-    top: 13%;
-    width: min(90vw, calc(var(--portrait-height) * 2 / 3));
-  }
-
   .hero-intro-title {
     max-width: 96%;
     padding-inline: 0.7rem;
@@ -1573,8 +1569,8 @@ body {
   }
 
   .hero-intro-creator-slot {
-    top: 6%;
-    width: min(36vw, calc(var(--hero-visual-height) * 1.2 * 2 / 3));
+    --portrait-visible: calc(var(--hero-visual-height) * 0.62);
+    --portrait-tuck: 1.5rem;
   }
 }
 
