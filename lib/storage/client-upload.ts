@@ -1,11 +1,8 @@
 import { readResponseJson } from "@/lib/http/json";
+import type { SignedMediaUpload } from "./media-host";
 import type { MediaUploadDir } from "./media-upload";
 
-type SignedUploadResponse = {
-  uploadUrl?: string;
-  publicUrl?: string;
-  error?: string;
-};
+type SignedUploadResponse = Partial<SignedMediaUpload> & { error?: string };
 
 export async function uploadMediaToStorage(
   file: File,
@@ -16,7 +13,7 @@ export async function uploadMediaToStorage(
   const response = await fetch(handleUploadUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ dir, filename: file.name }),
+    body: JSON.stringify({ dir, filename: file.name, contentType: file.type }),
   });
 
   const payload = await readResponseJson<SignedUploadResponse>(response);
@@ -24,22 +21,33 @@ export async function uploadMediaToStorage(
     throw new Error(payload.error ?? "Could not start upload.");
   }
 
-  await putToSignedUrl(payload.uploadUrl, file, onProgress);
+  // R2 presigned PUTs take the raw bytes; Supabase expects a multipart form.
+  const body: XMLHttpRequestBodyInit =
+    payload.mode === "raw-put" ? file : supabaseFormBody(file);
+
+  await putToSignedUrl(payload.uploadUrl, body, payload.headers, onProgress);
   return payload.publicUrl;
+}
+
+function supabaseFormBody(file: File): FormData {
+  const body = new FormData();
+  body.append("cacheControl", "31536000");
+  body.append("", file);
+  return body;
 }
 
 function putToSignedUrl(
   uploadUrl: string,
-  file: File,
+  body: XMLHttpRequestBodyInit,
+  headers?: Record<string, string>,
   onProgress?: (percentage: number) => void,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    const body = new FormData();
-    body.append("cacheControl", "31536000");
-    body.append("", file);
-
     const xhr = new XMLHttpRequest();
     xhr.open("PUT", uploadUrl);
+    for (const [name, value] of Object.entries(headers ?? {})) {
+      xhr.setRequestHeader(name, value);
+    }
     xhr.upload.onprogress = (event) => {
       if (!onProgress || !event.lengthComputable || event.total <= 0) return;
       onProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)));

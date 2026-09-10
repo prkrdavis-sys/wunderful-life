@@ -26,11 +26,7 @@ import {
   type StoredPortfolioLibrary,
 } from "./database";
 import { isHostedProduction } from "./runtime";
-import {
-  deletePublicMedia,
-  hasSupabaseMediaConfig,
-  uploadPublicMedia,
-} from "./supabase-media";
+import { deleteMedia, hasMediaConfig, uploadMedia } from "./media-host";
 import { StorageError } from "./types";
 
 const DATA_PATH = path.join(process.cwd(), "data", "videos.json");
@@ -54,7 +50,7 @@ function normalizeVideos(videos: PortfolioVideo[]): PortfolioVideo[] {
 }
 
 async function ensureUploadDirs() {
-  if (hasSupabaseMediaConfig()) return;
+  if (hasMediaConfig()) return;
   await fs.mkdir(VIDEO_DIR, { recursive: true });
   await fs.mkdir(THUMB_DIR, { recursive: true });
 }
@@ -172,8 +168,8 @@ async function saveUploadFile(
     path.extname(file.name).toLowerCase() || (dir === "videos" ? ".mp4" : ".jpg");
   const filename = `${randomUUID()}${ext}`;
 
-  if (hasSupabaseMediaConfig()) {
-    return uploadPublicMedia(
+  if (hasMediaConfig()) {
+    return uploadMedia(
       `${dir}/${filename}`,
       file,
       dir === "videos"
@@ -191,7 +187,7 @@ async function saveUploadFile(
 async function deleteStoredFile(filePath: string) {
   if (filePath.startsWith("https://")) {
     try {
-      await deletePublicMedia(filePath);
+      await deleteMedia(filePath);
     } catch {
       // A stale file should not prevent its metadata from being replaced.
     }
@@ -208,9 +204,9 @@ async function deleteStoredFile(filePath: string) {
 }
 
 function assertCanPersistUploads() {
-  if (process.env.VERCEL && !hasSupabaseMediaConfig()) {
+  if (process.env.VERCEL && !hasMediaConfig()) {
     throw new StorageError(
-      "Video uploads require Supabase media storage. Add the Supabase credentials and redeploy.",
+      "Video uploads require media storage. Add the Cloudflare R2 or Supabase credentials and redeploy.",
       503,
     );
   }
@@ -230,7 +226,7 @@ function isRemoteAssetUrl(value: string | null | undefined): value is string {
 }
 
 async function rollbackClientUploads(files?: UploadFiles) {
-  if (!files || !hasSupabaseMediaConfig()) return;
+  if (!files || !hasMediaConfig()) return;
 
   const urls = [files.videoUrl, files.thumbnailUrl].filter(isRemoteAssetUrl);
   await Promise.all(urls.map((url) => deleteStoredFile(url)));

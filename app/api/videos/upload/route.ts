@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { isMediaUploadDir } from "@/lib/storage/media-upload";
 import {
-  createSignedPublicMediaUpload,
-  hasSupabaseMediaConfig,
-} from "@/lib/storage/supabase-media";
+  createSignedMediaUpload,
+  hasMediaConfig,
+} from "@/lib/storage/media-host";
+import { isMediaUploadDir } from "@/lib/storage/media-upload";
 import { StorageError } from "@/lib/storage";
 
 export async function POST(request: Request) {
   try {
-    if (!hasSupabaseMediaConfig()) {
+    if (!hasMediaConfig()) {
       return NextResponse.json(
         { error: "Media storage is not configured." },
         { status: 503 },
@@ -18,9 +18,12 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       dir?: unknown;
       filename?: unknown;
+      contentType?: unknown;
     };
     const dir = typeof body.dir === "string" ? body.dir : "";
     const filename = typeof body.filename === "string" ? body.filename.trim() : "";
+    const contentType =
+      typeof body.contentType === "string" ? body.contentType.trim() : undefined;
 
     if (!isMediaUploadDir(dir) || !filename) {
       return NextResponse.json(
@@ -29,7 +32,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const upload = await createSignedPublicMediaUpload(dir, filename);
+    const upload = await createSignedMediaUpload(dir, filename, contentType);
     return NextResponse.json(upload);
   } catch (error) {
     if (error instanceof StorageError) {

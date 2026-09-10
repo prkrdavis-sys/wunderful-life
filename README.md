@@ -36,8 +36,14 @@ edits write to the same database as production.
 4. **Restore an earlier save** — rolls back to a previous version. The current
    save stays in history.
 
-Media uploads go straight to Supabase Storage. Clips are converted to a web
-MP4 in the browser. QuickTime originals are rejected if conversion fails.
+Media uploads go to Cloudflare R2 when it is configured, otherwise Supabase
+Storage. Clips are converted to a web MP4 in the browser. QuickTime originals
+are rejected if conversion fails. Uploaded stills over 600KB are re-compressed
+before upload, to WebP when the source may carry transparency.
+
+Photos and thumbnails are served through `/_next/image`, which caches optimized
+WebP variants for 31 days. Serving the originals directly is what exhausted the
+free Supabase egress quota.
 
 ## Environment
 
@@ -46,8 +52,41 @@ MP4 in the browser. QuickTime originals are rejected if conversion fails.
 | `SUPABASE_URL` | Vercel Production (server only) | Project URL, e.g. `https://xxxx.supabase.co` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Vercel Production (server only) | Service role key. Never prefix with `NEXT_PUBLIC_` |
 | `ADMIN_PASSWORD` | Vercel Production | Protects admin writes |
+| `R2_ACCOUNT_ID` | Vercel Production (server only) | Cloudflare account ID |
+| `R2_ACCESS_KEY_ID` | Vercel Production (server only) | R2 API token access key |
+| `R2_SECRET_ACCESS_KEY` | Vercel Production (server only) | R2 API token secret |
+| `R2_BUCKET` | Vercel Production (server only) | Bucket name, e.g. `wunderful-media` |
+| `R2_PUBLIC_BASE_URL` | Vercel Production | Public bucket origin, e.g. `https://pub-xxxx.r2.dev` |
+
+All five R2 variables must be present together; any missing one falls back to
+Supabase Storage. R2 charges nothing for egress, which is why media lives there.
 
 Do **not** add `BLOB_READ_WRITE_TOKEN`. Media must not go back to Vercel Blob.
+
+## Backup and media migration
+
+Before any media change, snapshot everything. Both scripts are read-only
+against production:
+
+```bash
+# 1. Export the content tables + revision history (via the Supabase MCP dump)
+node scripts/extract-db-dump.mjs <mcp-dump.txt> backups/<date>/database.json
+# 2. Download and byte-verify every file in the site-media bucket
+node scripts/backup-media.mjs backups/<date>
+```
+
+To move media to R2 (copies only — Supabase keeps every original, so revision
+history stays restorable):
+
+```bash
+node scripts/migrate-media-to-r2.mjs backups/<date>           # dry run
+node scripts/migrate-media-to-r2.mjs backups/<date> --apply   # copy + verify
+```
+
+The script refuses to run on an incomplete backup, verifies each upload's byte
+length, checks every file is publicly reachable from R2, then writes
+`r2-repoint.sql` and `r2-rollback.sql` into the backup folder. Run the repoint
+SQL to switch the live site over; run the rollback SQL to undo it.
 
 ## Deploy
 
@@ -55,9 +94,7 @@ Production needs the two Supabase variables above. After deploy, confirm:
 
 - Admin banner says **Live from your saved site**
 - Hero and portfolio videos play in Chrome (MP4)
-- Brand logos that still point at `blob.vercel-storage.com` are re-uploaded
-  in Admin (two leftover Blob logos cannot be copied while Blob transfer is
-  maxed)
+- Photos load as WebP from `/_next/image`, not as multi-megabyte originals
 
 One-time media repair (transcode leftover `.mov` files) if needed:
 

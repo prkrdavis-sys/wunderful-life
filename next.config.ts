@@ -1,6 +1,20 @@
 import type { NextConfig } from "next";
 import path from "node:path";
 
+/**
+ * R2 serves media from either the bucket's `pub-*.r2.dev` domain or a custom
+ * domain, so the allowlist is derived from the configured public base URL.
+ */
+function r2RemotePattern(): { protocol: "https"; hostname: string }[] {
+  const base = process.env.R2_PUBLIC_BASE_URL?.trim();
+  if (!base) return [];
+  try {
+    return [{ protocol: "https", hostname: new URL(base).hostname }];
+  } catch {
+    return [];
+  }
+}
+
 const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(process.cwd()),
@@ -30,8 +44,9 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "*.public.blob.vercel-storage.com",
+        hostname: "*.r2.dev",
       },
+      ...r2RemotePattern(),
     ],
   },
   experimental: {

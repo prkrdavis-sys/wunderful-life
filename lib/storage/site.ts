@@ -18,11 +18,7 @@ import {
   type StoredSiteContent,
 } from "./database";
 import { isHostedProduction } from "./runtime";
-import {
-  deletePublicMedia,
-  hasSupabaseMediaConfig,
-  uploadPublicMedia,
-} from "./supabase-media";
+import { deleteMedia, hasMediaConfig, uploadMedia } from "./media-host";
 import { StorageError } from "./types";
 
 const SITE_PATH = path.join(process.cwd(), "data", "site.json");
@@ -165,7 +161,7 @@ export async function updateSiteContent(
 async function deleteStoredPhoto(imagePath: string) {
   if (imagePath.startsWith("https://")) {
     try {
-      await deletePublicMedia(imagePath);
+      await deleteMedia(imagePath);
     } catch {
       // A stale file should not prevent its metadata from being replaced.
     }
@@ -200,8 +196,8 @@ async function savePublicFile(
     contentType?: string;
   },
 ): Promise<string> {
-  if (hasSupabaseMediaConfig()) {
-    return uploadPublicMedia(
+  if (hasMediaConfig()) {
+    return uploadMedia(
       options.remotePath,
       file,
       options.contentType,

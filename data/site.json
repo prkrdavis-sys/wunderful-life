@@ -77,7 +77,7 @@
         "id": "brand-1",
         "url": "www.fryingpan.com",
         "name": "Nike",
-        "logoPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/brand-logos/brand-1-e35179aa-5979-4d74-925b-036127e4158f.png"
+        "logoPath": "https://ltrldffckmplvmyonhwc.supabase.co/storage/v1/object/public/site-media/brand-logos/e0964ecc-9f21-45f4-ac21-b80c89d15e85.png"
       },
       {
         "id": "brand-2",
@@ -86,8 +86,7 @@
       },
       {
         "id": "brand-3",
-        "name": "Brand 3",
-        "logoPath": "https://fvmkqbcbm1headql.public.blob.vercel-storage.com/brand-logos/brand-3-e0f29c2b-8694-4944-b618-567069a8794e.png"
+        "name": "Brand 3"
       },
       {
         "id": "brand-4",

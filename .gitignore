@@ -51,3 +51,4 @@ next-env.d.ts
 # supabase CLI
 /supabase/.temp/
 backups/
+/scripts/.env.r2.local

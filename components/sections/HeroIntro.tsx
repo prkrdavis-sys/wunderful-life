@@ -46,7 +46,7 @@ function HeroHillSilhouettes() {
         >
           <svg
             viewBox="0 0 1600 600"
-            preserveAspectRatio="xMidYMax slice"
+            preserveAspectRatio="none"
             className="block h-full w-full"
           >
             <path d={layer.d} fill="currentColor" opacity={layer.opacity} />
@@ -136,7 +136,7 @@ export function HeroIntro() {
 
   return (
     <section
-      className={`hero-intro relative overflow-hidden${
+      className={`hero-intro relative${
         subtitle ? " hero-intro--belt-copy" : ""
       }`}
     >

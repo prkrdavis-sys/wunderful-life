@@ -1103,10 +1103,10 @@ body {
   overflow: visible;
   color: var(--sage-deep);
   opacity: 0.94;
-  /* Compact stack, bottom-aligned, tucked under the forest belt. */
+  /* Full path maps to the canvas so ridge spacing scales, nothing is cropped. */
   top: auto;
   bottom: -2px;
-  height: calc(var(--hero-hill-stack, 76%) + 2px);
+  height: calc(100% + 2px);
 }
 
 .hero-intro-silhouette-layer {
@@ -1428,9 +1428,10 @@ body {
 
 /*
  * Hero intro stacking. Hills and title stay in .hero-intro-visual, above
- * the forest belt. The hill canvas is compact; the portrait keeps a
- * taller scale so the figure does not shrink with the hills. It starts
- * just under the three service labels and hangs behind the forest belt.
+ * the forest belt. The hill canvas is a uniform scale of the original
+ * 82svh field so ridge spacing shrinks and no ridge is cropped. The
+ * portrait keeps that original size, sits under the service labels, and
+ * hangs behind the forest belt with the same tuck.
  *   0  silhouettes
  *   2  creator cutout
  *   5  butterfly
@@ -1438,15 +1439,17 @@ body {
  *  30  name (bottom left)
  */
 .hero-intro {
+  --hero-canvas: 82svh;
+  --hero-scale: 0.73;
   --hero-services-top: clamp(1rem, 2.2svh, 1.35rem);
   --hero-services-line: clamp(1.05rem, 2.8vw, 1.7rem);
   --hero-portrait-gap: 0.4rem;
   --portrait-top: calc(
     var(--hero-services-top) + var(--hero-services-line) + var(--hero-portrait-gap)
   );
+  /* Same overlap vs the figure as the original 82svh layout. */
   --portrait-tuck: clamp(2.5rem, 8svh, 4.75rem);
-  /* Figure size stays at the pre-compact canvas so the PNG does not shrink. */
-  --portrait-scale-height: 82svh;
+  --portrait-scale-height: var(--hero-canvas);
   overflow: visible;
   container-type: inline-size;
   container-name: hero-intro;
@@ -1455,8 +1458,7 @@ body {
 }
 
 .hero-intro-visual {
-  --hero-visual-height: 58svh;
-  --hero-hill-stack: 76%;
+  --hero-visual-height: calc(var(--hero-canvas) * var(--hero-scale));
   position: relative;
   overflow: visible;
   background-color: var(--paper);
@@ -1582,16 +1584,11 @@ body {
 
 @media (max-height: 40rem) and (orientation: landscape) {
   .hero-intro {
+    --hero-canvas: 70svh;
     --hero-services-top: 0.7rem;
     --hero-services-line: 1rem;
     --hero-portrait-gap: 0.25rem;
     --portrait-tuck: 1.35rem;
-    --portrait-scale-height: 70svh;
-  }
-
-  .hero-intro-visual {
-    --hero-visual-height: 48svh;
-    --hero-hill-stack: 72%;
   }
 }
 

@@ -1,7 +1,11 @@
 import { randomUUID } from "crypto";
 import { extensionFromFilename } from "@/lib/files";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { isMediaUploadDir, type MediaUploadDir } from "./media-upload";
+import {
+  defaultExtensionForDir,
+  isMediaUploadDir,
+  type MediaUploadDir,
+} from "./media-upload";
 import { StorageError } from "./types";
 
 const MEDIA_BUCKET = "site-media";
@@ -35,27 +39,6 @@ function getMediaStorage(): SupabaseClient {
   return createClient(normalizeSupabaseUrl(rawUrl), serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
-}
-
-function defaultExtensionForDir(dir: MediaUploadDir): string {
-  switch (dir) {
-    case "videos":
-    case "hero":
-      return ".mp4";
-    case "thumbnails":
-    case "about-photos":
-    case "home-grid-photos":
-    case "brand-logos":
-    case "cta-photos":
-    case "stats-photos":
-      return ".jpg";
-    case "hero-photos":
-      return ".png";
-    default: {
-      const _exhaustive: never = dir;
-      return _exhaustive;
-    }
-  }
 }
 
 export async function createSignedPublicMediaUpload(
