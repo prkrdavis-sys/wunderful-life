@@ -1,5 +1,10 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { describeUnknownError } from "./runtime";
+import {
+  createSupabaseAdminClient,
+  hasSupabaseAdminConfig,
+} from "./supabase-admin";
+import { withSupabaseJwtClockSkewRetry } from "./supabase-retry";
 import { StorageError } from "./types";
 import type { SiteContent } from "@/lib/site/types";
 import type { PortfolioVideo } from "@/lib/videos/types";
@@ -20,36 +25,12 @@ type PortfolioLibraryRow = {
   updated_by: string | null;
 };
 
-function readEnv(name: string): string | undefined {
-  return process.env[name];
-}
-
-/** Accept a bare project URL or a mistakenly pasted REST endpoint. */
-function normalizeSupabaseUrl(raw: string): string {
-  const trimmed = raw.trim().replace(/\/+$/, "");
-  return trimmed.replace(/\/rest\/v1$/i, "");
-}
-
 export function hasSiteDatabaseConfig(): boolean {
-  return Boolean(
-    readEnv("SUPABASE_URL") && readEnv("SUPABASE_SERVICE_ROLE_KEY"),
-  );
+  return hasSupabaseAdminConfig();
 }
 
 function getSiteDatabase(): SupabaseClient {
-  const rawUrl = readEnv("SUPABASE_URL");
-  const serviceRoleKey = readEnv("SUPABASE_SERVICE_ROLE_KEY");
-
-  if (!rawUrl || !serviceRoleKey) {
-    throw new StorageError(
-      "Site content storage is not configured. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
-      503,
-    );
-  }
-
-  return createClient(normalizeSupabaseUrl(rawUrl), serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  return createSupabaseAdminClient();
 }
 
 function unwrapRow(data: SiteContentRow | SiteContentRow[] | null): SiteContentRow {
@@ -58,24 +39,6 @@ function unwrapRow(data: SiteContentRow | SiteContentRow[] | null): SiteContentR
     throw new StorageError("Site content storage returned no record.", 503);
   }
   return row;
-}
-
-function isJwtClockSkew(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
-  const record = error as { code?: unknown; message?: unknown };
-  const code = typeof record.code === "string" ? record.code : "";
-  const message = typeof record.message === "string" ? record.message : "";
-  return code === "PGRST303" || message.includes("JWT issued at future");
-}
-
-async function withJwtClockSkewRetry<T>(run: () => Promise<T>): Promise<T> {
-  try {
-    return await run();
-  } catch (error) {
-    if (!isJwtClockSkew(error)) throw error;
-    await new Promise((resolve) => setTimeout(resolve, 750));
-    return run();
-  }
 }
 
 function storageError(error: unknown, fallback: string): StorageError {
@@ -104,6 +67,17 @@ function storageError(error: unknown, fallback: string): StorageError {
     );
   }
   return new StorageError(describeUnknownError(error, fallback), 503);
+}
+
+async function withSiteDatabase<T>(
+  fallback: string,
+  run: (database: SupabaseClient) => Promise<T>,
+): Promise<T> {
+  try {
+    return await withSupabaseJwtClockSkewRetry(async () => run(getSiteDatabase()));
+  } catch (error) {
+    throw storageError(error, fallback);
+  }
 }
 
 export type ContentRevisionSummary = {
@@ -157,36 +131,33 @@ function toStoredContent(row: SiteContentRow): StoredSiteContent {
 }
 
 export async function readStoredSiteContent(): Promise<StoredSiteContent | null> {
-  try {
-    return await withJwtClockSkewRetry(async () => {
-      const { data, error } = await getSiteDatabase()
-        .from("site_content")
-        .select("id, content, version, updated_at, updated_by")
-        .eq("id", "singleton")
-        .maybeSingle();
+  return withSiteDatabase("Could not load site content.", async (database) => {
+    const { data, error } = await database
+      .from("site_content")
+      .select("id, content, version, updated_at, updated_by")
+      .eq("id", "singleton")
+      .maybeSingle();
 
-      if (error) throw error;
-      return data ? toStoredContent(data as SiteContentRow) : null;
-    });
-  } catch (error) {
-    throw storageError(error, "Could not load site content.");
-  }
+    if (error) throw error;
+    return data ? toStoredContent(data as SiteContentRow) : null;
+  });
 }
 
 export async function initializeStoredSiteContent(
   content: SiteContent,
 ): Promise<StoredSiteContent> {
-  try {
-    const { data, error } = await getSiteDatabase().rpc(
-      "initialize_site_content",
-      { initial_content: content, actor: "migration" },
-    );
+  return withSiteDatabase(
+    "Could not initialize site content storage.",
+    async (database) => {
+      const { data, error } = await database.rpc("initialize_site_content", {
+        initial_content: content,
+        actor: "migration",
+      });
 
-    if (error) throw error;
-    return toStoredContent(unwrapRow(data as SiteContentRow));
-  } catch (error) {
-    throw storageError(error, "Could not initialize site content storage.");
-  }
+      if (error) throw error;
+      return toStoredContent(unwrapRow(data as SiteContentRow));
+    },
+  );
 }
 
 export async function saveStoredSiteContent(
@@ -194,8 +165,8 @@ export async function saveStoredSiteContent(
   expectedVersion: number,
   actor = "admin",
 ): Promise<StoredSiteContent> {
-  try {
-    const { data, error } = await getSiteDatabase().rpc("save_site_content", {
+  return withSiteDatabase("Could not save site content.", async (database) => {
+    const { data, error } = await database.rpc("save_site_content", {
       expected_version: expectedVersion,
       next_content: content,
       actor,
@@ -203,9 +174,7 @@ export async function saveStoredSiteContent(
 
     if (error) throw error;
     return toStoredContent(unwrapRow(data as SiteContentRow));
-  } catch (error) {
-    throw storageError(error, "Could not save site content.");
-  }
+  });
 }
 
 function toStoredPortfolioLibrary(
@@ -219,63 +188,53 @@ function toStoredPortfolioLibrary(
 }
 
 export async function readStoredPortfolioLibrary(): Promise<StoredPortfolioLibrary | null> {
-  try {
-    return await withJwtClockSkewRetry(async () => {
-      const { data, error } = await getSiteDatabase()
-        .from("portfolio_library")
-        .select("id, videos, version, updated_at, updated_by")
-        .eq("id", "singleton")
-        .maybeSingle();
+  return withSiteDatabase("Could not load the video library.", async (database) => {
+    const { data, error } = await database
+      .from("portfolio_library")
+      .select("id, videos, version, updated_at, updated_by")
+      .eq("id", "singleton")
+      .maybeSingle();
 
-      if (error) throw error;
-      return data
-        ? toStoredPortfolioLibrary(data as PortfolioLibraryRow)
-        : null;
-    });
-  } catch (error) {
-    throw storageError(error, "Could not load the video library.");
-  }
+    if (error) throw error;
+    return data ? toStoredPortfolioLibrary(data as PortfolioLibraryRow) : null;
+  });
 }
 
 export async function initializeStoredPortfolioLibrary(
   videos: PortfolioVideo[],
 ): Promise<StoredPortfolioLibrary> {
-  try {
-    const { data, error } = await getSiteDatabase().rpc(
-      "initialize_portfolio_library",
-      { initial_videos: videos, actor: "migration" },
-    );
+  return withSiteDatabase(
+    "Could not initialize the video library.",
+    async (database) => {
+      const { data, error } = await database.rpc("initialize_portfolio_library", {
+        initial_videos: videos,
+        actor: "migration",
+      });
 
-    if (error) throw error;
-    return toStoredPortfolioLibrary(
-      unwrapPortfolioRow(data as PortfolioLibraryRow | PortfolioLibraryRow[] | null),
-    );
-  } catch (error) {
-    throw storageError(error, "Could not initialize the video library.");
-  }
+      if (error) throw error;
+      return toStoredPortfolioLibrary(
+        unwrapPortfolioRow(data as PortfolioLibraryRow | PortfolioLibraryRow[] | null),
+      );
+    },
+  );
 }
 
 export async function saveStoredPortfolioLibrary(
   videos: PortfolioVideo[],
   expectedVersion: number,
 ): Promise<StoredPortfolioLibrary> {
-  try {
-    const { data, error } = await getSiteDatabase().rpc(
-      "save_portfolio_library",
-      {
-        expected_version: expectedVersion,
-        next_videos: videos,
-        actor: "admin",
-      },
-    );
+  return withSiteDatabase("Could not save the video library.", async (database) => {
+    const { data, error } = await database.rpc("save_portfolio_library", {
+      expected_version: expectedVersion,
+      next_videos: videos,
+      actor: "admin",
+    });
 
     if (error) throw error;
     return toStoredPortfolioLibrary(
       unwrapPortfolioRow(data as PortfolioLibraryRow | PortfolioLibraryRow[] | null),
     );
-  } catch (error) {
-    throw storageError(error, "Could not save the video library.");
-  }
+  });
 }
 
 function unwrapPortfolioRow(
@@ -291,26 +250,27 @@ function unwrapPortfolioRow(
 export async function listStoredSiteContentRevisions(
   limit = 20,
 ): Promise<ContentRevisionSummary[]> {
-  try {
-    const { data, error } = await getSiteDatabase()
-      .from("site_content_revisions")
-      .select("version, created_at, updated_by")
-      .eq("site_id", "singleton")
-      .order("version", { ascending: false })
-      .limit(limit);
+  return withSiteDatabase(
+    "Could not load site content history.",
+    async (database) => {
+      const { data, error } = await database
+        .from("site_content_revisions")
+        .select("version, created_at, updated_by")
+        .eq("site_id", "singleton")
+        .order("version", { ascending: false })
+        .limit(limit);
 
-    if (error) throw error;
-    return (data ?? []).map((row) => toRevisionSummary(row as SiteRevisionRow));
-  } catch (error) {
-    throw storageError(error, "Could not load site content history.");
-  }
+      if (error) throw error;
+      return (data ?? []).map((row) => toRevisionSummary(row as SiteRevisionRow));
+    },
+  );
 }
 
 export async function readStoredSiteContentRevision(
   version: number,
 ): Promise<SiteContent> {
-  try {
-    const { data, error } = await getSiteDatabase()
+  return withSiteDatabase("Could not load that site save.", async (database) => {
+    const { data, error } = await database
       .from("site_content_revisions")
       .select("content, version")
       .eq("site_id", "singleton")
@@ -322,48 +282,48 @@ export async function readStoredSiteContentRevision(
       throw new StorageError("That site save was not found.", 404);
     }
     return (data as SiteRevisionRow).content;
-  } catch (error) {
-    throw storageError(error, "Could not load that site save.");
-  }
+  });
 }
 
 export async function listStoredPortfolioLibraryRevisions(
   limit = 20,
 ): Promise<ContentRevisionSummary[]> {
-  try {
-    const { data, error } = await getSiteDatabase()
-      .from("portfolio_library_revisions")
-      .select("version, created_at, updated_by")
-      .eq("library_id", "singleton")
-      .order("version", { ascending: false })
-      .limit(limit);
+  return withSiteDatabase(
+    "Could not load video library history.",
+    async (database) => {
+      const { data, error } = await database
+        .from("portfolio_library_revisions")
+        .select("version, created_at, updated_by")
+        .eq("library_id", "singleton")
+        .order("version", { ascending: false })
+        .limit(limit);
 
-    if (error) throw error;
-    return (data ?? []).map((row) =>
-      toRevisionSummary(row as PortfolioRevisionRow),
-    );
-  } catch (error) {
-    throw storageError(error, "Could not load video library history.");
-  }
+      if (error) throw error;
+      return (data ?? []).map((row) =>
+        toRevisionSummary(row as PortfolioRevisionRow),
+      );
+    },
+  );
 }
 
 export async function readStoredPortfolioLibraryRevision(
   version: number,
 ): Promise<PortfolioVideo[]> {
-  try {
-    const { data, error } = await getSiteDatabase()
-      .from("portfolio_library_revisions")
-      .select("videos, version")
-      .eq("library_id", "singleton")
-      .eq("version", version)
-      .maybeSingle();
+  return withSiteDatabase(
+    "Could not load that video library save.",
+    async (database) => {
+      const { data, error } = await database
+        .from("portfolio_library_revisions")
+        .select("videos, version")
+        .eq("library_id", "singleton")
+        .eq("version", version)
+        .maybeSingle();
 
-    if (error) throw error;
-    if (!data) {
-      throw new StorageError("That video library save was not found.", 404);
-    }
-    return (data as PortfolioRevisionRow).videos;
-  } catch (error) {
-    throw storageError(error, "Could not load that video library save.");
-  }
+      if (error) throw error;
+      if (!data) {
+        throw new StorageError("That video library save was not found.", 404);
+      }
+      return (data as PortfolioRevisionRow).videos;
+    },
+  );
 }
