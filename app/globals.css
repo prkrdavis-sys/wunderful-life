@@ -1103,10 +1103,20 @@ body {
   overflow: visible;
   color: var(--sage-deep);
   opacity: 0.94;
-  /* Full path maps to the canvas so ridge spacing scales, nothing is cropped. */
   top: auto;
   bottom: -2px;
   height: calc(100% + 2px);
+}
+
+.hero-intro-silhouette-layer svg {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  height: 100%;
+  width: auto;
+  aspect-ratio: 1600 / 600;
+  max-width: none;
+  translate: -50% 0;
 }
 
 .hero-intro-silhouette-layer {
@@ -1428,10 +1438,10 @@ body {
 
 /*
  * Hero intro stacking. Hills and title stay in .hero-intro-visual, above
- * the forest belt. The hill canvas is a uniform scale of the original
- * 82svh field so ridge spacing shrinks and no ridge is cropped. The
- * portrait keeps that original size, sits under the service labels, and
- * hangs behind the forest belt with the same tuck.
+ * the forest belt. The hill field is a shorter, uniform scale of the
+ * original so ridge spacing tightens and every ridge stays visible. The
+ * portrait fills that field: head at the palest ridge, feet tucked in
+ * the forest belt.
  *   0  silhouettes
  *   2  creator cutout
  *   5  butterfly
@@ -1440,16 +1450,14 @@ body {
  */
 .hero-intro {
   --hero-canvas: 82svh;
-  --hero-scale: 0.73;
-  --hero-services-top: clamp(1rem, 2.2svh, 1.35rem);
+  --hero-scale: 0.55;
+  --hero-services-top: clamp(0.85rem, 1.8svh, 1.15rem);
   --hero-services-line: clamp(1.05rem, 2.8vw, 1.7rem);
-  --hero-portrait-gap: 0.4rem;
+  --hero-portrait-gap: 0.25rem;
   --portrait-top: calc(
     var(--hero-services-top) + var(--hero-services-line) + var(--hero-portrait-gap)
   );
-  /* Same overlap vs the figure as the original 82svh layout. */
-  --portrait-tuck: clamp(2.5rem, 8svh, 4.75rem);
-  --portrait-scale-height: var(--hero-canvas);
+  --portrait-tuck: clamp(2.25rem, 7svh, 4rem);
   overflow: visible;
   container-type: inline-size;
   container-name: hero-intro;
@@ -1483,10 +1491,9 @@ body {
 }
 
 .hero-intro-creator-slot {
-  /* Stretch from under the services line through the hills into the belt.
-   * Height is in svh so width cannot resolve against the viewport width. */
+  /* Fill the condensed hill field: head at the palest ridge, hang into the belt. */
   --portrait-height: calc(
-    var(--portrait-scale-height) - var(--portrait-top) + var(--portrait-tuck)
+    var(--hero-visual-height) - var(--portrait-top) + var(--portrait-tuck)
   );
   position: absolute;
   left: 50%;
@@ -1569,9 +1576,10 @@ body {
 
 @media (max-width: 40rem) {
   .hero-intro {
-    --hero-services-top: 1rem;
+    --hero-scale: 0.58;
+    --hero-services-top: 0.85rem;
     --hero-services-line: clamp(1rem, 4.2vw, 1.25rem);
-    --portrait-tuck: clamp(3rem, 11svh, 5.75rem);
+    --portrait-tuck: clamp(2.5rem, 9svh, 4.5rem);
   }
 }
 

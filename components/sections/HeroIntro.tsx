@@ -46,8 +46,8 @@ function HeroHillSilhouettes() {
         >
           <svg
             viewBox="0 0 1600 600"
-            preserveAspectRatio="none"
-            className="block h-full w-full"
+            preserveAspectRatio="xMidYMax meet"
+            className="block"
           >
             <path d={layer.d} fill="currentColor" opacity={layer.opacity} />
           </svg>
@@ -183,7 +183,7 @@ export function HeroIntro() {
                   preload
                   sizes="(max-height: 40rem) and (orientation: landscape) 40vw, (min-width: 1024px) 50rem, 92vw"
                   unoptimized={shouldBypassImageOptimizer(creatorImage)}
-                  className="h-full w-full object-cover object-top"
+                  className="h-full w-full object-cover object-[50%_12%]"
                 />
               </div>
             </div>
