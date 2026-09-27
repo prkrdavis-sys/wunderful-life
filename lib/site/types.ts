@@ -201,7 +201,6 @@ export type SiteContent = {
     /** Small caps line above the Testimonials heading. */
     eyebrow: string;
     heading: string;
-    intro: string;
     items: Testimonial[];
   };
 };

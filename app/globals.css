@@ -156,6 +156,18 @@ body {
 }
 
 /*
+ * Brands heading sits alone above the logo row, so it can carry the display
+ * opsz the other didone titles avoid: lighter weight and open tracking let
+ * the high-contrast strokes read as editorial rather than blunt.
+ */
+.brands-heading {
+  font-weight: 500;
+  font-variation-settings: "opsz" 72, "wght" 500;
+  letter-spacing: 0.015em;
+  line-height: 1.12;
+}
+
+/*
  * Keep looping videos on a GPU layer at device resolution. Parent transforms,
  * overflow:hidden, and border-radius otherwise rasterize them at 1× CSS pixels
  * on retina. The player also sizes the <video> at devicePixelRatio.
@@ -214,6 +226,11 @@ body {
   transform: translateZ(0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+}
+
+/* Opacity only — transform is set in JS for Safari's video fit. */
+.autoplay-loop-video.is-handoff {
+  transition: opacity var(--loop-fade, 420ms) linear;
 }
 
 /* Decorative loop videos: never show native play chrome, even while buffering. */
@@ -1470,26 +1487,26 @@ body {
   padding-top: var(--hero-services-top);
 }
 
+/*
+ * Head just under the services, hanging into the belt. Uploads are cropped
+ * to the cutout's opaque rows, so the image top is the top of her head; the
+ * width follows the image's own aspect ratio rather than cropping it.
+ */
 .hero-intro-creator-slot {
-  /* Fill the condensed hill field: head at the palest ridge, hang into the belt. */
-  --portrait-height: calc(
-    var(--hero-visual-height) - var(--portrait-top) + var(--portrait-tuck)
-  );
   position: absolute;
   left: 50%;
   top: var(--portrait-top);
   z-index: 2;
-  width: calc(var(--portrait-height) * 2 / 3);
-  height: var(--portrait-height);
+  height: calc(
+    var(--hero-visual-height) - var(--portrait-top) + var(--portrait-tuck)
+  );
   overflow: visible;
   translate: -50% 0;
 }
 
 .hero-intro-creator-image {
-  position: absolute;
-  inset: 0;
+  position: relative;
   z-index: 0;
-  width: 100%;
   height: 100%;
   pointer-events: none;
 }

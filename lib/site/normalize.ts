@@ -160,8 +160,6 @@ const DEFAULT_TESTIMONIALS: SiteContent["testimonials"] = {
   visible: true,
   eyebrow: "Social Proof",
   heading: "Kind Words",
-  intro:
-    "A few example notes to show how client feedback can live here once Emily starts collecting testimonials.",
   items: [
     {
       id: "warm-natural",
@@ -650,7 +648,6 @@ export function normalizeSiteContent(raw: SiteContentInput): SiteContent {
           : DEFAULT_TESTIMONIALS.visible,
       eyebrow: text(testimonials.eyebrow, DEFAULT_TESTIMONIALS.eyebrow),
       heading: text(testimonials.heading, DEFAULT_TESTIMONIALS.heading),
-      intro: text(testimonials.intro, DEFAULT_TESTIMONIALS.intro),
       items: Array.isArray(testimonials.items)
         ? testimonials.items
             .map((testimonial, index) => ({

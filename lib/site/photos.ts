@@ -110,6 +110,44 @@ export function isWebSafePhoto(file: Pick<File, "name" | "type">): boolean {
   );
 }
 
+type RowRange = { top: number; height: number };
+
+/** Alpha at or below this counts as empty when cropping cutout padding. */
+const TRANSPARENT_ALPHA = 8;
+
+/**
+ * Rows of a cutout that contain any visible pixel. Full width is kept so the
+ * subject's horizontal placement in the original frame survives the crop.
+ */
+function opaqueRowRange(
+  source: CanvasImageSource,
+  width: number,
+  height: number,
+): RowRange {
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context) return { top: 0, height };
+  context.drawImage(source, 0, 0, width, height);
+  const { data } = context.getImageData(0, 0, width, height);
+
+  const rowHasPixel = (y: number) => {
+    const start = y * width * 4;
+    for (let i = start + 3; i < start + width * 4; i += 4) {
+      if (data[i] > TRANSPARENT_ALPHA) return true;
+    }
+    return false;
+  };
+
+  let top = 0;
+  while (top < height && !rowHasPixel(top)) top += 1;
+  if (top === height) return { top: 0, height };
+  let bottom = height - 1;
+  while (bottom > top && !rowHasPixel(bottom)) bottom -= 1;
+  return { top, height: bottom - top + 1 };
+}
+
 async function canvasToEncodedFile(
   source: CanvasImageSource,
   width: number,
@@ -117,15 +155,16 @@ async function canvasToEncodedFile(
   id: string,
   mimeType: "image/jpeg" | "image/webp",
   quality = 0.8,
+  rows: RowRange = { top: 0, height },
 ): Promise<File> {
   const canvas = document.createElement("canvas");
   canvas.width = width;
-  canvas.height = height;
+  canvas.height = rows.height;
   const context = canvas.getContext("2d");
   if (!context) {
     throw new Error("Could not prepare this photo for upload.");
   }
-  context.drawImage(source, 0, 0, width, height);
+  context.drawImage(source, 0, -rows.top, width, height);
 
   const blob = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
@@ -172,6 +211,8 @@ export async function preparePhotoForUpload(
     maxEdge?: number;
     quality?: number;
     preferJpeg?: boolean;
+    /** Drop fully transparent rows above and below a cutout. */
+    cropTransparentRows?: boolean;
   },
 ): Promise<File> {
   const id = `photo-${crypto.randomUUID()}`;
@@ -181,8 +222,10 @@ export async function preparePhotoForUpload(
   const preferJpeg = options?.preferJpeg ?? !mime.includes("png");
   // Re-encoding a GIF through canvas would flatten an animation, so leave it.
   const isGif = mime === "image/gif" || extensionFromFilename(file.name) === ".gif";
+  const cropRows = Boolean(options?.cropTransparentRows) && !isGif;
   const needsEncode =
     options?.forceEncode ||
+    cropRows ||
     isHeicLike(file) ||
     !isWebSafePhoto(file) ||
     (preferJpeg && file.size > COMPRESS_PHOTO_OVER_BYTES) ||
@@ -214,6 +257,7 @@ export async function preparePhotoForUpload(
         id,
         targetMime,
         quality,
+        cropRows ? opaqueRowRange(bitmap, width, height) : undefined,
       );
     } finally {
       bitmap.close();
@@ -236,7 +280,15 @@ export async function preparePhotoForUpload(
       element.src = objectUrl;
     });
     const { width, height } = scaledSize(image.naturalWidth, image.naturalHeight, maxEdge);
-    return await canvasToEncodedFile(image, width, height, id, targetMime, quality);
+    return await canvasToEncodedFile(
+      image,
+      width,
+      height,
+      id,
+      targetMime,
+      quality,
+      cropRows ? opaqueRowRange(image, width, height) : undefined,
+    );
   } finally {
     URL.revokeObjectURL(objectUrl);
   }

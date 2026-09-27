@@ -10,6 +10,15 @@ import { EmilyPhoto } from "@/components/ui/EmilyPhoto";
 import { SectionSurface } from "@/components/ui/SectionSurface";
 import { SectionReveal } from "@/components/ui/motion";
 
+function splitClosingBody(body: string): { lead: string; closer: string } | null {
+  const mark = body.lastIndexOf("?");
+  if (mark < 0) return null;
+  const lead = body.slice(0, mark + 1).trim();
+  const closer = body.slice(mark + 1).trim();
+  if (!lead || !closer) return null;
+  return { lead, closer };
+}
+
 function InstagramIcon() {
   return (
     <svg
@@ -36,6 +45,7 @@ export function ClosingCtaSection() {
   const showPhoto =
     closingCta.showPhoto &&
     (Boolean(closingCta.photo.imagePath) || viewMode === "admin");
+  const bodyLines = splitClosingBody(closingCta.body);
 
   return (
     <section
@@ -66,23 +76,35 @@ export function ClosingCtaSection() {
 
         <div
           className={
-            showPhoto
-              ? "text-center lg:text-left"
-              : "w-full max-w-2xl text-center"
+            showPhoto ? "text-center lg:text-left" : "w-full text-center"
           }
         >
           <h2
             id="closing-cta-heading"
-            className="font-editorial pb-1 text-6xl font-semibold italic leading-[1.1] tracking-[0.015em] text-forest sm:text-8xl"
+            className={`font-editorial whitespace-nowrap pb-1 font-semibold italic leading-[1.1] tracking-[0.015em] text-forest ${
+              showPhoto
+                ? "text-[clamp(1.85rem,10vw,3rem)] lg:text-6xl xl:text-7xl"
+                : "text-[clamp(1.85rem,11vw,3rem)] sm:text-7xl md:text-8xl"
+            }`}
           >
             {closingCta.headline}
           </h2>
           <p
             className={`mx-auto mt-5 max-w-md text-sm leading-relaxed text-ink/80 sm:text-base${
-              showPhoto ? " lg:mx-0" : ""
+              showPhoto ? " lg:mx-0" : " md:max-w-none"
             }`}
           >
-            {closingCta.body}
+            {bodyLines ? (
+              <>
+                <span className={showPhoto ? undefined : "md:whitespace-nowrap"}>
+                  {bodyLines.lead}
+                </span>
+                <span className="md:hidden"> </span>
+                <span className="md:block">{bodyLines.closer}</span>
+              </>
+            ) : (
+              closingCta.body
+            )}
           </p>
 
           <div

@@ -192,23 +192,6 @@ export function TestimonialsEditor({
           className={inputClass}
         />
       </label>
-      <label className="block max-w-2xl text-sm">
-        <span className="text-muted">Intro</span>
-        <AutoResizeTextarea
-          value={form.testimonials.intro}
-          onChange={(event) =>
-            setForm((current) => ({
-              ...current,
-              testimonials: {
-                ...current.testimonials,
-                intro: event.target.value,
-              },
-            }))
-          }
-          rows={4}
-          className={inputClass}
-        />
-      </label>
       <div className="grid min-w-0 gap-4 sm:grid-cols-2">
         {form.testimonials.items.map((testimonial, index) => (
           <div key={testimonial.id} className={cardClass}>

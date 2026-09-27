@@ -279,6 +279,7 @@ export function useSiteEditorController(onSaved?: (site: SiteContent) => void) {
           kind === "ctaPhoto" ||
           kind === "statsPhoto",
         maxEdge: kind === "brandLogo" ? 800 : 1920,
+        cropTransparentRows: kind === "heroCreator",
       });
       const payload = new FormData();
       const endpoint = descriptor.singleton

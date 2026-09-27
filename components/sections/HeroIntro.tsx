@@ -182,9 +182,9 @@ export function HeroIntro() {
                   width={HERO_CREATOR_FALLBACK.width}
                   height={HERO_CREATOR_FALLBACK.height}
                   preload
-                  sizes="(max-height: 40rem) and (orientation: landscape) 30vw, (min-width: 1024px) 20rem, 50vw"
+                  sizes="(max-height: 40rem) and (orientation: landscape) 40vw, (min-width: 1024px) 28rem, 90vw"
                   unoptimized={shouldBypassImageOptimizer(creatorImage)}
-                  className="h-full w-full object-cover object-[50%_12%]"
+                  className="block h-full w-auto max-w-none"
                 />
               </div>
             </div>

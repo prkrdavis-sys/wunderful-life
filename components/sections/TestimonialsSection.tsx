@@ -44,9 +44,6 @@ export function TestimonialsSection() {
           <h2 className={`font-didone text-3xl font-black tracking-tight sm:text-5xl ${text.heading}`}>
             {site.testimonials.heading}
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-ink/88 sm:text-lg">
-            {site.testimonials.intro}
-          </p>
         </SectionReveal>
 
         <StaggerChildren className="testimonial-cloud-drift mx-auto mt-10 max-w-6xl">
