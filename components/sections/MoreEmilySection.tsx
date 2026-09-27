@@ -25,6 +25,7 @@ export function MoreEmilySection() {
     >
       <SectionSurface tone="sage" motifs="scatter" />
       <SectionButterfly flight="aboutFar" />
+      <SectionButterfly flight="aboutGalleryCompanion" />
       <AdminEditButton section="photos" label="Edit My vibe" />
       <div className="relative z-10 mx-auto max-w-5xl">
         <SectionReveal variant="fadeUp" className="text-center">

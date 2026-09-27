@@ -22,7 +22,6 @@ const defaultCaptionClasses: Required<CaptionClasses> = {
 
 type PhoneVideoPlayerProps = {
   video: PortfolioVideo;
-  accentIndex?: number;
   tilt?: number;
   size?: "sm" | "md" | "lg";
   activeId: string | null;
@@ -34,7 +33,6 @@ type PhoneVideoPlayerProps = {
 
 export function PhoneVideoPlayer({
   video,
-  accentIndex = 0,
   tilt = 0,
   size = "md",
   activeId,
@@ -95,7 +93,6 @@ export function PhoneVideoPlayer({
     <div className="flex flex-col items-center gap-3">
       <PhoneFrame
         tilt={tilt}
-        accentIndex={accentIndex}
         size={size}
         isActive={isPlaying}
       >

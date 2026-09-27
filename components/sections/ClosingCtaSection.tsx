@@ -45,6 +45,7 @@ export function ClosingCtaSection() {
     >
       <SectionSurface tone="ivory" motifs="scatter" />
       <SectionButterfly flight="closing" />
+      <SectionButterfly flight="closingAccent" />
       <SectionButterfly flight="closingFar" />
       <AdminEditButton section="cta" label="Edit CTA" />
 
@@ -72,7 +73,7 @@ export function ClosingCtaSection() {
         >
           <h2
             id="closing-cta-heading"
-            className="font-script pb-1 text-5xl leading-[1.15] text-forest sm:text-7xl"
+            className="font-editorial pb-1 text-6xl font-semibold italic leading-[1.1] tracking-[0.015em] text-forest sm:text-8xl"
           >
             {closingCta.headline}
           </h2>

@@ -84,6 +84,7 @@ export function PhotographyCollage() {
       <DecorMotifs preset="right" />
       <AdminEditButton section="photography" label="Edit photos" />
       <SectionButterfly flight="photography" />
+      <SectionButterfly flight="photographyAccent" />
       <SectionButterfly flight="photographyLow" />
 
       <div ref={shellRef} className="photography-shell relative z-10">

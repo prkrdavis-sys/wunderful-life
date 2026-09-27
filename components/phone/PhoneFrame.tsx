@@ -3,13 +3,11 @@
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 
-const FINISHES = ["natural", "white", "blue", "black"] as const;
-type PhoneFinish = (typeof FINISHES)[number];
+const PHONE_FINISH = "white";
 
 type PhoneFrameProps = {
   children: ReactNode;
   tilt?: number;
-  accentIndex?: number;
   size?: "sm" | "md" | "lg";
   isActive?: boolean;
   className?: string;
@@ -20,11 +18,6 @@ const widths = {
   md: 210,
   lg: 280,
 };
-
-function finishForIndex(index: number): PhoneFinish {
-  const normalized = ((index % FINISHES.length) + FINISHES.length) % FINISHES.length;
-  return FINISHES[normalized];
-}
 
 function PhoneScreen({ children }: { children: ReactNode }) {
   return (
@@ -41,7 +34,7 @@ function CssPhoneChassis({
   finish,
   children,
 }: {
-  finish: PhoneFinish;
+  finish: typeof PHONE_FINISH;
   children: ReactNode;
 }) {
   return (
@@ -58,12 +51,10 @@ function CssPhoneChassis({
 export function PhoneFrame({
   children,
   tilt = 0,
-  accentIndex = 0,
   size = "md",
   isActive = false,
   className = "",
 }: PhoneFrameProps) {
-  const finish = finishForIndex(accentIndex);
   const width = widths[size];
 
   return (
@@ -72,10 +63,10 @@ export function PhoneFrame({
       animate={{ scale: isActive ? 1.05 : 1 }}
       transition={{ type: "spring", stiffness: 260, damping: 22 }}
       className={`phone-device relative shrink-0 ${className}`}
-      data-finish={finish}
+      data-finish={PHONE_FINISH}
     >
       <span className="phone-float-shadow" aria-hidden />
-      <CssPhoneChassis finish={finish}>{children}</CssPhoneChassis>
+      <CssPhoneChassis finish={PHONE_FINISH}>{children}</CssPhoneChassis>
     </motion.div>
   );
 }

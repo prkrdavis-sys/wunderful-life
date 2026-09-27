@@ -48,7 +48,7 @@ export function StatsBannerSection() {
             <StaggerChildren className="grid grid-cols-2 gap-x-4 gap-y-7 sm:flex sm:items-start sm:justify-around sm:gap-8">
               {items.map((stat) => (
                 <StaggerItem key={stat.id} variant="fadeUp" className="text-center">
-                  <p className="font-script pb-1 text-4xl leading-[1.15] text-paper sm:text-5xl">
+                  <p className="font-editorial pb-1 text-5xl font-semibold leading-[1.1] tracking-[0.01em] text-paper sm:text-6xl">
                     {stat.value}
                   </p>
                   <p className="mt-2 font-label text-[11px] font-bold tracking-[0.08em] text-paper/90 sm:text-sm">

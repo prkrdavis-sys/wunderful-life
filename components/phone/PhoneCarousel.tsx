@@ -78,7 +78,6 @@ export function PhoneCarousel({ videos, size = "lg" }: PhoneCarouselProps) {
             <div key={video.id} className="min-w-0 shrink-0 grow-0 basis-auto">
               <PhoneVideoPlayer
                 video={video}
-                accentIndex={index}
                 tilt={phoneTilt(index)}
                 size={size}
                 activeId={activeId}

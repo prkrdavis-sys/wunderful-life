@@ -54,8 +54,7 @@
   --font-serif: var(--font-fraunces);
   --font-didone: var(--font-bodoni);
   --font-label: var(--font-instrument);
-  --font-script: var(--font-niconne);
-  --font-calligraphy: var(--font-nautigal);
+  --font-editorial: var(--font-cormorant);
   --font-cooper: var(--font-calistoga);
 }
 
@@ -331,49 +330,30 @@ body {
 
 /*
  * Quote clouds use the same warm paper fill and bark-tinted elevation as
- * .glass-panel. drop-shadow follows the puffy silhouette; box-shadow cannot.
+ * .glass-panel. The silhouette is a 9-slice border-image: corners stay fixed
+ * and `round` adds whole puffs along each edge, so long quotes grow the cloud
+ * instead of stretching it. drop-shadow follows the puffs; box-shadow cannot.
  */
 .testimonial-cloud {
-  position: relative;
-  isolation: isolate;
   display: flex;
   width: 100%;
-  aspect-ratio: 55 / 45;
   flex-direction: column;
   justify-content: center;
   box-sizing: border-box;
-  /* Keep copy in the fat middle of the silhouette, clear of the puffs. */
-  padding: 4.5rem 4.75rem 5rem;
+  border: 2.75rem solid transparent;
+  border-image: url("/decor/testimonial-cloud-9slice.svg") 40 fill round;
+  padding: 0.25rem 0.5rem;
   text-align: left;
-}
-
-.testimonial-cloud-shape {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  pointer-events: none;
   filter:
     drop-shadow(0 10px 18px rgb(61 55 46 / 0.1))
     drop-shadow(0 18px 36px rgb(61 55 46 / 0.08));
 }
 
-.testimonial-cloud-shape-flip {
-  transform: scaleX(-1);
-}
-
-.testimonial-cloud-shape path {
-  fill: rgb(255 253 249 / 0.9);
-  stroke: rgb(255 255 255 / 0.7);
-  stroke-width: 0.35;
-  stroke-linejoin: round;
+.testimonial-cloud-flip {
+  border-image-source: url("/decor/testimonial-cloud-9slice-flip.svg");
 }
 
 .testimonial-cloud-body {
-  position: relative;
-  z-index: 1;
   min-width: 0;
   width: 100%;
 }
@@ -385,18 +365,21 @@ body {
 
 @media (min-width: 640px) {
   .testimonial-cloud {
-    padding: 4.75rem 5.25rem 5.25rem;
+    border-width: 3.25rem;
+    padding: 0.25rem 0.75rem;
   }
 }
 
 /*
- * Quote clouds drift like a sky, not a card grid: alternate banks, uneven
- * widths, and slight tuck-ins so four (or fewer) never line up on a rail.
+ * On phones the clouds stack full width so quotes get a readable measure.
+ * From tablet up they drift like a sky, not a card grid: alternate banks,
+ * uneven widths, and slight tuck-ins so four (or fewer) never line up.
  */
 .testimonial-cloud-drift {
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  gap: 1.25rem;
 }
 
 .testimonial-cloud-row {
@@ -406,63 +389,57 @@ body {
 
 .testimonial-cloud-slot {
   position: relative;
-  width: min(84%, 22.5rem);
+  width: 100%;
 }
 
 .testimonial-cloud-slot-a {
   z-index: 1;
-  margin-left: 0;
-  transform: rotate(-1.4deg);
 }
 
 .testimonial-cloud-slot-b {
   z-index: 2;
-  margin-top: 0.4rem;
-  margin-left: auto;
-  margin-right: 2%;
-  width: min(80%, 21.5rem);
-  transform: rotate(1.6deg);
 }
 
 .testimonial-cloud-slot-c {
   z-index: 3;
-  margin-top: 0.55rem;
-  margin-left: 10%;
-  width: min(82%, 23rem);
-  transform: rotate(0.8deg);
 }
 
 .testimonial-cloud-slot-d {
   z-index: 4;
-  margin-top: 0.25rem;
-  margin-left: auto;
-  margin-right: 8%;
-  width: min(78%, 21rem);
-  transform: rotate(-1.1deg);
 }
 
 @media (min-width: 768px) {
+  .testimonial-cloud-drift {
+    gap: 0;
+  }
+
   .testimonial-cloud-slot-a {
     margin-left: 1%;
     width: min(54%, 28rem);
+    transform: rotate(-1.4deg);
   }
 
   .testimonial-cloud-slot-b {
-    margin-top: -4.25rem;
+    margin-top: -2.5rem;
+    margin-left: auto;
     margin-right: 4%;
     width: min(50%, 26.5rem);
+    transform: rotate(1.6deg);
   }
 
   .testimonial-cloud-slot-c {
-    margin-top: -2.5rem;
+    margin-top: -1.25rem;
     margin-left: 11%;
     width: min(56%, 29rem);
+    transform: rotate(0.8deg);
   }
 
   .testimonial-cloud-slot-d {
-    margin-top: -5rem;
+    margin-top: -3rem;
+    margin-left: auto;
     margin-right: 1.5%;
     width: min(52%, 27rem);
+    transform: rotate(-1.1deg);
   }
 }
 
@@ -473,19 +450,19 @@ body {
   }
 
   .testimonial-cloud-slot-b {
-    margin-top: -5.25rem;
+    margin-top: -3rem;
     margin-right: 7%;
     width: min(48%, 28rem);
   }
 
   .testimonial-cloud-slot-c {
-    margin-top: -3rem;
+    margin-top: -1.5rem;
     margin-left: 15%;
     width: min(54%, 31rem);
   }
 
   .testimonial-cloud-slot-d {
-    margin-top: -6.25rem;
+    margin-top: -3.5rem;
     margin-right: 2%;
     width: min(50%, 29rem);
   }
@@ -987,11 +964,11 @@ body {
 }
 
 /*
- * Photography title: calligraphy spines on wide frames, centered
+ * Photography title: editorial serif spines on wide frames, centered
  * heading when the word cannot sit beside the collage.
  */
 .photography-shell {
-  --photography-word-size: clamp(3.4rem, 8vw, 5.35rem);
+  --photography-word-size: clamp(3.6rem, 8.2vw, 5.75rem);
   container-type: inline-size;
   container-name: photography-shell;
   width: 100%;
@@ -1006,10 +983,12 @@ body {
 
 .photography-word,
 .photography-word-measure {
-  font-family: var(--font-calligraphy), cursive;
+  font-family: var(--font-editorial), Georgia, serif;
   font-size: var(--photography-word-size);
-  font-weight: 400;
-  line-height: 1.2;
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+  line-height: 1.1;
   color: var(--forest);
 }
 
@@ -1022,8 +1001,8 @@ body {
   grid-row: 1;
   justify-self: center;
   max-width: 100%;
-  padding-bottom: 0.22em;
-  margin-bottom: 0.2em;
+  padding-bottom: 0.08em;
+  margin-bottom: 0.3em;
   text-align: center;
   text-wrap: balance;
 }
@@ -1108,13 +1087,16 @@ body {
   height: calc(100% + 2px);
 }
 
+/*
+ * Natural width follows the viewBox (1600 x 520) so narrow screens crop the
+ * sides; wide screens stretch horizontally so the hills stay full bleed.
+ */
 .hero-intro-silhouette-layer svg {
   position: absolute;
   bottom: 0;
   left: 50%;
   height: 100%;
-  width: auto;
-  aspect-ratio: 1600 / 600;
+  width: max(100%, calc((var(--hero-visual-height) + 2px) * 40 / 13));
   max-width: none;
   translate: -50% 0;
 }
@@ -1438,10 +1420,10 @@ body {
 
 /*
  * Hero intro stacking. Hills and title stay in .hero-intro-visual, above
- * the forest belt. The hill field is a shorter, uniform scale of the
- * original so ridge spacing tightens and every ridge stays visible. The
- * portrait fills that field: head at the palest ridge, feet tucked in
- * the forest belt.
+ * the forest belt. The hill field is a short, uniform scale of the
+ * artwork so ridge spacing stays proportional. The portrait fills that
+ * field (head at the palest ridge) and its tuck scales with the field, so
+ * a shorter hero keeps a proportionally larger figure under the belt.
  *   0  silhouettes
  *   2  creator cutout
  *   5  butterfly
@@ -1449,15 +1431,14 @@ body {
  *  30  name (bottom left)
  */
 .hero-intro {
-  --hero-canvas: 82svh;
-  --hero-scale: 0.55;
+  --hero-visual-height: clamp(12rem, 28svh, 18rem);
   --hero-services-top: clamp(0.85rem, 1.8svh, 1.15rem);
   --hero-services-line: clamp(1.05rem, 2.8vw, 1.7rem);
   --hero-portrait-gap: 0.25rem;
   --portrait-top: calc(
     var(--hero-services-top) + var(--hero-services-line) + var(--hero-portrait-gap)
   );
-  --portrait-tuck: clamp(2.25rem, 7svh, 4rem);
+  --portrait-tuck: calc(var(--hero-visual-height) * 0.36);
   overflow: visible;
   container-type: inline-size;
   container-name: hero-intro;
@@ -1466,7 +1447,6 @@ body {
 }
 
 .hero-intro-visual {
-  --hero-visual-height: calc(var(--hero-canvas) * var(--hero-scale));
   position: relative;
   overflow: visible;
   background-color: var(--paper);
@@ -1558,9 +1538,11 @@ body {
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: 0 0 0.18em;
-  font-size: clamp(1.35rem, 3.4vw, 2.2rem);
-  line-height: 1.28;
+  padding: 0 0 0.12em;
+  font-size: clamp(1.6rem, 4vw, 2.7rem);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
   text-wrap: pretty;
 }
 
@@ -1570,16 +1552,15 @@ body {
   }
 
   .hero-intro-belt-copy {
-    font-size: clamp(1.7rem, 2.15vw, 2.35rem);
+    font-size: clamp(2rem, 2.6vw, 2.9rem);
   }
 }
 
 @media (max-width: 40rem) {
   .hero-intro {
-    --hero-scale: 0.58;
+    --hero-visual-height: clamp(12rem, 30svh, 17rem);
     --hero-services-top: 0.85rem;
     --hero-services-line: clamp(1rem, 4.2vw, 1.25rem);
-    --portrait-tuck: clamp(2.5rem, 9svh, 4.5rem);
   }
 }
 
@@ -1592,11 +1573,10 @@ body {
 
 @media (max-height: 40rem) and (orientation: landscape) {
   .hero-intro {
-    --hero-canvas: 70svh;
+    --hero-visual-height: clamp(9rem, 40svh, 12rem);
     --hero-services-top: 0.7rem;
     --hero-services-line: 1rem;
     --hero-portrait-gap: 0.25rem;
-    --portrait-tuck: 1.35rem;
   }
 }
 

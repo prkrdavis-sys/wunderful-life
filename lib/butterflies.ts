@@ -23,13 +23,18 @@
  */
 export type ButterflyFlightId =
   | "intro"
+  | "introCompanion"
   | "about"
+  | "aboutSmall"
   | "aboutFar"
+  | "aboutGalleryCompanion"
   | "photography"
+  | "photographyAccent"
   | "photographyLow"
   | "services"
   | "servicesHigh"
   | "brandsBand"
+  | "brandsCompanion"
   | "stats"
   | "workBand"
   | "workMarquee"
@@ -38,6 +43,7 @@ export type ButterflyFlightId =
   | "testimonials"
   | "testimonialsLow"
   | "closing"
+  | "closingAccent"
   | "closingFar";
 
 export type ButterflyFlightPreset = {
@@ -269,5 +275,83 @@ export const butterflyFlights: Record<ButterflyFlightId, ButterflyFlightPreset> 
     flapDuration: 0.7,
     colorClassName: "text-forest",
     opacity: 0.74,
+  },
+  // A tiny honey loop high in the opposite corner of the hero.
+  introCompanion: {
+    path: "M 132 92 C 177 62 244 68 273 109 C 301 150 278 205 222 218 C 166 231 109 202 98 154 C 87 117 101 103 132 92",
+    className: "top-[18%] left-0 sm:left-4",
+    duration: 34,
+    areaWidth: 190,
+    maxViewportWidth: 34,
+    size: 22,
+    trailLength: 92,
+    flapDuration: 0.58,
+    colorClassName: "text-honey-deep",
+    opacity: 0.72,
+  },
+  // A small lavender orbit tucked into the open lower-right edge of the copy.
+  aboutSmall: {
+    path: "M 116 178 C 105 129 139 86 191 80 C 243 74 294 106 304 153 C 314 200 276 236 221 238 C 166 240 127 227 116 178",
+    className: "bottom-2 right-1 sm:right-6",
+    duration: 30,
+    areaWidth: 210,
+    maxViewportWidth: 38,
+    size: 26,
+    trailLength: 110,
+    flapDuration: 0.72,
+    colorClassName: "text-lavender-deep",
+    opacity: 0.72,
+  },
+  // A broad blush loop behind the gallery's open left margin.
+  aboutGalleryCompanion: {
+    path: "M 82 144 C 104 91 171 65 236 83 C 301 101 332 154 308 201 C 284 248 215 260 151 235 C 87 210 60 197 82 144",
+    className: "top-[34%] left-0 sm:left-5",
+    duration: 44,
+    areaWidth: 320,
+    maxViewportWidth: 52,
+    size: 48,
+    trailLength: 170,
+    flapDuration: 0.84,
+    colorClassName: "text-blush-deep",
+    opacity: 0.66,
+  },
+  // A large muted-sage sweep in the collage's upper-left breathing room.
+  photographyAccent: {
+    path: "M 72 188 C 62 133 109 82 181 72 C 253 62 326 98 337 153 C 348 208 292 248 216 247 C 140 246 82 243 72 188",
+    className: "top-[18%] left-0 sm:left-4",
+    duration: 52,
+    areaWidth: 350,
+    maxViewportWidth: 54,
+    size: 58,
+    trailLength: 195,
+    flapDuration: 0.96,
+    colorClassName: "text-sage-deep",
+    opacity: 0.64,
+  },
+  // A petite blush crescent balancing the brand band's lower-left corner.
+  brandsCompanion: {
+    path: "M 102 126 C 135 85 200 69 258 93 C 316 117 330 168 296 207 C 262 246 195 250 139 221 C 83 192 69 167 102 126",
+    className: "bottom-0 left-1 sm:left-8",
+    duration: 32,
+    areaWidth: 230,
+    maxViewportWidth: 38,
+    size: 34,
+    trailLength: 120,
+    flapDuration: 0.68,
+    colorClassName: "text-blush-deep",
+    opacity: 0.68,
+  },
+  // A medium lavender loop between the closing section's two green flights.
+  closingAccent: {
+    path: "M 91 166 C 94 111 145 76 208 77 C 271 78 319 116 317 169 C 315 222 263 250 199 244 C 135 238 88 221 91 166",
+    className: "top-[46%] right-[16%] sm:right-[22%]",
+    duration: 39,
+    areaWidth: 280,
+    maxViewportWidth: 44,
+    size: 38,
+    trailLength: 145,
+    flapDuration: 0.76,
+    colorClassName: "text-lavender-deep",
+    opacity: 0.7,
   },
 };

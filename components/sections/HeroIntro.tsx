@@ -45,8 +45,8 @@ function HeroHillSilhouettes() {
           className="hero-intro-silhouette-layer"
         >
           <svg
-            viewBox="0 0 1600 600"
-            preserveAspectRatio="xMidYMax meet"
+            viewBox="0 60 1600 520"
+            preserveAspectRatio="none"
             className="block"
           >
             <path d={layer.d} fill="currentColor" opacity={layer.opacity} />
@@ -115,7 +115,7 @@ function HeroForestBelt({ subtitle }: { subtitle: string }) {
           delay={0.48}
           className="relative z-10 w-full"
         >
-          <p className="hero-intro-belt-copy text-center font-script text-paper">
+          <p className="hero-intro-belt-copy text-center font-editorial text-paper">
             {subtitle}
           </p>
         </HeroEntrance>
@@ -143,6 +143,7 @@ export function HeroIntro() {
       <AdminEditButton section="hero" label="Edit hero" />
       <div className="hero-intro-visual">
         <SectionButterfly flight="intro" />
+        <SectionButterfly flight="introCompanion" />
         <HeroHillSilhouettes />
         <div
           aria-hidden
@@ -181,7 +182,7 @@ export function HeroIntro() {
                   width={HERO_CREATOR_FALLBACK.width}
                   height={HERO_CREATOR_FALLBACK.height}
                   preload
-                  sizes="(max-height: 40rem) and (orientation: landscape) 40vw, (min-width: 1024px) 50rem, 92vw"
+                  sizes="(max-height: 40rem) and (orientation: landscape) 30vw, (min-width: 1024px) 20rem, 50vw"
                   unoptimized={shouldBypassImageOptimizer(creatorImage)}
                   className="h-full w-full object-cover object-[50%_12%]"
                 />

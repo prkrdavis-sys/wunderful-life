@@ -47,6 +47,7 @@ export function BrandsBanner() {
     >
       <AdminEditButton section="brands" label="Edit brands" />
       <SectionButterfly flight="brandsBand" />
+      <SectionButterfly flight="brandsCompanion" />
 
       <div className="relative z-10 mx-auto max-w-6xl">
         <SectionReveal variant="fadeUp" className="mx-auto max-w-2xl text-center">

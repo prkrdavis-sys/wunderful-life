@@ -29,6 +29,7 @@ export function AboutSection() {
     >
       <DecorMotifs preset="right" />
       <SectionButterfly flight="about" />
+      <SectionButterfly flight="aboutSmall" />
       <SectionButterfly flight="stats" />
       <AdminEditButton section="about" label="Edit about" />
       <div className="relative z-10 mx-auto max-w-5xl">

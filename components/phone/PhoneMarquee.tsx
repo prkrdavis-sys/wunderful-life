@@ -66,7 +66,6 @@ function PhoneSlide({
     <div className="min-w-0 shrink-0 grow-0 basis-auto">
       <PhoneVideoPlayer
         video={video}
-        accentIndex={index % 5}
         tilt={phoneTilt(index)}
         size="md"
         activeId={activeId}

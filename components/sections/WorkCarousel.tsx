@@ -36,7 +36,7 @@ export function WorkCarousel({ featuredVideos }: WorkCarouselProps) {
             <SectionSurface tone="forest" motifs="none" />
             <h2
               id="work-heading"
-              className="relative z-10 font-script pb-1 text-3xl leading-[1.15] text-balance text-paper sm:text-5xl"
+              className="relative z-10 font-editorial pb-1 text-4xl font-semibold italic leading-[1.1] tracking-[0.015em] text-balance text-paper sm:text-6xl"
             >
               {site.work.heading}
             </h2>

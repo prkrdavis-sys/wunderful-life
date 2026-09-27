@@ -3,11 +3,10 @@ import {
   Bodoni_Moda,
   Bricolage_Grotesque,
   Calistoga,
+  Cormorant_Garamond,
   DM_Sans,
   Fraunces,
   Instrument_Sans,
-  Niconne,
-  The_Nautigal,
 } from "next/font/google";
 import { AdminModeBanner } from "@/components/admin/AdminModeBanner";
 import { SiteNav } from "@/components/layout/SiteNav";
@@ -55,17 +54,10 @@ const instrumentSans = Instrument_Sans({
   preload: false,
 });
 
-const niconne = Niconne({
-  variable: "--font-niconne",
-  weight: "400",
-  subsets: ["latin"],
-  display: "swap",
-  preload: false,
-});
-
-const nautigal = The_Nautigal({
-  variable: "--font-nautigal",
-  weight: "400",
+const cormorantGaramond = Cormorant_Garamond({
+  variable: "--font-cormorant",
+  weight: ["500", "600"],
+  style: ["normal", "italic"],
   subsets: ["latin"],
   display: "swap",
   preload: false,
@@ -133,7 +125,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bricolage.variable} ${dmSans.variable} ${fraunces.variable} ${instrumentSans.variable} ${niconne.variable} ${nautigal.variable} ${calistoga.variable} ${bodoniModa.variable} h-full scroll-smooth`}
+      className={`${bricolage.variable} ${dmSans.variable} ${fraunces.variable} ${instrumentSans.variable} ${cormorantGaramond.variable} ${calistoga.variable} ${bodoniModa.variable} h-full scroll-smooth`}
     >
       <body className="relative min-h-full flex flex-col bg-cream font-body antialiased">
         <AppProviders
