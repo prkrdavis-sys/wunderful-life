@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   ADMIN_COOKIE,
+  ADMIN_SESSION_MAX_AGE_SECONDS,
   adminSessionCookieValue,
   verifyAdminPassword,
 } from "@/lib/auth";
@@ -31,12 +32,13 @@ async function readPassword(request: Request): Promise<string> {
   return "";
 }
 
-function setAdminCookie(response: NextResponse) {
-  response.cookies.set(ADMIN_COOKIE, adminSessionCookieValue(), {
+async function setAdminCookie(response: NextResponse) {
+  response.cookies.set(ADMIN_COOKIE, await adminSessionCookieValue(), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
+    maxAge: ADMIN_SESSION_MAX_AGE_SECONDS,
   });
   return response;
 }
@@ -45,6 +47,19 @@ export async function POST(request: Request) {
   const password = await readPassword(request);
   const contentType = request.headers.get("content-type") ?? "";
   const isJson = contentType.includes("application/json");
+
+  if (!password.trim()) {
+    if (!isJson) {
+      return NextResponse.redirect(
+        new URL("/admin/login?error=empty", request.url),
+        303,
+      );
+    }
+    return NextResponse.json(
+      { error: "Enter the password to continue." },
+      { status: 400 },
+    );
+  }
 
   if (!verifyAdminPassword(password)) {
     if (!isJson) {

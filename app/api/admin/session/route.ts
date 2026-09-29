@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const session = (await cookies()).get(ADMIN_COOKIE)?.value;
-  const authenticated = canAccessAdmin(session);
+  const authenticated = await canAccessAdmin(session);
 
   return NextResponse.json({
     authenticated,
