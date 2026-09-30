@@ -191,6 +191,8 @@ export function HeroIntro() {
           </div>
         </div>
 
+        <div aria-hidden className="hero-intro-title-scrim" />
+
         <HeroLockup
           as="h1"
           first={nameFirst}

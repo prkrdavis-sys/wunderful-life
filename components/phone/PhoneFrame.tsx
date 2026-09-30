@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 
-const PHONE_FINISH = "white";
+const PHONE_FINISH = "black";
 
 type PhoneFrameProps = {
   children: ReactNode;

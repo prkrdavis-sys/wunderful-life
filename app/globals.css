@@ -156,15 +156,13 @@ body {
 }
 
 /*
- * Brands heading sits alone above the logo row, so it can carry the display
- * opsz the other didone titles avoid: lighter weight and open tracking let
- * the high-contrast strokes read as editorial rather than blunt.
+ * Brands heading sits alone above the logo row. Cormorant stays at a medium
+ * weight with open tracking so the line reads as editorial, not a blunt title.
  */
 .brands-heading {
   font-weight: 500;
-  font-variation-settings: "opsz" 72, "wght" 500;
-  letter-spacing: 0.015em;
-  line-height: 1.12;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
 }
 
 /*
@@ -1529,6 +1527,23 @@ body {
   text-align: left;
 }
 
+.hero-intro-title-scrim {
+  pointer-events: none;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 25;
+  width: min(78%, 34rem);
+  height: clamp(4.5rem, 24%, 11rem);
+  background: radial-gradient(
+    120% 100% at 0% 100%,
+    color-mix(in srgb, var(--paper) 100%, transparent) 0%,
+    color-mix(in srgb, var(--cream) 55%, transparent) 42%,
+    transparent 78%
+  );
+  opacity: 0.82;
+}
+
 .hero-intro-belt {
   position: relative;
   z-index: 20;
@@ -1586,6 +1601,11 @@ body {
     max-width: 96%;
     padding-inline: 0.7rem;
   }
+
+  .hero-intro-title-scrim {
+    width: min(92%, 20rem);
+    height: clamp(3.75rem, 30%, 6rem);
+  }
 }
 
 @media (max-height: 40rem) and (orientation: landscape) {
@@ -1594,6 +1614,10 @@ body {
     --hero-services-top: 0.7rem;
     --hero-services-line: 1rem;
     --hero-portrait-gap: 0.25rem;
+  }
+
+  .hero-intro-title-scrim {
+    height: clamp(3rem, 34%, 5rem);
   }
 }
 
